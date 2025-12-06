@@ -213,4 +213,205 @@
     // 預設資料
     const defaultData = {
         0: [
-            { id: 1, time: '16:00', location: '関西国際空港 (KIX)', action: '抵達機場', transport: '', note: '入境審
+            { id: 1, time: '16:00', location: '関西国際空港 (KIX)', action: '抵達機場', transport: '', note: '入境審查、領取行李' },
+            { id: 2, time: '17:00', location: '南海なんば駅', action: '搭車前往難波', transport: '南海電鐵「特急ラピート」 (約34-38分)', note: '舒適快速，直達市區' },
+            { id: 3, time: '18:00', location: 'キャプション·バイ·ハイアット難波大阪', action: '飯店 Check-in', transport: '步行', note: '位於日本橋站旁' },
+            { id: 4, time: '19:00', location: '道頓堀·心斎橋', action: '晚餐＋散步', transport: '步行', note: '必拍 Glico 跑跑人招牌' },
+            { id: 5, time: '20:00', location: 'ドン·キホーテ 道頓堀店', action: 'Donki / 藥妝小買', transport: '步行', note: '24HR營業，買旅途中急需品' },
+            { id: 6, time: '21:00', location: '日本橋·黒門市場周邊', action: '回飯店休息', transport: '步行', note: '養精蓄銳' }
+        ],
+        1: [
+            { id: 7, time: '09:00', location: '神戸三宮駅', action: '出發去神戶', transport: '阪神なんば線 直通 (約45分)', note: '大阪難波出發' },
+            { id: 8, time: '10:00', location: '生田神社 / 三宮センター街', action: '三宮周邊散步', transport: '步行', note: '祈求戀愛運、逛街' },
+            { id: 9, time: '12:00', location: 'モーリヤ / 桜', action: '神戶牛午餐', transport: '步行', note: '★ 強烈建議事先預約' },
+            { id: 10, time: '14:00', location: '神戸ハーバーランド', action: '港口拍照', transport: '地下鐵海岸線 / 步行', note: '神戶港塔、美利堅公園' },
+            { id: 11, time: '17:00', location: '大阪難波駅', action: '回大阪', transport: '阪神なんば線', note: '返回市區' },
+            { id: 12, time: '18:00', location: '道頓堀 / なんばCITY', action: '晚餐', transport: '步行', note: '' },
+            { id: 13, time: '19:00', location: 'なんばロフト (Loft)', action: '文具購物第一戰', transport: '步行', note: 'Loft 或 Hands Be' },
+            { id: 14, time: '21:00', location: '日本橋飯店', action: '回飯店休息', transport: '', note: '' }
+        ],
+        2: [
+            { id: 15, time: '08:30', location: '黒門市場', action: '吃海鮮/和牛早餐', transport: '步行', note: '水果、海鮮、小吃' },
+            { id: 16, time: '10:00', location: 'キャプション·バイ·ハイアット難波大阪', action: '退房 & 寄放行李', transport: '', note: '輕裝去吃午餐' },
+            { id: 17, time: '12:30', location: '難波周邊', action: '領取行李 / 午餐', transport: '', note: '' },
+            { id: 18, time: '14:00', location: '京都駅', action: '移動前往京都', transport: '御堂筋線(梅田)轉JR新快速 (約60分)', note: '難波->梅田->京都' },
+            { id: 19, time: '15:30', location: 'ハイアット プレイス 京都', action: '抵達飯店 Check-in', transport: '地下鐵烏丸線 (丸太町站6號口)', note: '站口直結，非常方便' },
+            { id: 20, time: '17:00', location: '京都御苑 / 京都御所', action: '傍晚散步', transport: '步行', note: '就在飯店旁，放鬆好去處' },
+            { id: 21, time: '19:00', location: '四条 / 烏丸', action: '京都晚餐', transport: '地鐵 / 步行', note: '尋找京都美食' }
+        ],
+        3: [
+            { id: 22, time: '08:30', location: '伏見稲荷大社', action: '千本鳥居', transport: '烏丸線->京都->JR奈良線(稲荷站)', note: '早點去避開人潮' },
+            { id: 23, time: '11:30', location: '五条坂 / 清水道', action: '前往清水寺區域', transport: 'JR回京都轉巴士 (100/206)', note: '' },
+            { id: 24, time: '12:00', location: '二年坂 / 三年坂', action: '午餐', transport: '步行', note: '和食、抹茶甜點' },
+            { id: 25, time: '13:00', location: '清水寺', action: '清水舞台', transport: '步行', note: '必訪景點' },
+            { id: 26, time: '14:30', location: '二寧坂 / 産寧坂', action: '古街逛街', transport: '步行', note: '很多特色小店' },
+            { id: 27, time: '16:00', location: '祇園 / 花見小路', action: '感受京都氛圍', transport: '步行', note: '傍晚時分最美' },
+            { id: 28, time: '17:00', location: '京都ロフト / 丸善', action: '文具重點區', transport: '步行(河原町·三条)', note: '文具第二輪大採購' },
+            { id: 29, time: '18:30', location: '四条河原町', action: '晚餐', transport: '步行', note: '' },
+            { id: 30, time: '19:30', location: '四条通藥妝店', action: '藥妝大採購', transport: '步行', note: '松本清/Sugi/鶴羽，價格競爭激烈' },
+            { id: 31, time: '20:30', location: 'ドン·キホーテ 四条河原町', action: 'Donki 最終戰', transport: '步行', note: '買到行李箱塞滿為止' },
+            { id: 32, time: '22:00', location: 'ハイアット プレイス 京都', action: '回飯店打包', transport: '地鐵 (京都市役所前->丸太町)', note: '最後整理行李' }
+        ],
+        4: [
+            { id: 33, time: '08:00', location: 'ハイアット プレイス 京都', action: '飯店出發', transport: '步行 -> 烏丸線 -> 京都駅', note: '建議提早出發' },
+            { id: 34, time: '08:15', location: '京都駅', action: '搭乘 HARUKA', transport: 'JR特急 はるか (約75分)', note: '前往關西機場' },
+            { id: 35, time: '10:00', location: '関西国際空港', action: '抵達機場', transport: '', note: '辦理登機、托運' },
+            { id: 36, time: '12:00', location: '関西国際空港', action: '飛機起飛', transport: '', note: '掰掰日本！' }
+        ]
+    };
+
+    createApp({
+        data() {
+            return {
+                currentDay: 0, 
+                currentView: 'list', 
+                showModal: false,
+                isEditing: false,
+                mapInstance: null,
+                days: [
+                    { shortName: 'Day 1 (五)', name: 'Day 1: 抵達大阪', desc: '機場 → 難波 → 道頓堀', center: [34.6687, 135.5013] },
+                    { shortName: 'Day 2 (六)', name: 'Day 2: 神戶一日', desc: '神戶牛 → 港口 → 文具', center: [34.6901, 135.1955] },
+                    { shortName: 'Day 3 (日)', name: 'Day 3: 移動日', desc: '黑門市場 → 京都入住', center: [35.0163, 135.7592] },
+                    { shortName: 'Day 4 (一)', name: 'Day 4: 京都巡禮', desc: '伏見稻荷 → 清水寺 → 購物', center: [35.0037, 135.7786] },
+                    { shortName: 'Day 5 (二)', name: 'Day 5: 返程', desc: '京都 → 機場', center: [34.4320, 135.2304] }
+                ],
+                activities: {},
+                form: {
+                    id: null,
+                    time: '',
+                    location: '',
+                    action: '',
+                    transport: '',
+                    note: ''
+                }
+            }
+        },
+        computed: {
+            currentActivities() {
+                return this.activities[this.currentDay] || [];
+            },
+            sortedActivities() {
+                return [...this.currentActivities].sort((a, b) => a.time.localeCompare(b.time));
+            }
+        },
+        mounted() {
+            this.loadFromStorage();
+        },
+        methods: {
+            changeDay(index) {
+                this.currentDay = index;
+                this.currentView = 'list';
+            },
+            switchMap() {
+                this.currentView = 'map';
+                this.$nextTick(() => {
+                    if (!this.mapInstance) {
+                        this.initMap();
+                    } else {
+                        const center = this.days[this.currentDay].center;
+                        this.mapInstance.setView(center, 13);
+                        this.mapInstance.invalidateSize(); 
+                    }
+                });
+            },
+            initMap() {
+                const center = this.days[this.currentDay].center;
+                this.mapInstance = L.map('map').setView(center, 13);
+                
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(this.mapInstance);
+            },
+            openGoogleMaps(location) {
+                const query = encodeURIComponent(location);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+            },
+            openModal(item = null) {
+                if (item) {
+                    this.isEditing = true;
+                    this.form = { ...item };
+                } else {
+                    this.isEditing = false;
+                    this.form = { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '' };
+                }
+                this.showModal = true;
+            },
+            saveActivity() {
+                if (!this.form.location) return alert('請輸入地點');
+                
+                if (!this.activities[this.currentDay]) {
+                    this.activities[this.currentDay] = [];
+                }
+
+                if (this.isEditing) {
+                    const index = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
+                    if (index !== -1) {
+                        this.activities[this.currentDay][index] = { ...this.form };
+                    }
+                } else {
+                    this.activities[this.currentDay].push({ ...this.form });
+                }
+
+                this.saveToStorage();
+                this.showModal = false;
+            },
+            deleteActivity() {
+                if(confirm('確定要刪除這個行程嗎？')) {
+                    this.activities[this.currentDay] = this.activities[this.currentDay].filter(x => x.id !== this.form.id);
+                    this.saveToStorage();
+                    this.showModal = false;
+                }
+            },
+            editActivity(item) {
+                this.openModal(item);
+            },
+            saveToStorage() {
+                // 使用 v2 避免與舊資料衝突
+                localStorage.setItem('japanTripData_v2', JSON.stringify(this.activities));
+            },
+            loadFromStorage() {
+                const data = localStorage.getItem('japanTripData_v2');
+                if (data) {
+                    this.activities = JSON.parse(data);
+                } else {
+                    // 如果沒有 V2 資料，載入預設資料
+                    this.activities = JSON.parse(JSON.stringify(defaultData));
+                    this.saveToStorage();
+                }
+            },
+            resetData() {
+                if(confirm('確定要重置回預設行程嗎？所有自訂資料將消失。')) {
+                    this.activities = JSON.parse(JSON.stringify(defaultData));
+                    this.saveToStorage();
+                    this.currentDay = 0;
+                    alert('行程已重置');
+                }
+            }
+        },
+        watch: {
+            currentDay(newVal) {
+                if (this.currentView === 'map' && this.mapInstance) {
+                    const center = this.days[newVal].center;
+                    this.mapInstance.flyTo(center, 13);
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+
+<style>
+@keyframes bounce-up {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+.animate-bounce-up {
+    animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+</style>
+
+</body>
+</html>
