@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神 5 日深度遊 (交通加強版)</title>
+    <title>京阪神 5 日全導航版</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
     <style>
-        body { background-color: #f3f4f6; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         #map { height: 100%; width: 100%; z-index: 1; }
@@ -23,18 +23,18 @@
 
 <div id="app" v-cloak class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
     
-    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 pb-4 rounded-b-3xl shadow-lg z-20">
+    <header class="bg-gradient-to-br from-indigo-700 to-blue-800 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold">京阪神深度遊 🇯🇵</h1>
-                <p class="text-blue-200 text-xs">交通攻略詳解版</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神深度遊 🇯🇵</h1>
+                <p class="text-blue-200 text-xs mt-1"><i class="fas fa-map-signs mr-1"></i>全路線導航版</p>
             </div>
-            <button @click="resetData" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">重置行程</button>
+            <button @click="resetData" class="text-xs bg-white/10 border border-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置行程</button>
         </div>
-        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
+        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
             <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
-                :class="currentDay === index ? 'bg-white text-blue-800 font-bold shadow-md' : 'bg-blue-900/40 text-blue-100'"
-                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all flex-shrink-0">
+                :class="currentDay === index ? 'bg-white text-indigo-800 font-bold shadow-lg scale-105' : 'bg-indigo-900/40 text-blue-100 hover:bg-indigo-800/60'"
+                class="px-4 py-2.5 rounded-xl text-sm whitespace-nowrap transition-all flex-shrink-0 mb-2">
                 {{ day.shortName }}
             </button>
         </div>
@@ -42,49 +42,51 @@
 
     <main class="flex-1 relative bg-gray-50 overflow-hidden">
         
-        <div v-show="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-4 no-scrollbar">
-            <div class="mb-3 ml-2">
-                <h2 class="text-lg font-bold text-gray-800">{{ days[currentDay].name }}</h2>
-                <p class="text-xs text-gray-500">{{ days[currentDay].desc }}</p>
+        <div v-show="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-5 no-scrollbar">
+            <div class="mb-4 ml-2 flex justify-between items-end">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">{{ days[currentDay].name }}</h2>
+                    <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle mr-1"></i>點擊綠色按鈕開啟路線圖</p>
+                </div>
             </div>
 
-            <div v-if="!currentActivities || currentActivities.length === 0" class="text-center text-gray-400 mt-10">
-                <i class="fas fa-route text-4xl mb-3"></i>
-                <p>載入中...</p>
-            </div>
-
-            <div class="space-y-4 pb-20">
-                <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-2 border-indigo-200">
-                    <div class="absolute -left-[9px] top-4 w-4 h-4 bg-indigo-500 rounded-full border-4 border-white"></div>
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="space-y-5 pb-20">
+                <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-[3px] border-indigo-100 last:border-0">
+                    <div class="absolute -left-[10px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-sm"
+                         :class="item.transport ? 'bg-blue-500' : 'bg-gray-300'"></div>
+                    
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                         <div class="flex justify-between items-start">
-                            <div class="flex-1 mr-2">
-                                <span class="bg-indigo-50 text-indigo-600 text-xs font-bold px-2 py-1 rounded mb-2 inline-block">{{ item.time }}</span>
-                                <h3 class="font-bold text-gray-800">{{ item.location }}</h3>
+                            <div class="flex-1 mr-3">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-indigo-50 text-indigo-700 text-[11px] font-bold px-2 py-0.5 rounded">{{ item.time }}</span>
+                                    <span v-if="item.transport" class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                                        <i class="fas fa-train mr-1"></i>移動
+                                    </span>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-[15px] leading-tight">{{ item.location }}</h3>
                                 <p class="text-gray-600 text-sm mt-1 font-medium">{{ item.action }}</p>
                                 
-                                <div v-if="item.transport" class="mt-2 text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-100">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-train mr-1.5 mt-0.5 shrink-0"></i>
-                                        <span>{{ item.transport }}</span>
-                                    </div>
+                                <div v-if="item.transport" class="mt-2.5 p-2.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                                    <p class="text-xs text-blue-800 font-semibold mb-1">
+                                        <i class="fas fa-subway mr-1.5 w-3"></i>{{ item.transport }}
+                                    </p>
+                                    <p v-if="item.note" class="text-[11px] text-gray-600 leading-relaxed pl-5 border-l-2 border-blue-200 ml-1">
+                                        {{ item.note }}
+                                    </p>
                                 </div>
-                                
-                                <div v-if="item.note" class="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-info-circle mr-1.5 mt-0.5 shrink-0 text-gray-400"></i>
-                                        <span class="whitespace-pre-wrap">{{ item.note }}</span>
-                                    </div>
+                                <div v-else-if="item.note" class="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+                                    <i class="fas fa-comment-alt mr-1 text-gray-400"></i>{{ item.note }}
                                 </div>
                             </div>
                             
-                            <div class="flex flex-col space-y-2">
+                            <div class="flex flex-col space-y-3 pt-1">
                                 <button @click="openSmartMap(item)" 
-                                    :class="item.link ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-                                    class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform">
-                                    <i :class="item.link ? 'fas fa-directions' : 'fas fa-map-marker-alt'" class="text-sm"></i>
+                                    :class="item.link ? 'bg-green-500 text-white shadow-green-200 shadow-md hover:bg-green-600' : 'bg-gray-100 text-gray-400'"
+                                    class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90">
+                                    <i :class="item.link ? 'fas fa-location-arrow' : 'fas fa-map-marker-alt'" class="text-sm"></i>
                                 </button>
-                                <button @click="editActivity(item)" class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center active:scale-90 transition-transform">
+                                <button @click="editActivity(item)" class="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform">
                                     <i class="fas fa-pen text-xs"></i>
                                 </button>
                             </div>
@@ -99,35 +101,35 @@
         </div>
     </main>
 
-    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-2 flex justify-between items-center z-30 pb-6 pt-2">
-        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16">
-            <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px]">行程</span>
+    <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur border-t border-gray-100 px-6 py-2 flex justify-between items-center z-30 pb-6 pt-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16 transition-colors">
+            <i class="fas fa-list-ul text-lg mb-1"></i><span class="text-[10px] font-medium">行程表</span>
         </button>
-        <button @click="openModal()" class="bg-indigo-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg -translate-y-4 hover:bg-indigo-700 transition">
+        <button @click="openModal()" class="bg-indigo-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-indigo-300 -translate-y-5 hover:bg-indigo-700 active:scale-95 transition-all">
             <i class="fas fa-plus text-xl"></i>
         </button>
-        <button @click="switchMap" :class="currentView === 'map' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16">
-            <i class="fas fa-map-marked-alt text-xl mb-1"></i><span class="text-[10px]">地圖</span>
+        <button @click="switchMap" :class="currentView === 'map' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16 transition-colors">
+            <i class="fas fa-map-marked-alt text-lg mb-1"></i><span class="text-[10px] font-medium">地圖概覽</span>
         </button>
     </nav>
 
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up">
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-[2px] transition-opacity">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-bounce-up">
             <h2 class="text-lg font-bold mb-4 text-gray-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h2>
             <div class="space-y-3">
-                <div class="flex gap-2">
-                    <input type="time" v-model="form.time" class="w-1/3 bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 outline-none">
-                    <input type="text" v-model="form.location" placeholder="地點" class="w-2/3 bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 outline-none">
+                <div class="flex gap-3">
+                    <input type="time" v-model="form.time" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+                    <input type="text" v-model="form.location" placeholder="地點名稱" class="w-2/3 bg-gray-50 border border-gray-200 rounded-xl p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition">
                 </div>
-                <input type="text" v-model="form.action" placeholder="要做什麼？" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 outline-none">
-                <input type="text" v-model="form.transport" placeholder="交通方式 (選填)" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 outline-none">
-                <textarea v-model="form.note" placeholder="備註 / 攻略" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 h-20 focus:border-indigo-500 outline-none resize-none"></textarea>
-                <input type="text" v-model="form.link" placeholder="專屬導航連結 (選填)" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-500">
+                <input type="text" v-model="form.action" placeholder="活動內容 (例: 吃晚餐)" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+                <input type="text" v-model="form.transport" placeholder="交通方式 (選填)" class="w-full bg-blue-50/50 border border-blue-100 rounded-xl p-3 focus:border-blue-400 outline-none transition text-blue-800 placeholder-blue-300">
+                <textarea v-model="form.note" placeholder="詳細攻略 / 備註" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 h-24 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition"></textarea>
+                <input type="text" v-model="form.link" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs text-gray-500 focus:border-indigo-500 outline-none">
             </div>
-            <div class="flex gap-2 mt-5">
-                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold hover:bg-red-100 transition">刪除</button>
-                <button @click="showModal = false" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl font-medium hover:bg-gray-200 transition">取消</button>
-                <button @click="saveActivity" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">儲存</button>
+            <div class="flex gap-3 mt-6">
+                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3.5 rounded-xl font-bold hover:bg-red-100 transition">刪除</button>
+                <button @click="showModal = false" class="flex-1 bg-gray-100 text-gray-500 py-3.5 rounded-xl font-medium hover:bg-gray-200 transition">取消</button>
+                <button @click="saveActivity" class="flex-[2] bg-indigo-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition">儲存</button>
             </div>
         </div>
     </div>
@@ -136,41 +138,38 @@
 <script>
     const { createApp } = Vue;
 
-    // 完整的 5 天行程資料 (含詳細交通攻略與連結)
+    // 完整的 5 天行程資料 (含 100% 交通導航連結)
     const detailedData = {
         0: [
             { id: 1, time: '16:00', location: '関西国際空港 (KIX)', action: '抵達 & 入境', transport: '', note: '入境後上2樓，過空橋至對面「南海電鐵」櫃台(紅色招牌)' },
-            { id: 2, time: '17:00', location: '南海機場站 → 難波', action: '搭乘特急 Rapi:t', transport: '南海電鐵 特急 Rapi:t (藍色鐵人頭)', note: '⚠️ 推薦先買電子票掃碼進站。通常在1或2號月台。車程約38分。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+International+Airport&destination=Namba+Station&travelmode=transit' },
-            { id: 3, time: '18:00', location: '難波飯店', action: 'Check-in', transport: '步行', note: '出站後建議走地面，避免地下街迷路' },
-            { id: 4, time: '19:00', location: '道頓堀', action: '晚餐 & 跑跑人', transport: '步行', note: '心齋橋筋商店街、Glico看板拍照' },
-            { id: 5, time: '20:30', location: 'Donki 道頓堀店', action: '購買補給品', transport: '步行', note: '摩天輪那間，人多注意退稅時間' }
+            { id: 2, time: '17:00', location: '機場 → 難波站', action: '搭乘特急 Rapi:t', transport: '南海電鐵 特急 Rapi:t', note: '往難波方向。推薦先買電子票掃碼進站。1或2號月台。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+International+Airport&destination=Namba+Station&travelmode=transit' },
+            { id: 3, time: '18:00', location: '難波站 → 道頓堀', action: '步行至商圈', transport: '步行', note: '出站後走地面，跟著 Glico 跑跑人廣告牌走。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station&destination=Dotonbori&travelmode=walking' },
+            { id: 4, time: '19:00', location: '道頓堀', action: '晚餐 & 跑跑人拍照', transport: '', note: '心齋橋筋商店街、Glico看板拍照' },
+            { id: 5, time: '20:30', location: 'Donki 道頓堀店', action: '購買補給品', transport: '步行', note: '摩天輪那間，人多注意退稅時間', link: 'https://www.google.com/maps/dir/?api=1&origin=Dotonbori&destination=Don+Quijote+Dotonbori&travelmode=walking' }
         ],
         1: [
-            { id: 7, time: '09:00', location: '大阪難波 → 神戶三宮', action: '移動至神戶', transport: '阪神電車「快速急行」 (往三宮)', note: '⚠️ 務必搭「快速急行 (Rapid Exp.)」，刷ICOCA直接進站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Osaka-Namba+Station&destination=Kobe-Sannomiya+Station&travelmode=transit' },
-            { id: 8, time: '10:00', location: '北野異人館 / 生田神社', action: '市區散策', transport: '步行', note: '從三宮站往北走，沿途很多咖啡店' },
-            { id: 9, time: '12:00', location: '神戶牛排 (Mouriya/Ishida)', action: '午餐', transport: '步行', note: '建議事先預約商業午餐時段較便宜' },
-            { id: 10, time: '14:30', location: '神戶港 (Harborland)', action: '港口塔 & 麵包超人', transport: 'JR神戶線 或 地鐵海岸線', note: '散步看海，Umie 商場很好逛' },
-            { id: 11, time: '17:30', location: '神戶三宮 → 大阪難波', action: '返回大阪', transport: '阪神電車「快速急行」 (往奈良/難波)', note: '一樣刷卡進站即可', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Osaka-Namba+Station&travelmode=transit' }
+            { id: 7, time: '09:00', location: '大阪難波 → 神戶三宮', action: '跨城市移動', transport: '阪神電車「快速急行」', note: '⚠️ 務必搭「快速急行 (Rapid Exp.)」，刷ICOCA直接進站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Osaka-Namba+Station&destination=Kobe-Sannomiya+Station&travelmode=transit' },
+            { id: 8, time: '10:00', location: '三宮站 → 北野異人館', action: '散步上坡', transport: '步行', note: '從三宮站往北走，沿途經過星巴克異人館店。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Kitano+Ijinkan-gai&travelmode=walking' },
+            { id: 9, time: '12:00', location: '神戶牛排 (Mouriya)', action: '午餐', transport: '步行', note: '建議事先預約商業午餐時段較便宜', link: 'https://www.google.com/maps/dir/?api=1&origin=Kitano+Ijinkan-gai&destination=Mouriya+Sannomiya+Steak&travelmode=walking' },
+            { id: 10, time: '14:30', location: '三宮 → 神戶港 (Harborland)', action: '前往港區', transport: 'JR神戶線', note: '搭到「神戶站」下車，步行至 Umie。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Kobe+Harborland+umie&travelmode=transit' },
+            { id: 11, time: '17:30', location: '神戶(或三宮) → 大阪難波', action: '返回大阪', transport: '阪神電車「快速急行」', note: '回程一樣刷卡，認準往「難波/奈良」方向。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Station&destination=Osaka-Namba+Station&travelmode=transit' }
         ],
         2: [
-            { id: 14, time: '09:00', location: '黑門市場', action: '早午餐', transport: '步行', note: '吃海鮮、豆漿、和牛串' },
-            { id: 15, time: '11:00', location: '飯店 Check-out', action: '退房帶行李', transport: '', note: '前往難波站' },
-            { id: 16, time: '11:30', location: '難波 → 京都 (經梅田)', action: '移動至京都 (大魔王關卡)', transport: '地鐵御堂筋線 + JR新快速', note: '1. 難波搭御堂筋線(紅)至「梅田」\n2. 走「中央改札」指標轉乘 JR大阪站\n3. 搭「JR新快速」至京都 (7-10月台)', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station&destination=Kyoto+Station&travelmode=transit' },
-            { id: 17, time: '13:00', location: '京都站 → 丸太町', action: '前往飯店', transport: '地鐵烏丸線 (往國際會館)', note: '京都站搭地鐵，約7分鐘抵達丸太町', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Marutamachi+Station&travelmode=transit' },
-            { id: 18, time: '15:00', location: '京都御苑', action: '悠閒散步', transport: '步行', note: '就在飯店旁，皇宮氣氛很棒' },
-            { id: 19, time: '18:00', location: '四條烏丸 / 錦市場', action: '晚餐', transport: '地鐵或步行', note: '錦市場通常 17:00 開始收攤，要早點去' }
+            { id: 14, time: '09:00', location: '黑門市場', action: '早午餐', transport: '步行', note: '從難波走過去約 10 分鐘。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station&destination=Kuromon+Ichiba+Market&travelmode=walking' },
+            { id: 16, time: '11:30', location: '難波 → 京都 (經梅田)', action: '移動至京都 (大魔王關卡)', transport: '地鐵御堂筋線 + JR新快速', note: '1. 難波搭御堂筋線至「梅田」\n2. 轉乘 JR大阪站\n3. 搭「JR新快速」至京都站', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station&destination=Kyoto+Station&travelmode=transit' },
+            { id: 17, time: '13:00', location: '京都站 → 丸太町(飯店)', action: '前往飯店放行李', transport: '地鐵烏丸線', note: '搭往「國際會館」方向，約7分鐘。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Marutamachi+Station&travelmode=transit' },
+            { id: 18, time: '15:00', location: '丸太町 → 京都御苑', action: '悠閒散步', transport: '步行', note: '就在車站旁，非常近。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Kyoto+Gyoen+National+Garden&travelmode=walking' },
+            { id: 19, time: '18:00', location: '前往四條烏丸/錦市場', action: '晚餐', transport: '地鐵烏丸線', note: '搭一站到「烏丸御池」或「四條」皆可。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Nishiki+Market&travelmode=transit' }
         ],
         3: [
-            { id: 20, time: '08:00', location: '丸太町 → 伏見稻荷', action: '前往千本鳥居', transport: '地鐵至京都站 + JR奈良線', note: '⚠️ JR轉乘注意：一定要搭「普通」車 (快速不停稻荷)！月台在8-10號(很遠)。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Inari+Station&travelmode=transit' },
-            { id: 21, time: '11:00', location: '伏見稻荷 → 清水寺', action: '移動', transport: 'JR回京都站 + 巴士', note: '回京都站，去中央口前巴士站\n搭乘 206 或 86 號 (D2月台) 至「五条坂」下車', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kiyomizu-dera&travelmode=transit' },
-            { id: 22, time: '12:00', location: '二三年坂 / 清水寺', action: '午餐 & 參拜', transport: '步行', note: '沿路都是坡道，建議穿好走的鞋' },
-            { id: 24, time: '16:00', location: '祇園 / 八坂神社', action: '散步', transport: '步行', note: '從清水寺一路走下來' },
-            { id: 25, time: '18:00', location: '河原町 → 飯店', action: '逛街後回程', transport: '地鐵東西線 + 烏丸線', note: '京都市役所前(東西線) → 烏丸御池(轉車) → 丸太町' }
+            { id: 20, time: '08:00', location: '丸太町 → 伏見稻荷', action: '前往千本鳥居', transport: '地鐵至京都站 + JR奈良線', note: '⚠️ JR轉乘注意：一定要搭「普通」車！月台在8-10號。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Fushimi+Inari+Taisha&travelmode=transit' },
+            { id: 21, time: '11:00', location: '伏見稻荷 → 清水寺', action: '公車移動', transport: 'JR回京都站 + 巴士(206號)', note: '回京都站D2月台，搭206或86號至「五条坂」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Inari+Station&destination=Kiyomizu-dera&travelmode=transit' },
+            { id: 24, time: '16:00', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '沿著三年坂、二年坂一路走到八坂神社。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Gion&travelmode=walking' },
+            { id: 25, time: '18:00', location: '河原町 → 丸太町(飯店)', action: '回程', transport: '巴士 或 地鐵', note: '若在河原町，可搭公車直接回丸太町，或走去市役所搭地鐵。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Kawaramachi+Station&destination=Marutamachi+Station&travelmode=transit' }
         ],
         4: [
-            { id: 28, time: '08:00', location: '飯店 Check-out', action: '前往京都站', transport: '地鐵烏丸線', note: '行李多建議預留時間' },
-            { id: 29, time: '08:30', location: '京都站 → 關西機場', action: '搭乘 Haruka', transport: 'JR 特急 Haruka', note: '⚠️ 30號月台 (入站後右轉走到底)\n憑護照去綠色機器買「Haruka Discount Ticket」最划算', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+International+Airport&travelmode=transit' },
-            { id: 30, time: '10:00', location: '關西機場', action: '報到 / 伴手禮', transport: '', note: '免稅店人多，建議提早' },
+            { id: 28, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: '地鐵烏丸線', note: '行李多建議預留時間。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Kyoto+Station&travelmode=transit' },
+            { id: 29, time: '08:30', location: '京都站 → 關西機場', action: '搭乘 Haruka', transport: 'JR 特急 Haruka', note: '⚠️ 30號月台 (入站後右轉走到底)。憑護照去綠色機器買票。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+International+Airport&travelmode=transit' },
             { id: 31, time: '12:00', location: '回程', action: '飛機起飛', transport: '飛機', note: 'Safe flight!' }
         ]
     };
@@ -203,18 +202,18 @@
             }
         },
         mounted() {
-            // 優先讀取舊資料，若無則載入預設資料
-            // 這裡做一個小技巧：如果檢測到舊資料結構過於簡單(沒有link)，則強制更新一次預設值
             this.loadAndMergeData();
         },
         methods: {
             loadAndMergeData() {
+                // 為了確保您能看到最新的「全路線導航」資料，
+                // 這裡會檢查資料版本，若舊資料缺少 link 欄位，建議在 console 執行 localStorage.clear() 或手動重置
+                // 預設行為：若無資料則載入新的 detailedData
                 try {
-                    const saved = localStorage.getItem('japanTrip_v4_detailed');
+                    const saved = localStorage.getItem('japanTrip_v5_fullmap');
                     if (saved) {
                         this.activities = JSON.parse(saved);
                     } else {
-                        // 第一次載入此版本，使用新的詳細資料
                         this.activities = JSON.parse(JSON.stringify(detailedData));
                         this.saveToStorage();
                     }
@@ -244,10 +243,8 @@
             },
             openSmartMap(item) {
                 if (item.link) {
-                    // 如果有專屬導航連結
                     window.open(item.link, '_blank');
                 } else {
-                    // 否則搜尋地點
                     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`, '_blank');
                 }
             },
@@ -277,14 +274,14 @@
                 }
             },
             saveToStorage() {
-                localStorage.setItem('japanTrip_v4_detailed', JSON.stringify(this.activities));
+                localStorage.setItem('japanTrip_v5_fullmap', JSON.stringify(this.activities));
             },
             resetData() {
                 if(confirm('確定要重置為預設行程嗎？您的自訂修改將會消失。')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
-                    alert('行程已更新為最新交通詳解版！');
+                    alert('行程已更新為全路線導航版！');
                 }
             }
         }
