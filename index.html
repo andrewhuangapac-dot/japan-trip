@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神旅遊助手</title>
+    <title>京阪神 5 日深度遊</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -16,7 +16,6 @@
             background-color: #f3f4f6;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        /* 隱藏 Scrollbar 但保持滑動功能 */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -24,7 +23,6 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* 模擬手機 App 的容器 */
         .app-container {
             max-width: 480px;
             margin: 0 auto;
@@ -33,7 +31,6 @@
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
-        /* 地圖高度 */
         #map {
             height: 100%;
             width: 100%;
@@ -50,6 +47,10 @@
             transform: translateY(20px);
             opacity: 0;
         }
+        /* 針對不同類型的標籤顏色 */
+        .tag-transport { background-color: #e0f2fe; color: #0369a1; }
+        .tag-food { background-color: #fce7f3; color: #be185d; }
+        .tag-shopping { background-color: #fff7ed; color: #c2410c; }
     </style>
 </head>
 <body>
@@ -59,11 +60,11 @@
     <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-b-3xl shadow-lg z-20 relative">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight">京阪神之旅 🇯🇵</h1>
-                <p class="text-blue-100 text-sm opacity-90"><i class="fas fa-map-marker-alt mr-1"></i> 大阪 • 京都 • 神戶</p>
+                <h1 class="text-2xl font-bold tracking-tight">京阪神深度遊 🇯🇵</h1>
+                <p class="text-blue-100 text-xs opacity-90">大阪 • 神戶 • 京都 • 購物</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
-                重置
+                重置行程
             </button>
         </div>
 
@@ -71,21 +72,26 @@
             <button 
                 v-for="(day, index) in days" 
                 :key="index"
-                @click="currentDay = index; currentView = 'list'"
-                :class="currentDay === index ? 'bg-white text-blue-600 font-bold shadow-md' : 'bg-blue-700/50 text-blue-100'"
-                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-300 flex-shrink-0">
-                {{ day.name }}
+                @click="changeDay(index)"
+                :class="currentDay === index ? 'bg-white text-blue-600 font-bold shadow-md' : 'bg-blue-800/40 text-blue-100'"
+                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-300 flex-shrink-0 border border-transparent">
+                {{ day.shortName }}
             </button>
         </div>
     </header>
 
     <main class="flex-1 relative overflow-hidden bg-gray-50">
         
-        <div v-if="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-6">
+        <div v-if="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-6 no-scrollbar">
             
+            <div class="mb-4 ml-2">
+                <h2 class="text-xl font-bold text-gray-800">{{ days[currentDay].name }}</h2>
+                <p class="text-sm text-gray-500">{{ days[currentDay].desc }}</p>
+            </div>
+
             <div v-if="currentActivities.length === 0" class="text-center text-gray-400 mt-20">
                 <i class="fas fa-suitcase-rolling text-4xl mb-3"></i>
-                <p>這一天還沒有行程<br>點擊右下角新增</p>
+                <p>無行程資料</p>
             </div>
 
             <transition-group name="slide-fade" tag="div" class="space-y-4">
@@ -94,14 +100,26 @@
                     
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-200">
                         <div class="flex justify-between items-start">
-                            <div>
+                            <div class="flex-1 mr-2">
                                 <span class="inline-block bg-indigo-50 text-indigo-600 text-xs font-bold px-2 py-1 rounded-md mb-2">
-                                    <i class="far fa-clock mr-1"></i>{{ item.time }}
+                                    {{ item.time }}
                                 </span>
                                 <h3 class="font-bold text-gray-800 text-lg">{{ item.location }}</h3>
-                                <p class="text-gray-500 text-sm mt-1 leading-relaxed">{{ item.note }}</p>
+                                <p class="text-gray-600 text-sm mt-1 font-medium">{{ item.action }}</p>
+                                
+                                <div class="mt-3 space-y-1">
+                                    <div v-if="item.transport" class="flex items-start text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
+                                        <i class="fas fa-train mt-0.5 mr-1.5 flex-shrink-0"></i>
+                                        <span>{{ item.transport }}</span>
+                                    </div>
+                                    <div v-if="item.note" class="flex items-start text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+                                        <i class="fas fa-info-circle mt-0.5 mr-1.5 flex-shrink-0"></i>
+                                        <span>{{ item.note }}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex flex-col space-y-2">
+                            
+                            <div class="flex flex-col space-y-2 flex-shrink-0">
                                 <button @click="openGoogleMaps(item.location)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 shadow-sm">
                                     <i class="fas fa-location-arrow text-sm"></i>
                                 </button>
@@ -119,9 +137,9 @@
 
         <div v-show="currentView === 'map'" class="h-full w-full relative">
             <div id="map" class="w-full h-full"></div>
-            <div class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg z-[500] text-sm">
-                <p class="font-bold text-gray-700">💡 提示</p>
-                <p class="text-gray-500">此地圖顯示概略位置。點擊行程列表中的 <i class="fas fa-location-arrow text-green-600"></i> 按鈕可開啟 Google Maps 導航。</p>
+            <div class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg z-[500] text-xs">
+                <p><span class="font-bold text-indigo-600">目前檢視：</span> {{ days[currentDay].name }}</p>
+                <p class="text-gray-500 mt-1">地圖已定位至當日重點區域</p>
             </div>
         </div>
 
@@ -144,7 +162,7 @@
     </nav>
 
     <div v-if="showModal" class="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up max-h-[90vh] overflow-y-auto">
             <h2 class="text-xl font-bold text-gray-800 mb-4">
                 {{ isEditing ? '編輯行程' : '新增行程' }}
             </h2>
@@ -155,12 +173,20 @@
                     <input type="time" v-model="form.time" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">地點</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">地點 (日文漢字)</label>
                     <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">行程內容</label>
+                    <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">交通方式</label>
+                    <input type="text" v-model="form.transport" placeholder="例如: JR奈良線 (可留空)" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">備註</label>
-                    <textarea v-model="form.note" placeholder="例如: 記得買御守、穿和服" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 h-20 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    <textarea v-model="form.note" placeholder="備註事項" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 h-20 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                 </div>
             </div>
 
@@ -175,8 +201,7 @@
                     {{ isEditing ? '更新' : '新增' }}
                 </button>
             </div>
-            
-            <button v-if="isEditing" @click="showModal = false" class="mt-3 w-full text-gray-400 text-sm py-2">取消編輯</button>
+             <button v-if="isEditing" @click="showModal = false" class="mt-3 w-full text-gray-400 text-sm py-2">取消編輯</button>
         </div>
     </div>
 
@@ -185,181 +210,7 @@
 <script>
     const { createApp } = Vue;
 
-    createApp({
-        data() {
-            return {
-                currentDay: 0, // 0 = Day 1
-                currentView: 'list', // list or map
-                showModal: false,
-                isEditing: false,
-                mapInstance: null,
-                days: [
-                    { name: 'Day 1: 大阪', center: [34.6937, 135.5023] },
-                    { name: 'Day 2: 京都', center: [35.0116, 135.7681] },
-                    { name: 'Day 3: 神戶', center: [34.6901, 135.1955] },
-                    { name: 'Day 4: 環球影城', center: [34.6654, 135.4323] }
-                ],
-                // 資料結構：每頁一個 Array
-                activities: {
-                    0: [
-                        { id: 1, time: '10:00', location: '關西機場抵達', note: '領取周遊券，搭乘南海電鐵' },
-                        { id: 2, time: '13:00', location: '心齋橋 & 道頓堀', note: '午餐：一蘭拉麵、章魚燒' },
-                        { id: 3, time: '16:00', location: '大阪城公園', note: '參觀天守閣' },
-                        { id: 4, time: '19:00', location: '梅田藍天大廈', note: '看夜景' }
-                    ],
-                    1: [
-                        { id: 5, time: '09:00', location: '伏見稻荷大社', note: '千本鳥居拍照' },
-                        { id: 6, time: '12:00', location: '清水寺', note: '二年坂、三年坂逛街' },
-                        { id: 7, time: '15:00', location: '金閣寺', note: '夕陽非常漂亮' }
-                    ],
-                    2: [
-                        { id: 8, time: '10:00', location: '北野異人館', note: '參觀風見雞之館' },
-                        { id: 9, time: '12:30', location: '神戶牛排 Misono', note: '已預約' },
-                        { id: 10, time: '15:00', location: '神戶港塔', note: '散步看海景' }
-                    ],
-                    3: []
-                },
-                form: {
-                    id: null,
-                    time: '',
-                    location: '',
-                    note: ''
-                }
-            }
-        },
-        computed: {
-            currentActivities() {
-                return this.activities[this.currentDay] || [];
-            },
-            sortedActivities() {
-                // 根據時間排序
-                return [...this.currentActivities].sort((a, b) => a.time.localeCompare(b.time));
-            }
-        },
-        mounted() {
-            this.loadFromStorage();
-        },
-        methods: {
-            // 切換到地圖模式
-            switchMap() {
-                this.currentView = 'map';
-                // Leaflet 需要在 DOM 顯示後初始化，使用 nextTick
-                this.$nextTick(() => {
-                    if (!this.mapInstance) {
-                        this.initMap();
-                    } else {
-                        // 切換到當天城市的中心點
-                        const center = this.days[this.currentDay].center;
-                        this.mapInstance.setView(center, 13);
-                        this.mapInstance.invalidateSize(); // 修正地圖渲染問題
-                    }
-                });
-            },
-            initMap() {
-                const center = this.days[this.currentDay].center;
-                this.mapInstance = L.map('map').setView(center, 13);
-                
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(this.mapInstance);
-
-                // 簡單標記當前城市中心
-                L.marker(center).addTo(this.mapInstance)
-                    .bindPopup(this.days[this.currentDay].name)
-                    .openPopup();
-            },
-            // 開啟 Google Maps 導航
-            openGoogleMaps(location) {
-                const query = encodeURIComponent(location);
-                // 使用 Google Maps Universal Link
-                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-            },
-            // Modal 操作
-            openModal(item = null) {
-                if (item) {
-                    this.isEditing = true;
-                    this.form = { ...item };
-                } else {
-                    this.isEditing = false;
-                    this.form = { id: Date.now(), time: '09:00', location: '', note: '' };
-                }
-                this.showModal = true;
-            },
-            // CRUD
-            saveActivity() {
-                if (!this.form.location) return alert('請輸入地點');
-                
-                if (!this.activities[this.currentDay]) {
-                    this.activities[this.currentDay] = [];
-                }
-
-                if (this.isEditing) {
-                    const index = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
-                    if (index !== -1) {
-                        this.activities[this.currentDay][index] = { ...this.form };
-                    }
-                } else {
-                    this.activities[this.currentDay].push({ ...this.form });
-                }
-
-                this.saveToStorage();
-                this.showModal = false;
-            },
-            deleteActivity() {
-                if(confirm('確定要刪除這個行程嗎？')) {
-                    this.activities[this.currentDay] = this.activities[this.currentDay].filter(x => x.id !== this.form.id);
-                    this.saveToStorage();
-                    this.showModal = false;
-                }
-            },
-            editActivity(item) {
-                this.openModal(item);
-            },
-            // LocalStorage
-            saveToStorage() {
-                localStorage.setItem('japanTripData', JSON.stringify(this.activities));
-            },
-            loadFromStorage() {
-                const data = localStorage.getItem('japanTripData');
-                if (data) {
-                    this.activities = JSON.parse(data);
-                }
-            },
-            resetData() {
-                if(confirm('確定要重置回預設行程嗎？所有自訂資料將消失。')) {
-                    localStorage.removeItem('japanTripData');
-                    location.reload();
-                }
-            }
-        },
-        watch: {
-            // 當切換日期時，如果在地圖模式，自動平移地圖
-            currentDay(newVal) {
-                if (this.currentView === 'map' && this.mapInstance) {
-                    const center = this.days[newVal].center;
-                    this.mapInstance.flyTo(center, 13);
-                }
-            }
-        }
-    }).mount('#app');
-</script>
-
-<style>
-/* CSS Animation for Modal */
-@keyframes bounce-up {
-    0% { transform: translateY(20px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-}
-.animate-bounce-up {
-    animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* Safe Area for iPhone */
-.pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-}
-</style>
-
-</body>
-</html>
+    // 預設資料
+    const defaultData = {
+        0: [
+            { id: 1, time: '16:00', location: '関西国際空港 (KIX)', action: '抵達機場', transport: '', note: '入境審
