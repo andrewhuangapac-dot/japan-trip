@@ -6,284 +6,194 @@
     <title>京阪神 5 日深度遊</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
     <style>
-        body {
-            background-color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .app-container {
-            max-width: 480px;
-            margin: 0 auto;
-            background: #ffffff;
-            min-height: 100vh;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-        }
-        #map {
-            height: 100%;
-            width: 100%;
-            z-index: 0;
-        }
-        .slide-fade-enter-active {
-            transition: all 0.3s ease-out;
-        }
-        .slide-fade-leave-active {
-            transition: all 0.2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
-        }
-        .slide-fade-enter-from,
-        .slide-fade-leave-to {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-        /* 針對不同類型的標籤顏色 */
-        .tag-transport { background-color: #e0f2fe; color: #0369a1; }
-        .tag-food { background-color: #fce7f3; color: #be185d; }
-        .tag-shopping { background-color: #fff7ed; color: #c2410c; }
+        body { background-color: #f3f4f6; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+        
+        /* 避免讀取時畫面閃爍 */
+        [v-cloak] { display: none; }
+        
+        .slide-fade-enter-active { transition: all 0.3s ease-out; }
+        .slide-fade-leave-active { transition: all 0.2s cubic-bezier(1.0, 0.5, 0.8, 1.0); }
+        .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(20px); opacity: 0; }
     </style>
 </head>
 <body>
 
-<div id="app" class="app-container flex flex-col">
+<div id="app" v-cloak class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
     
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-b-3xl shadow-lg z-20 relative">
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 pb-4 rounded-b-3xl shadow-lg z-20">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight">京阪神深度遊 🇯🇵</h1>
-                <p class="text-blue-100 text-xs opacity-90">大阪 • 神戶 • 京都 • 購物</p>
+                <h1 class="text-xl font-bold">京阪神深度遊 🇯🇵</h1>
+                <p class="text-blue-100 text-xs">大阪 • 神戶 • 京都</p>
             </div>
-            <button @click="resetData" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
-                重置行程
-            </button>
+            <button @click="resetData" class="text-xs bg-white/20 px-3 py-1 rounded-full">重置</button>
         </div>
-
-        <div class="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
-            <button 
-                v-for="(day, index) in days" 
-                :key="index"
-                @click="changeDay(index)"
-                :class="currentDay === index ? 'bg-white text-blue-600 font-bold shadow-md' : 'bg-blue-800/40 text-blue-100'"
-                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-300 flex-shrink-0 border border-transparent">
+        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
+            <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
+                :class="currentDay === index ? 'bg-white text-blue-600 font-bold' : 'bg-blue-800/40 text-blue-100'"
+                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-colors flex-shrink-0">
                 {{ day.shortName }}
             </button>
         </div>
     </header>
 
-    <main class="flex-1 relative overflow-hidden bg-gray-50">
+    <main class="flex-1 relative bg-gray-50 overflow-hidden">
         
-        <div v-if="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-6 no-scrollbar">
-            
-            <div class="mb-4 ml-2">
-                <h2 class="text-xl font-bold text-gray-800">{{ days[currentDay].name }}</h2>
-                <p class="text-sm text-gray-500">{{ days[currentDay].desc }}</p>
+        <div v-show="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-4 no-scrollbar">
+            <div class="mb-3 ml-2">
+                <h2 class="text-lg font-bold text-gray-800">{{ days[currentDay].name }}</h2>
+                <p class="text-xs text-gray-500">{{ days[currentDay].desc }}</p>
             </div>
 
-            <div v-if="currentActivities.length === 0" class="text-center text-gray-400 mt-20">
+            <div v-if="!currentActivities || currentActivities.length === 0" class="text-center text-gray-400 mt-10">
                 <i class="fas fa-suitcase-rolling text-4xl mb-3"></i>
                 <p>無行程資料</p>
             </div>
 
-            <transition-group name="slide-fade" tag="div" class="space-y-4">
-                <div v-for="(item, idx) in sortedActivities" :key="item.id" class="relative pl-6 border-l-2 border-indigo-200">
-                    <div class="absolute -left-[9px] top-4 w-4 h-4 bg-indigo-500 rounded-full border-4 border-white shadow-sm"></div>
-                    
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-200">
+            <div class="space-y-4 pb-20">
+                <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-2 border-indigo-200">
+                    <div class="absolute -left-[9px] top-4 w-4 h-4 bg-indigo-500 rounded-full border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 mr-2">
-                                <span class="inline-block bg-indigo-50 text-indigo-600 text-xs font-bold px-2 py-1 rounded-md mb-2">
-                                    {{ item.time }}
-                                </span>
-                                <h3 class="font-bold text-gray-800 text-lg">{{ item.location }}</h3>
-                                <p class="text-gray-600 text-sm mt-1 font-medium">{{ item.action }}</p>
-                                
-                                <div class="mt-3 space-y-1">
-                                    <div v-if="item.transport" class="flex items-start text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
-                                        <i class="fas fa-train mt-0.5 mr-1.5 flex-shrink-0"></i>
-                                        <span>{{ item.transport }}</span>
-                                    </div>
-                                    <div v-if="item.note" class="flex items-start text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
-                                        <i class="fas fa-info-circle mt-0.5 mr-1.5 flex-shrink-0"></i>
-                                        <span>{{ item.note }}</span>
-                                    </div>
+                                <span class="bg-indigo-50 text-indigo-600 text-xs font-bold px-2 py-1 rounded mb-2 inline-block">{{ item.time }}</span>
+                                <h3 class="font-bold text-gray-800">{{ item.location }}</h3>
+                                <p class="text-gray-600 text-sm mt-1">{{ item.action }}</p>
+                                <div v-if="item.transport" class="mt-2 flex items-center text-xs text-blue-600 bg-blue-50 p-1.5 rounded">
+                                    <i class="fas fa-train mr-1"></i> {{ item.transport }}
+                                </div>
+                                <div v-if="item.note" class="mt-1 flex items-start text-xs text-gray-500 bg-gray-50 p-1.5 rounded">
+                                    <i class="fas fa-info-circle mr-1 mt-0.5"></i> {{ item.note }}
                                 </div>
                             </div>
-                            
-                            <div class="flex flex-col space-y-2 flex-shrink-0">
-                                <button @click="openGoogleMaps(item.location)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 shadow-sm">
-                                    <i class="fas fa-location-arrow text-sm"></i>
+                            <div class="flex flex-col space-y-2">
+                                <button @click="openGoogleMaps(item.location)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+                                    <i class="fas fa-location-arrow text-xs"></i>
                                 </button>
-                                <button @click="editActivity(item)" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-gray-100">
+                                <button @click="editActivity(item)" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center">
                                     <i class="fas fa-pen text-xs"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </transition-group>
-            
-            <div class="h-20"></div>
-        </div>
-
-        <div v-show="currentView === 'map'" class="h-full w-full relative">
-            <div id="map" class="w-full h-full"></div>
-            <div class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg z-[500] text-xs">
-                <p><span class="font-bold text-indigo-600">目前檢視：</span> {{ days[currentDay].name }}</p>
-                <p class="text-gray-500 mt-1">地圖已定位至當日重點區域</p>
             </div>
         </div>
 
+        <div v-show="currentView === 'map'" class="absolute inset-0 z-0">
+            <div id="map"></div>
+        </div>
     </main>
 
-    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-30 pb-safe">
-        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center space-y-1 w-16">
-            <i class="fas fa-list-ul text-xl"></i>
-            <span class="text-[10px] font-medium">行程</span>
+    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-2 flex justify-between items-center z-30 pb-6 pt-2">
+        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16">
+            <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px]">行程</span>
         </button>
-        
-        <button @click="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-indigo-300 transform -translate-y-6 transition hover:scale-105 active:scale-95">
+        <button @click="openModal()" class="bg-indigo-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg -translate-y-4">
             <i class="fas fa-plus text-xl"></i>
         </button>
-
-        <button @click="switchMap" :class="currentView === 'map' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center space-y-1 w-16">
-            <i class="fas fa-map-marked-alt text-xl"></i>
-            <span class="text-[10px] font-medium">地圖</span>
+        <button @click="switchMap" :class="currentView === 'map' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center w-16">
+            <i class="fas fa-map-marked-alt text-xl mb-1"></i><span class="text-[10px]">地圖</span>
         </button>
     </nav>
 
-    <div v-if="showModal" class="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up max-h-[90vh] overflow-y-auto">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">
-                {{ isEditing ? '編輯行程' : '新增行程' }}
-            </h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">時間</label>
-                    <input type="time" v-model="form.time" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">地點 (日文漢字)</label>
-                    <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">行程內容</label>
-                    <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">交通方式</label>
-                    <input type="text" v-model="form.transport" placeholder="例如: JR奈良線 (可留空)" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">備註</label>
-                    <textarea v-model="form.note" placeholder="備註事項" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 h-20 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                </div>
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up">
+            <h2 class="text-lg font-bold mb-4">{{ isEditing ? '編輯行程' : '新增行程' }}</h2>
+            <div class="space-y-3">
+                <input type="time" v-model="form.time" class="w-full bg-gray-50 border rounded-lg p-2">
+                <input type="text" v-model="form.location" placeholder="地點 (如: 清水寺)" class="w-full bg-gray-50 border rounded-lg p-2">
+                <input type="text" v-model="form.action" placeholder="內容 (如: 拍照)" class="w-full bg-gray-50 border rounded-lg p-2">
+                <input type="text" v-model="form.transport" placeholder="交通 (選填)" class="w-full bg-gray-50 border rounded-lg p-2">
+                <textarea v-model="form.note" placeholder="備註" class="w-full bg-gray-50 border rounded-lg p-2 h-16"></textarea>
             </div>
-
-            <div class="flex gap-3 mt-6">
-                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 font-bold py-3 rounded-xl hover:bg-red-100">
-                    刪除
-                </button>
-                <button v-if="!isEditing" @click="showModal = false" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl hover:bg-gray-200">
-                    取消
-                </button>
-                <button @click="saveActivity" class="flex-[2] bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700">
-                    {{ isEditing ? '更新' : '新增' }}
-                </button>
+            <div class="flex gap-2 mt-4">
+                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg font-bold">刪除</button>
+                <button @click="showModal = false" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg">取消</button>
+                <button @click="saveActivity" class="flex-[2] bg-indigo-600 text-white py-2 rounded-lg font-bold">儲存</button>
             </div>
-             <button v-if="isEditing" @click="showModal = false" class="mt-3 w-full text-gray-400 text-sm py-2">取消編輯</button>
         </div>
     </div>
-
 </div>
 
 <script>
     const { createApp } = Vue;
 
-    // 預設資料
+    // 完整的 5 天預設行程資料
     const defaultData = {
         0: [
             { id: 1, time: '16:00', location: '関西国際空港 (KIX)', action: '抵達機場', transport: '', note: '入境審查、領取行李' },
-            { id: 2, time: '17:00', location: '南海なんば駅', action: '搭車前往難波', transport: '南海電鐵「特急ラピート」 (約34-38分)', note: '舒適快速，直達市區' },
-            { id: 3, time: '18:00', location: 'キャプション·バイ·ハイアット難波大阪', action: '飯店 Check-in', transport: '步行', note: '位於日本橋站旁' },
-            { id: 4, time: '19:00', location: '道頓堀·心斎橋', action: '晚餐＋散步', transport: '步行', note: '必拍 Glico 跑跑人招牌' },
-            { id: 5, time: '20:00', location: 'ドン·キホーテ 道頓堀店', action: 'Donki / 藥妝小買', transport: '步行', note: '24HR營業，買旅途中急需品' },
-            { id: 6, time: '21:00', location: '日本橋·黒門市場周邊', action: '回飯店休息', transport: '步行', note: '養精蓄銳' }
+            { id: 2, time: '17:00', location: '南海なんば駅', action: '搭車前往難波', transport: '南海電鐵「特急ラピート」', note: '舒適快速' },
+            { id: 3, time: '18:00', location: 'キャプション·バイ·ハイアット難波大阪', action: 'Check-in', transport: '步行', note: '飯店位於日本橋' },
+            { id: 4, time: '19:00', location: '道頓堀·心斎橋', action: '晚餐＋散步', transport: '步行', note: 'Glico 招牌' },
+            { id: 5, time: '20:00', location: 'ドン·キホーテ 道頓堀店', action: 'Donki / 藥妝', transport: '步行', note: '買急需品' },
+            { id: 6, time: '21:00', location: '日本橋·黒門市場周邊', action: '回飯店', transport: '步行', note: '休息' }
         ],
         1: [
-            { id: 7, time: '09:00', location: '神戸三宮駅', action: '出發去神戶', transport: '阪神なんば線 直通 (約45分)', note: '大阪難波出發' },
-            { id: 8, time: '10:00', location: '生田神社 / 三宮センター街', action: '三宮周邊散步', transport: '步行', note: '祈求戀愛運、逛街' },
-            { id: 9, time: '12:00', location: 'モーリヤ / 桜', action: '神戶牛午餐', transport: '步行', note: '★ 強烈建議事先預約' },
-            { id: 10, time: '14:00', location: '神戸ハーバーランド', action: '港口拍照', transport: '地下鐵海岸線 / 步行', note: '神戶港塔、美利堅公園' },
-            { id: 11, time: '17:00', location: '大阪難波駅', action: '回大阪', transport: '阪神なんば線', note: '返回市區' },
-            { id: 12, time: '18:00', location: '道頓堀 / なんばCITY', action: '晚餐', transport: '步行', note: '' },
-            { id: 13, time: '19:00', location: 'なんばロフト (Loft)', action: '文具購物第一戰', transport: '步行', note: 'Loft 或 Hands Be' },
-            { id: 14, time: '21:00', location: '日本橋飯店', action: '回飯店休息', transport: '', note: '' }
+            { id: 7, time: '09:00', location: '神戸三宮駅', action: '前往神戶', transport: '阪神なんば線 (約45分)', note: '大阪難波出發' },
+            { id: 8, time: '10:00', location: '三宮センター街', action: '三宮散步', transport: '步行', note: '生田神社' },
+            { id: 9, time: '12:00', location: 'モーリヤ / 桜', action: '神戶牛午餐', transport: '步行', note: '建議預約' },
+            { id: 10, time: '14:00', location: '神戸ハーバーランド', action: '港口拍照', transport: '地鐵海岸線', note: '神戶港塔' },
+            { id: 11, time: '17:00', location: '大阪難波駅', action: '回大阪', transport: '阪神なんば線', note: '' },
+            { id: 12, time: '19:00', location: 'なんばロフト (Loft)', action: '文具購物', transport: '步行', note: 'Loft 或 Hands Be' },
+            { id: 13, time: '21:00', location: '日本橋飯店', action: '回飯店', transport: '', note: '' }
         ],
         2: [
-            { id: 15, time: '08:30', location: '黒門市場', action: '吃海鮮/和牛早餐', transport: '步行', note: '水果、海鮮、小吃' },
-            { id: 16, time: '10:00', location: 'キャプション·バイ·ハイアット難波大阪', action: '退房 & 寄放行李', transport: '', note: '輕裝去吃午餐' },
-            { id: 17, time: '12:30', location: '難波周邊', action: '領取行李 / 午餐', transport: '', note: '' },
-            { id: 18, time: '14:00', location: '京都駅', action: '移動前往京都', transport: '御堂筋線(梅田)轉JR新快速 (約60分)', note: '難波->梅田->京都' },
-            { id: 19, time: '15:30', location: 'ハイアット プレイス 京都', action: '抵達飯店 Check-in', transport: '地下鐵烏丸線 (丸太町站6號口)', note: '站口直結，非常方便' },
-            { id: 20, time: '17:00', location: '京都御苑 / 京都御所', action: '傍晚散步', transport: '步行', note: '就在飯店旁，放鬆好去處' },
-            { id: 21, time: '19:00', location: '四条 / 烏丸', action: '京都晚餐', transport: '地鐵 / 步行', note: '尋找京都美食' }
+            { id: 14, time: '08:30', location: '黒門市場', action: '早餐', transport: '步行', note: '海鮮、和牛' },
+            { id: 15, time: '10:00', location: '難波飯店', action: '退房 & 寄行李', transport: '', note: '' },
+            { id: 16, time: '14:00', location: '京都駅', action: '前往京都', transport: '梅田轉JR新快速', note: '約60分' },
+            { id: 17, time: '15:30', location: 'ハイアット プレイス 京都', action: 'Check-in', transport: '烏丸線(丸太町)', note: '6號出口直結' },
+            { id: 18, time: '17:00', location: '京都御苑', action: '散步', transport: '步行', note: '就在飯店旁' },
+            { id: 19, time: '19:00', location: '四条 / 烏丸', action: '晚餐', transport: '', note: '' }
         ],
         3: [
-            { id: 22, time: '08:30', location: '伏見稲荷大社', action: '千本鳥居', transport: '烏丸線->京都->JR奈良線(稲荷站)', note: '早點去避開人潮' },
-            { id: 23, time: '11:30', location: '五条坂 / 清水道', action: '前往清水寺區域', transport: 'JR回京都轉巴士 (100/206)', note: '' },
-            { id: 24, time: '12:00', location: '二年坂 / 三年坂', action: '午餐', transport: '步行', note: '和食、抹茶甜點' },
-            { id: 25, time: '13:00', location: '清水寺', action: '清水舞台', transport: '步行', note: '必訪景點' },
-            { id: 26, time: '14:30', location: '二寧坂 / 産寧坂', action: '古街逛街', transport: '步行', note: '很多特色小店' },
-            { id: 27, time: '16:00', location: '祇園 / 花見小路', action: '感受京都氛圍', transport: '步行', note: '傍晚時分最美' },
-            { id: 28, time: '17:00', location: '京都ロフト / 丸善', action: '文具重點區', transport: '步行(河原町·三条)', note: '文具第二輪大採購' },
-            { id: 29, time: '18:30', location: '四条河原町', action: '晚餐', transport: '步行', note: '' },
-            { id: 30, time: '19:30', location: '四条通藥妝店', action: '藥妝大採購', transport: '步行', note: '松本清/Sugi/鶴羽，價格競爭激烈' },
-            { id: 31, time: '20:30', location: 'ドン·キホーテ 四条河原町', action: 'Donki 最終戰', transport: '步行', note: '買到行李箱塞滿為止' },
-            { id: 32, time: '22:00', location: 'ハイアット プレイス 京都', action: '回飯店打包', transport: '地鐵 (京都市役所前->丸太町)', note: '最後整理行李' }
+            { id: 20, time: '08:30', location: '伏見稲荷大社', action: '千本鳥居', transport: 'JR奈良線', note: '早起避開人潮' },
+            { id: 21, time: '11:30', location: '五条坂 / 清水道', action: '前往清水寺', transport: '巴士 100/206', note: '' },
+            { id: 22, time: '12:00', location: '二年坂 / 三年坂', action: '午餐', transport: '步行', note: '古街散步' },
+            { id: 23, time: '13:00', location: '清水寺', action: '清水舞台', transport: '步行', note: '必拍' },
+            { id: 24, time: '16:00', location: '祇園 / 花見小路', action: '傍晚散策', transport: '步行', note: '' },
+            { id: 25, time: '17:00', location: '京都ロフト / 丸善', action: '文具大採購', transport: '步行', note: '河原町' },
+            { id: 26, time: '19:30', location: '四条河原町藥妝', action: '藥妝採購', transport: '步行', note: '價格競爭激烈' },
+            { id: 27, time: '20:30', location: 'ドン·キホーテ 河原町', action: 'Donki 最終戰', transport: '步行', note: '' }
         ],
         4: [
-            { id: 33, time: '08:00', location: 'ハイアット プレイス 京都', action: '飯店出發', transport: '步行 -> 烏丸線 -> 京都駅', note: '建議提早出發' },
-            { id: 34, time: '08:15', location: '京都駅', action: '搭乘 HARUKA', transport: 'JR特急 はるか (約75分)', note: '前往關西機場' },
-            { id: 35, time: '10:00', location: '関西国際空港', action: '抵達機場', transport: '', note: '辦理登機、托運' },
-            { id: 36, time: '12:00', location: '関西国際空港', action: '飛機起飛', transport: '', note: '掰掰日本！' }
+            { id: 28, time: '08:00', location: '京都飯店', action: 'Check-out', transport: '前往京都站', note: '提前3小時出發' },
+            { id: 29, time: '08:15', location: '京都駅', action: '搭乘 HARUKA', transport: 'JR特急 (約75分)', note: '直達機場' },
+            { id: 30, time: '10:00', location: '関西国際空港', action: '抵達 / 登機', transport: '', note: '快樂回家' },
+            { id: 31, time: '12:00', location: '飛機起飛', action: '起飛', transport: '', note: '掰掰日本' }
         ]
     };
 
-    createApp({
+    const app = createApp({
         data() {
             return {
-                currentDay: 0, 
-                currentView: 'list', 
+                currentDay: 0,
+                currentView: 'list',
                 showModal: false,
                 isEditing: false,
                 mapInstance: null,
+                // 定義 5 天的按鈕與地圖中心
                 days: [
-                    { shortName: 'Day 1 (五)', name: 'Day 1: 抵達大阪', desc: '機場 → 難波 → 道頓堀', center: [34.6687, 135.5013] },
-                    { shortName: 'Day 2 (六)', name: 'Day 2: 神戶一日', desc: '神戶牛 → 港口 → 文具', center: [34.6901, 135.1955] },
-                    { shortName: 'Day 3 (日)', name: 'Day 3: 移動日', desc: '黑門市場 → 京都入住', center: [35.0163, 135.7592] },
-                    { shortName: 'Day 4 (一)', name: 'Day 4: 京都巡禮', desc: '伏見稻荷 → 清水寺 → 購物', center: [35.0037, 135.7786] },
-                    { shortName: 'Day 5 (二)', name: 'Day 5: 返程', desc: '京都 → 機場', center: [34.4320, 135.2304] }
+                    { shortName: 'Day 1 (五)', name: 'Day 1: 抵達大阪', desc: '機場 → 難波', center: [34.6655, 135.5015] },
+                    { shortName: 'Day 2 (六)', name: 'Day 2: 神戶一日', desc: '神戶牛 → 港口', center: [34.6946, 135.1954] },
+                    { shortName: 'Day 3 (日)', name: 'Day 3: 移動京都', desc: '黑門市場 → 入住', center: [35.0163, 135.7592] },
+                    { shortName: 'Day 4 (一)', name: 'Day 4: 京都巡禮', desc: '伏見稻荷 → 清水寺', center: [34.9949, 135.7850] },
+                    { shortName: 'Day 5 (二)', name: 'Day 5: 返程', desc: '前往機場', center: [34.4320, 135.2304] }
                 ],
                 activities: {},
-                form: {
-                    id: null,
-                    time: '',
-                    location: '',
-                    action: '',
-                    transport: '',
-                    note: ''
-                }
+                form: { id: null, time: '', location: '', action: '', transport: '', note: '' }
             }
         },
         computed: {
@@ -295,7 +205,13 @@
             }
         },
         mounted() {
-            this.loadFromStorage();
+            try {
+                this.loadFromStorage();
+            } catch (e) {
+                console.error("Storage error:", e);
+                // 如果讀取失敗，直接載入預設值
+                this.activities = JSON.parse(JSON.stringify(defaultData));
+            }
         },
         methods: {
             changeDay(index) {
@@ -304,113 +220,81 @@
             },
             switchMap() {
                 this.currentView = 'map';
+                // 確保地圖容器有顯示後再初始化
                 this.$nextTick(() => {
                     if (!this.mapInstance) {
                         this.initMap();
-                    } else {
-                        const center = this.days[this.currentDay].center;
-                        this.mapInstance.setView(center, 13);
-                        this.mapInstance.invalidateSize(); 
                     }
+                    setTimeout(() => {
+                        this.mapInstance.invalidateSize();
+                        this.mapInstance.setView(this.days[this.currentDay].center, 13);
+                    }, 100);
                 });
             },
             initMap() {
-                const center = this.days[this.currentDay].center;
-                this.mapInstance = L.map('map').setView(center, 13);
-                
+                this.mapInstance = L.map('map').setView(this.days[this.currentDay].center, 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap contributors',
-                    maxZoom: 19
+                    attribution: 'OpenStreetMap', maxZoom: 19
                 }).addTo(this.mapInstance);
             },
-            openGoogleMaps(location) {
-                const query = encodeURIComponent(location);
-                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+            openGoogleMaps(loc) {
+                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank');
             },
             openModal(item = null) {
-                if (item) {
-                    this.isEditing = true;
-                    this.form = { ...item };
-                } else {
-                    this.isEditing = false;
-                    this.form = { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '' };
-                }
+                this.isEditing = !!item;
+                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '' };
                 this.showModal = true;
             },
             saveActivity() {
                 if (!this.form.location) return alert('請輸入地點');
+                if (!this.activities[this.currentDay]) this.activities[this.currentDay] = [];
                 
-                if (!this.activities[this.currentDay]) {
-                    this.activities[this.currentDay] = [];
-                }
-
                 if (this.isEditing) {
-                    const index = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
-                    if (index !== -1) {
-                        this.activities[this.currentDay][index] = { ...this.form };
-                    }
+                    const idx = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
+                    if (idx !== -1) this.activities[this.currentDay][idx] = { ...this.form };
                 } else {
                     this.activities[this.currentDay].push({ ...this.form });
                 }
-
                 this.saveToStorage();
                 this.showModal = false;
             },
             deleteActivity() {
-                if(confirm('確定要刪除這個行程嗎？')) {
+                if(confirm('刪除此行程？')) {
                     this.activities[this.currentDay] = this.activities[this.currentDay].filter(x => x.id !== this.form.id);
                     this.saveToStorage();
                     this.showModal = false;
                 }
             },
-            editActivity(item) {
-                this.openModal(item);
-            },
             saveToStorage() {
-                // 使用 v2 避免與舊資料衝突
-                localStorage.setItem('japanTripData_v2', JSON.stringify(this.activities));
+                try {
+                    localStorage.setItem('japanTrip_v3_safe', JSON.stringify(this.activities));
+                } catch(e) { console.warn('無法儲存到本地 (可能是無痕模式)'); }
             },
             loadFromStorage() {
-                const data = localStorage.getItem('japanTripData_v2');
+                const data = localStorage.getItem('japanTrip_v3_safe');
                 if (data) {
                     this.activities = JSON.parse(data);
                 } else {
-                    // 如果沒有 V2 資料，載入預設資料
                     this.activities = JSON.parse(JSON.stringify(defaultData));
                     this.saveToStorage();
                 }
             },
             resetData() {
-                if(confirm('確定要重置回預設行程嗎？所有自訂資料將消失。')) {
+                if(confirm('重置所有行程？')) {
                     this.activities = JSON.parse(JSON.stringify(defaultData));
                     this.saveToStorage();
                     this.currentDay = 0;
-                    alert('行程已重置');
-                }
-            }
-        },
-        watch: {
-            currentDay(newVal) {
-                if (this.currentView === 'map' && this.mapInstance) {
-                    const center = this.days[newVal].center;
-                    this.mapInstance.flyTo(center, 13);
                 }
             }
         }
-    }).mount('#app');
+    });
+    
+    app.mount('#app');
 </script>
 
 <style>
-@keyframes bounce-up {
-    0% { transform: translateY(20px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-}
-.animate-bounce-up {
-    animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-}
+@keyframes bounce-up { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.animate-bounce-up { animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 </style>
 
 </body>
