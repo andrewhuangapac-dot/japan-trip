@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (全地圖導航版)</title>
+    <title>京阪神親子遊 (終極優化版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -19,17 +19,18 @@
         [v-cloak] { display: none; }
         .map-btn { transition: all 0.2s; }
         .map-btn:active { transform: scale(0.95); }
+        .vip-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3); }
     </style>
 </head>
 <body>
 
 <div id="app" v-cloak class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
     
-    <header class="bg-gradient-to-br from-indigo-700 to-violet-700 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20 sticky top-0">
+    <header class="bg-gradient-to-br from-indigo-800 to-violet-800 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20 sticky top-0">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 🗺️</h1>
-                <p class="text-indigo-100 text-xs mt-1 font-medium">全路段地圖導航版</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 👑</h1>
+                <p class="text-indigo-100 text-xs mt-1 font-medium">Ultimate Route: 最適化路徑</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
         </div>
@@ -73,6 +74,7 @@
                                     <span v-if="item.isHotel" class="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 font-medium">
                                         <i class="fas fa-bed mr-1"></i>住宿
                                     </span>
+                                    <span v-if="item.recommend" class="vip-badge">推薦</span>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-[15px] leading-tight">{{ item.location }}</h3>
                                 <p class="text-slate-600 text-sm mt-1 font-medium">{{ item.action }}</p>
@@ -172,27 +174,27 @@
             { id: 11, time: '13:00', location: '返回三宮', action: '午餐', transport: '纜車 + 地鐵', note: '下山回到三宮市區用餐。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Nunobiki+Herb+Gardens&destination=Kobe-Sannomiya+Station&travelmode=transit' },
             { id: 12, time: '15:00', location: '三宮 → 神戶港', action: '移動', transport: 'JR神戶線', note: '搭JR從三宮到「神戶站」(3分鐘)。走路去 Mosaic。', link: 'https://www.google.com/maps/dir/?api=1&origin=Sannomiya+Station&destination=Kobe+Station&travelmode=transit' },
             { id: 13, time: '15:15', location: '神戶站 → Mosaic', action: '步行', transport: '步行', note: '沿著地下街或天橋走到海邊。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Station&destination=Kobe+Harborland+umie&travelmode=walking' },
-            { id: 14, time: '18:30', location: 'Mosaic → 高速神戶', action: '回程步行', transport: '步行 (10分鐘)', note: '走去「高速神戶站」搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Harborland+umie&destination=Kosokukobe+Station&travelmode=walking' },
+            { id: 14, time: '18:30', location: 'Mosaic → 高速神戶', action: '回程步行', transport: '步行 (10分鐘)', note: '注意：這段路程若孩子太累，可考慮搭計程車至「高速神戶站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Harborland+umie&destination=Kosokukobe+Station&travelmode=walking' },
             { id: 15, time: '18:45', location: '高速神戶 → 大阪', action: '回飯店', transport: '阪神電車 (直達)', note: '搭乘阪神電車直達「近鐵日本橋站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kosokukobe+Station&destination=Nippombashi+Station&travelmode=transit' }
         ],
         2: [
             { id: 16, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '飯店旁輕鬆逛。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Kuromon+Ichiba+Market&travelmode=walking' },
-            { id: 17, time: '11:00', location: '飯店 → 北濱', action: '移動Step 1', transport: '地鐵堺筋線', note: '日本橋站搭乘堺筋線至「北濱站」(1站)。', link: 'https://www.google.com/maps/dir/?api=1&origin=Nippombashi+Station&destination=Kitahama+Station&travelmode=transit' },
-            { id: 18, time: '11:20', location: '北濱 → 神宮丸太町', action: '移動Step 2 (京阪)', transport: '京阪電車特急', note: '北濱站轉乘京阪電車(往出町柳)至「神宮丸太町」。', tip: '京阪特急舒適且免轉車直達飯店附近。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kitahama+Station&destination=Jingu-Marutamachi+Station&travelmode=transit' },
-            { id: 19, time: '12:10', location: '神宮丸太町 → 飯店', action: '步行至飯店', transport: '步行 (10分鐘)', isHotel: true, note: '過橋跨越鴨川，沿著丸太町通直走即達 Hyatt Place。', link: 'https://www.google.com/maps/dir/?api=1&origin=Jingu-Marutamachi+Station&destination=Hyatt+Place+Kyoto&travelmode=walking' },
-            { id: 20, time: '15:00', location: '京都御苑', action: '散步', transport: '步行', note: '飯店對面。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Gyoen+National+Garden&travelmode=walking' },
+            { id: 17, time: '11:00', location: '飯店 → 淀屋橋', action: '移動Step 1 (優化)', transport: '計程車 (推薦)', recommend: true, note: '【專家建議】搭計程車去「京阪淀屋橋站」(約1200日圓)。比轉地鐵輕鬆太多，且淀屋橋是起點站，保證有位。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Yodoyabashi+Station&travelmode=driving' },
+            { id: 18, time: '11:20', location: '淀屋橋 → 神宮丸太町', action: '移動Step 2 (京阪)', transport: '京阪電車特急', recommend: true, note: '前往月台最前方車廂，搶「雙層座位」！孩子會很愛。搭到「神宮丸太町」。', tip: '因為是起點站，所以不用擔心沒位子。', link: 'https://www.google.com/maps/dir/?api=1&origin=Yodoyabashi+Station&destination=Jingu-Marutamachi+Station&travelmode=transit' },
+            { id: 19, time: '12:10', location: '神宮丸太町 → 飯店', action: '移動Step 3 (最後一哩)', transport: '計程車 (強烈建議)', isHotel: true, note: '【重點】出站後直接招計程車去 Hyatt Place (起跳價)。這段路拖行李走很痛苦，計程車是最好的投資。', link: 'https://www.google.com/maps/dir/?api=1&origin=Jingu-Marutamachi+Station&destination=Hyatt+Place+Kyoto&travelmode=driving' },
+            { id: 20, time: '15:00', location: '京都御苑', action: '散步', transport: '步行', note: '飯店對面，Check-in 後輕鬆逛。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Gyoen+National+Garden&travelmode=walking' },
             { id: 21, time: '17:30', location: '飯店 → 四條', action: '晚餐', transport: '地鐵烏丸線', note: '丸太町搭地鐵至「四條站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Shijo+Station&travelmode=transit' }
         ],
         3: [
-            { id: 22, time: '08:30', location: '飯店 → 伏見稻荷', action: '京阪電車攻略', transport: '步行 + 京阪電車', note: '走回神宮丸太町站，搭京阪電車直達「伏見稻荷」。', tip: '避開京都站人潮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Fushimi+Inari+Taisha&travelmode=transit' },
+            { id: 22, time: '08:30', location: '飯店 → 伏見稻荷', action: '早起出發', transport: '計程車/地鐵', note: '建議搭地鐵或計程車去京都站，轉JR去稻荷 (或者走去京阪丸太町搭車，看體力)。', tip: '越早到越好，避開人潮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Fushimi+Inari+Taisha&travelmode=transit' },
             { id: 23, time: '10:30', location: '伏見稻荷 → 清水五條', action: '移動', transport: '京阪電車', note: '搭京阪電車到「清水五條站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Fushimi-Inari+Station&destination=Kiyomizu-Gojo+Station&travelmode=transit' },
-            { id: 24, time: '11:00', location: '清水五條 → 清水寺', action: '上山', transport: '計程車/步行', note: '建議搭短程計程車上山。若步行需20分鐘上坡。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-Gojo+Station&destination=Kiyomizu-dera&travelmode=walking' },
-            { id: 25, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '走三年坂 → 二年坂 → 八坂神社。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Gion&travelmode=walking' },
-            { id: 26, time: '17:30', location: '祇園四條 → 飯店', action: '回程', transport: '京阪電車', note: '從祇園四條站搭回神宮丸太町。', link: 'https://www.google.com/maps/dir/?api=1&origin=Gion-Shijo+Station&destination=Hyatt+Place+Kyoto&travelmode=transit' }
+            { id: 24, time: '11:00', location: '清水五條 → 清水寺', action: '攻頂策略', transport: '計程車 (必搭)', recommend: true, note: '【省力關鍵】出站後務必搭計程車直接上到「清水道」。這段上坡路非常陡，把體力留給逛街。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-Gojo+Station&destination=Kiyomizu-dera&travelmode=driving' },
+            { id: 25, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '參拜完後，順著三年坂 → 二年坂一路「下坡」逛到八坂神社。這是最舒服的走法。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Gion&travelmode=walking' },
+            { id: 26, time: '17:30', location: '祇園四條 → 飯店', action: '回程', transport: '京阪電車/計程車', note: '如果累了，從祇園直接搭計程車回飯店約 1200-1500 日圓，非常划算。', link: 'https://www.google.com/maps/dir/?api=1&origin=Gion-Shijo+Station&destination=Hyatt+Place+Kyoto&travelmode=driving' }
         ],
         4: [
             { id: 28, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: '地鐵烏丸線', note: '飯店樓下丸太町站 → 京都站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Station&travelmode=transit' },
-            { id: 29, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+Airport+Station&travelmode=transit' },
+            { id: 29, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。請事先買好票券。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+Airport+Station&travelmode=transit' },
             { id: 30, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: '車站出來過空橋去 Aeroplaza 搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Aeroplaza&travelmode=walking' },
             { id: 31, time: '12:00', location: '回程', action: 'Safe Flight', transport: '飛機', note: '旅途愉快！' }
         ]
@@ -209,12 +211,12 @@
                 days: [
                     { date: '12/12 (五)', name: 'Day 1: 抵達大阪', desc: 'Rapi:t α 直達難波', center: [34.6629, 135.5023], weather: { status: '晴時多雲', icon: 'fas fa-sun', temp_high: 11, temp_low: 5, color: 'text-orange-500', rain: false } },
                     { date: '12/13 (六)', name: 'Day 2: 神戶觀景', desc: '布引香草園纜車', center: [34.6946, 135.1954], weather: { status: '多雲時陰', icon: 'fas fa-cloud', temp_high: 11, temp_low: 4, color: 'text-gray-500', rain: false } },
-                    { date: '12/14 (日)', name: 'Day 3: 移動京都', desc: '京阪電車免轉乘', center: [35.0163, 135.7592], weather: { status: '陰短暫雨', icon: 'fas fa-cloud-rain', temp_high: 14, temp_low: 7, color: 'text-blue-500', rain: true } },
-                    { date: '12/15 (一)', name: 'Day 4: 清水寺', desc: '京阪電車攻略', center: [34.9949, 135.7850], weather: { status: '多雲', icon: 'fas fa-cloud', temp_high: 11, temp_low: 6, color: 'text-gray-500', rain: false } },
+                    { date: '12/14 (日)', name: 'Day 3: 移動京都', desc: '京阪電車舒適移動', center: [35.0163, 135.7592], weather: { status: '陰短暫雨', icon: 'fas fa-cloud-rain', temp_high: 14, temp_low: 7, color: 'text-blue-500', rain: true } },
+                    { date: '12/15 (一)', name: 'Day 4: 清水寺', desc: '下坡散步攻略', center: [34.9949, 135.7850], weather: { status: '多雲', icon: 'fas fa-cloud', temp_high: 11, temp_low: 6, color: 'text-gray-500', rain: false } },
                     { date: '12/16 (二)', name: 'Day 5: 返程', desc: '地鐵直達京都站', center: [34.4320, 135.2304], weather: { status: '晴朗', icon: 'fas fa-sun', temp_high: 12, temp_low: 4, color: 'text-orange-500', rain: false } }
                 ],
                 activities: {},
-                form: { id: null, time: '', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '' }
+                form: { id: null, time: '', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', recommend: false }
             }
         },
         computed: {
@@ -230,9 +232,8 @@
         },
         methods: {
             loadAndMergeData() {
-                // 更新 key 為 v13_FullMaps
                 try {
-                    const saved = localStorage.getItem('japanTrip_v13_FullMaps');
+                    const saved = localStorage.getItem('japanTrip_v14_Ultimate');
                     if (saved) {
                         this.activities = JSON.parse(saved);
                     } else {
@@ -268,12 +269,13 @@
             },
             getIconColor(item) {
                 if (item.isHotel) return 'bg-purple-500';
+                if (item.recommend) return 'bg-amber-500';
                 if (item.transport) return 'bg-indigo-500';
                 return 'bg-slate-300';
             },
             openModal(item = null) {
                 this.isEditing = !!item;
-                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '' };
+                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', recommend: false };
                 this.showModal = true;
             },
             saveActivity() {
@@ -297,14 +299,14 @@
                 }
             },
             saveToStorage() {
-                localStorage.setItem('japanTrip_v13_FullMaps', JSON.stringify(this.activities));
+                localStorage.setItem('japanTrip_v14_Ultimate', JSON.stringify(this.activities));
             },
             resetData() {
-                if(confirm('重置將會清除自訂行程，恢復預設值。確定嗎？')) {
+                if(confirm('重置將會清除自訂行程，恢復為「專家優化版」。確定嗎？')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
-                    alert('全地圖連結版已更新！');
+                    alert('已載入 v14 終極優化版！');
                 }
             }
         }
