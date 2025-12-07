@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (Rapi:t α版)</title>
+    <title>京阪神親子遊 (全地圖導航版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -17,25 +17,25 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         #map { height: 100%; width: 100%; z-index: 1; }
         [v-cloak] { display: none; }
-        .tip-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 8px; font-size: 12px; margin-top: 6px; color: #1e40af; }
-        .warning-box { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 8px; font-size: 12px; margin-top: 6px; color: #991b1b; }
+        .map-btn { transition: all 0.2s; }
+        .map-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
 <div id="app" v-cloak class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
     
-    <header class="bg-gradient-to-br from-indigo-700 to-blue-800 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20 sticky top-0">
+    <header class="bg-gradient-to-br from-indigo-700 to-violet-700 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20 sticky top-0">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 ✈️</h1>
-                <p class="text-indigo-100 text-xs mt-1 font-medium">Day 1: 南海特急 Rapi:t α 直達</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 🗺️</h1>
+                <p class="text-indigo-100 text-xs mt-1 font-medium">全路段地圖導航版</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
         </div>
         <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
             <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
-                :class="currentDay === index ? 'bg-white text-blue-800 font-bold shadow-lg scale-105 ring-2 ring-white/50' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-700/60'"
+                :class="currentDay === index ? 'bg-white text-indigo-800 font-bold shadow-lg scale-105 ring-2 ring-white/50' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-700/60'"
                 class="px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex-shrink-0 mb-2 flex flex-col items-center min-w-[4.5rem]">
                 <span>{{ day.date }}</span>
                 <span class="text-[10px] opacity-80 mt-0.5">{{ day.weather.temp_high }}°</span>
@@ -77,9 +77,9 @@
                                 <h3 class="font-bold text-slate-800 text-[15px] leading-tight">{{ item.location }}</h3>
                                 <p class="text-slate-600 text-sm mt-1 font-medium">{{ item.action }}</p>
                                 
-                                <div v-if="item.transport" class="mt-2.5 p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-100">
+                                <div v-if="item.transport" class="mt-2.5 p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100">
                                     <p class="text-xs text-indigo-800 font-semibold mb-1">
-                                        <i class="fas fa-train mr-1.5 w-3"></i>{{ item.transport }}
+                                        <i class="fas fa-route mr-1.5 w-3"></i>{{ item.transport }}
                                     </p>
                                     <p v-if="item.note" class="text-[11px] text-slate-600 leading-relaxed pl-5 border-l-2 border-indigo-200 ml-1">
                                         {{ item.note }}
@@ -89,26 +89,22 @@
                                     <i class="fas fa-info-circle mr-1 text-slate-400"></i>{{ item.note }}
                                 </div>
 
-                                <div v-if="item.tip" class="tip-box rounded-lg flex items-start">
+                                <div v-if="item.tip" class="mt-2 text-[11px] bg-amber-50 text-amber-800 p-2 rounded-lg border border-amber-100 flex items-start">
                                     <i class="fas fa-lightbulb mr-2 mt-0.5 flex-shrink-0"></i>
                                     <span class="leading-relaxed">{{ item.tip }}</span>
-                                </div>
-                                <div v-if="item.warning" class="warning-box rounded-lg flex items-start">
-                                    <i class="fas fa-exclamation-triangle mr-2 mt-0.5 flex-shrink-0"></i>
-                                    <span class="leading-relaxed">{{ item.warning }}</span>
                                 </div>
                             </div>
                             
                             <div class="flex flex-col space-y-3 pt-1">
                                 <button v-if="item.link" @click="openSmartMap(item)" 
-                                    class="w-10 h-10 rounded-xl bg-emerald-500 text-white shadow-emerald-200 shadow-md hover:bg-emerald-600 flex items-center justify-center transition-all active:scale-90">
+                                    class="map-btn w-10 h-10 rounded-xl bg-emerald-500 text-white shadow-emerald-200 shadow-md hover:bg-emerald-600 flex items-center justify-center">
                                     <i class="fas fa-location-arrow text-sm"></i>
                                 </button>
                                 <button v-else class="w-10 h-10 rounded-xl bg-slate-100 text-slate-300 flex items-center justify-center cursor-default">
                                     <i class="fas fa-map-marker-alt text-sm"></i>
                                 </button>
                                 
-                                <button @click="editActivity(item)" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition-transform">
+                                <button @click="editActivity(item)" class="map-btn w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100">
                                     <i class="fas fa-pen text-xs"></i>
                                 </button>
                             </div>
@@ -146,6 +142,7 @@
                 <input type="text" v-model="form.action" placeholder="內容" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500 transition">
                 <input type="text" v-model="form.transport" placeholder="交通" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-800 rounded-xl p-3 outline-none focus:border-indigo-400 placeholder-indigo-300 transition">
                 <textarea v-model="form.note" placeholder="備註" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 h-20 resize-none outline-none focus:border-indigo-500 transition"></textarea>
+                <input type="text" v-model="form.link" placeholder="Google Maps 連結" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-500 outline-none focus:border-indigo-500 transition">
             </div>
             <div class="flex gap-3 mt-6">
                 <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold hover:bg-red-100 transition">刪除</button>
@@ -161,37 +158,42 @@
 
     const detailedData = {
         0: [
-            { id: 1, time: '16:00', location: '關西機場 T2', action: '轉搭接駁巴士', transport: '免費巴士', note: '入境後，前往 Aeroplaza 搭乘接駁車至 T1/關西機場站。' },
-            { id: 2, time: '16:30', location: '關西機場站', action: '南海特急 Rapi:t α', transport: 'Rapi:t α 6', note: '您選擇了停靠站最少的 α (Alpha) 列車。全車指定席，請依照票面座位入座。', link: 'https://www.howto-osaka.com/tc/access/' },
-            { id: 3, time: '17:05', location: '南海難波站 (終點)', action: '抵達 & 出站指引', transport: '步行 (推薦)', note: '抵達在 3F。請搭長扶梯下到 1F 的「北改札口」或「東出入口」。', warning: '從難波站轉乘地鐵只有一站，但地下迷宮很複雜。建議直接走路面去飯店。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station&destination=Nippombashi+Station&travelmode=walking' },
-            { id: 4, time: '17:20', location: '前往日本橋/飯店', action: '地面步行', transport: '步行 (約10-12分)', isHotel: true, note: '從「難波 CITY」東側出來，往「Den Den Town (電器街)」方向走。這段路比地下迷宮簡單，且沿途有店家。', tip: '沿途經過難波公園 (Namba Parks) 邊緣，直走過堺筋大馬路即抵達黑門市場/日本橋區域。' },
-            { id: 5, time: '19:00', location: '道頓堀 / 裏難波', action: '晚餐', transport: '步行', note: '放下行李後，可步行至道頓堀或「裏難波」區域覓食。' }
+            { id: 1, time: '16:00', location: '關西機場 T2', action: '轉搭接駁巴士', transport: '免費巴士 → Aeroplaza', note: '入境後，前往 Aeroplaza 搭乘接駁車至 T1/關西機場站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Terminal+2&destination=Aeroplaza&travelmode=transit' },
+            { id: 2, time: '16:30', location: '關西機場站', action: '南海特急 Rapi:t α', transport: 'Rapi:t α 6 (往難波)', note: '搭乘藍色的 Rapi:t 特急 α。全車指定席。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Namba+Station&travelmode=transit' },
+            { id: 3, time: '17:05', location: '南海難波站 (出站指引)', action: '步行出站', transport: '步行 (關鍵路徑)', note: '抵達 3F 月台 → 搭手扶梯下 1F → 找「北出口」或「東出口」。', tip: '不要走地下街，容易迷路。請走到戶外地面層。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station+Nankai&destination=Namba+City' },
+            { id: 4, time: '17:20', location: '前往日本橋/飯店', action: '地面步行', transport: '步行 (10-12分)', isHotel: true, note: '沿著「難波 CITY」外圍往東走，進入「電器街 (Den Den Town)」。看到堺筋大馬路左轉即是黑門市場。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station+Nankai&destination=Caption+by+Hyatt+Namba+Osaka&travelmode=walking' },
+            { id: 5, time: '19:00', location: '道頓堀 / 裏難波', action: '晚餐', transport: '步行', note: '步行至道頓堀約 8 分鐘。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Dotonbori&travelmode=walking' }
         ],
         1: [
-            { id: 7, time: '09:00', location: '日本橋站', action: '前往神戶', transport: '阪神電車 (直達)', note: '進日本橋站，看標示往「尼崎/神戶三宮」方向。搭「快速急行」。', tip: '完全不用換車，一班車直達神戶三宮，約 45 分鐘。' },
-            { id: 8, time: '10:00', location: '神戶三宮', action: '轉乘去纜車', transport: '地鐵 (一站)', note: '出站後，轉搭神戶地鐵(西神山手線)到「新神戶站」。', tip: '新神戶站出來就能看到布引香草園纜車站的指標。' },
-            { id: 9, time: '10:30', location: '布引香草園', action: '空中纜車', transport: '纜車', note: '隨著纜車爬升，可以看見神戶港全景。山上可以散步、吃冰淇淋。' },
-            { id: 10, time: '13:00', location: '三宮市區', action: '午餐', transport: '纜車下山', note: '搭纜車下山，回到三宮吃午餐。' },
-            { id: 11, time: '15:00', location: '神戶港 (Mosaic)', action: '麵包超人/逛街', transport: 'JR神戶線', note: '三宮站搭JR到「神戶站」(3分鐘)。走路去海邊 Mosaic 廣場。' },
-            { id: 12, time: '18:30', location: '高速神戶站', action: '回大阪', transport: '阪神電車 (直達)', note: '從 Mosaic 走去「高速神戶站」搭車，直達日本橋。' }
+            { id: 7, time: '09:00', location: '飯店 → 日本橋站', action: '步行至車站', transport: '步行 (3分鐘)', note: '走到堺筋線日本橋站 (10號入口有電梯)。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Nippombashi+Station&travelmode=walking' },
+            { id: 8, time: '09:10', location: '日本橋站', action: '前往神戶', transport: '阪神電車 (直達)', note: '搭乘往「尼崎/神戶三宮」方向的「快速急行」。', tip: '免換車，一班直達神戶三宮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Nippombashi+Station&destination=Kobe-Sannomiya+Station&travelmode=transit' },
+            { id: 9, time: '10:00', location: '神戶三宮 → 新神戶', action: '轉搭地鐵', transport: '神戶地鐵 (1站)', note: '轉乘西神山手線至「新神戶站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Shin-Kobe+Station&travelmode=transit' },
+            { id: 10, time: '10:20', location: '新神戶 → 香草園', action: '空中纜車', transport: '纜車', note: '出站後跟著指標走，搭乘纜車上山。', link: 'https://www.google.com/maps/dir/?api=1&origin=Shin-Kobe+Station&destination=Kobe+Nunobiki+Herb+Gardens&travelmode=walking' },
+            { id: 11, time: '13:00', location: '返回三宮', action: '午餐', transport: '纜車 + 地鐵', note: '下山回到三宮市區用餐。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Nunobiki+Herb+Gardens&destination=Kobe-Sannomiya+Station&travelmode=transit' },
+            { id: 12, time: '15:00', location: '三宮 → 神戶港', action: '移動', transport: 'JR神戶線', note: '搭JR從三宮到「神戶站」(3分鐘)。走路去 Mosaic。', link: 'https://www.google.com/maps/dir/?api=1&origin=Sannomiya+Station&destination=Kobe+Station&travelmode=transit' },
+            { id: 13, time: '15:15', location: '神戶站 → Mosaic', action: '步行', transport: '步行', note: '沿著地下街或天橋走到海邊。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Station&destination=Kobe+Harborland+umie&travelmode=walking' },
+            { id: 14, time: '18:30', location: 'Mosaic → 高速神戶', action: '回程步行', transport: '步行 (10分鐘)', note: '走去「高速神戶站」搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Harborland+umie&destination=Kosokukobe+Station&travelmode=walking' },
+            { id: 15, time: '18:45', location: '高速神戶 → 大阪', action: '回飯店', transport: '阪神電車 (直達)', note: '搭乘阪神電車直達「近鐵日本橋站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kosokukobe+Station&destination=Nippombashi+Station&travelmode=transit' }
         ],
         2: [
-            { id: 14, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '最後逛一下黑門市場。' },
-            { id: 16, time: '11:00', location: '大阪 → 京都 (京阪電車)', action: '移動至京都 (免轉車)', transport: '地鐵(1站)+京阪電車', isHotel: true, note: '1. 日本橋搭地鐵到「北濱」(1站)\n2. 北濱轉「京阪電車特急」直達「神宮丸太町」\n3. 下車過橋走10分鐘到飯店', tip: '這條路線避開了繁忙的京都車站。京阪特急有雙層座位，孩子會很喜歡！' },
-            { id: 18, time: '15:00', location: '京都御苑', action: '散步', transport: '步行', note: '飯店對面就是，環境清幽。' },
-            { id: 19, time: '17:30', location: '錦市場 / 河原町', action: '晚餐', transport: '地鐵', note: '丸太町搭一站去烏丸御池，或搭兩站去四條。' }
+            { id: 16, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '飯店旁輕鬆逛。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Kuromon+Ichiba+Market&travelmode=walking' },
+            { id: 17, time: '11:00', location: '飯店 → 北濱', action: '移動Step 1', transport: '地鐵堺筋線', note: '日本橋站搭乘堺筋線至「北濱站」(1站)。', link: 'https://www.google.com/maps/dir/?api=1&origin=Nippombashi+Station&destination=Kitahama+Station&travelmode=transit' },
+            { id: 18, time: '11:20', location: '北濱 → 神宮丸太町', action: '移動Step 2 (京阪)', transport: '京阪電車特急', note: '北濱站轉乘京阪電車(往出町柳)至「神宮丸太町」。', tip: '京阪特急舒適且免轉車直達飯店附近。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kitahama+Station&destination=Jingu-Marutamachi+Station&travelmode=transit' },
+            { id: 19, time: '12:10', location: '神宮丸太町 → 飯店', action: '步行至飯店', transport: '步行 (10分鐘)', isHotel: true, note: '過橋跨越鴨川，沿著丸太町通直走即達 Hyatt Place。', link: 'https://www.google.com/maps/dir/?api=1&origin=Jingu-Marutamachi+Station&destination=Hyatt+Place+Kyoto&travelmode=walking' },
+            { id: 20, time: '15:00', location: '京都御苑', action: '散步', transport: '步行', note: '飯店對面。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Gyoen+National+Garden&travelmode=walking' },
+            { id: 21, time: '17:30', location: '飯店 → 四條', action: '晚餐', transport: '地鐵烏丸線', note: '丸太町搭地鐵至「四條站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Shijo+Station&travelmode=transit' }
         ],
         3: [
-            { id: 21, time: '08:30', location: '飯店 → 伏見稻荷', action: '京阪電車攻略', transport: '京阪電車 (直達)', note: '走路去「神宮丸太町站」，搭京阪電車直達「伏見稻荷」。', tip: '完全不用去京都站人擠人！京阪電車這段路線是觀光神隊友。' },
-            { id: 22, time: '10:30', location: '伏見稻荷 → 清水寺', action: '移動', transport: '京阪電車 + 走路/計程車', note: '搭京阪電車到「清水五條站」。出站後建議搭短程計程車(約800円)上山到清水道。', tip: '如果不搭計程車，從清水五條走上去約20分鐘(上坡)。帶孩子建議這小段搭車。' },
-            { id: 23, time: '13:00', location: '清水寺', action: '參拜', transport: '步行', note: '參觀清水舞台。' },
-            { id: 24, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '走三年坂、二年坂一路下坡。這方向走最輕鬆。' },
-            { id: 25, time: '17:30', location: '祇園 → 飯店', action: '回程', transport: '京阪電車', note: '走到「祇園四條站」，搭京阪電車回「神宮丸太町」。' }
+            { id: 22, time: '08:30', location: '飯店 → 伏見稻荷', action: '京阪電車攻略', transport: '步行 + 京阪電車', note: '走回神宮丸太町站，搭京阪電車直達「伏見稻荷」。', tip: '避開京都站人潮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Fushimi+Inari+Taisha&travelmode=transit' },
+            { id: 23, time: '10:30', location: '伏見稻荷 → 清水五條', action: '移動', transport: '京阪電車', note: '搭京阪電車到「清水五條站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Fushimi-Inari+Station&destination=Kiyomizu-Gojo+Station&travelmode=transit' },
+            { id: 24, time: '11:00', location: '清水五條 → 清水寺', action: '上山', transport: '計程車/步行', note: '建議搭短程計程車上山。若步行需20分鐘上坡。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-Gojo+Station&destination=Kiyomizu-dera&travelmode=walking' },
+            { id: 25, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '走三年坂 → 二年坂 → 八坂神社。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Gion&travelmode=walking' },
+            { id: 26, time: '17:30', location: '祇園四條 → 飯店', action: '回程', transport: '京阪電車', note: '從祇園四條站搭回神宮丸太町。', link: 'https://www.google.com/maps/dir/?api=1&origin=Gion-Shijo+Station&destination=Hyatt+Place+Kyoto&travelmode=transit' }
         ],
         4: [
-            { id: 28, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: '地鐵烏丸線', note: '飯店樓下就是丸太町站入口。搭到京都站。' },
-            { id: 29, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台。' },
-            { id: 30, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: '到 Aeroplaza 搭乘 T2 接駁車。' },
+            { id: 28, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: '地鐵烏丸線', note: '飯店樓下丸太町站 → 京都站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Station&travelmode=transit' },
+            { id: 29, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+Airport+Station&travelmode=transit' },
+            { id: 30, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: '車站出來過空橋去 Aeroplaza 搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Aeroplaza&travelmode=walking' },
             { id: 31, time: '12:00', location: '回程', action: 'Safe Flight', transport: '飛機', note: '旅途愉快！' }
         ]
     };
@@ -212,7 +214,7 @@
                     { date: '12/16 (二)', name: 'Day 5: 返程', desc: '地鐵直達京都站', center: [34.4320, 135.2304], weather: { status: '晴朗', icon: 'fas fa-sun', temp_high: 12, temp_low: 4, color: 'text-orange-500', rain: false } }
                 ],
                 activities: {},
-                form: { id: null, time: '', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', warning: '' }
+                form: { id: null, time: '', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '' }
             }
         },
         computed: {
@@ -228,9 +230,9 @@
         },
         methods: {
             loadAndMergeData() {
-                // 使用新的 key 來儲存，避免與舊版衝突
+                // 更新 key 為 v13_FullMaps
                 try {
-                    const saved = localStorage.getItem('japanTrip_v12_RapitAlpha');
+                    const saved = localStorage.getItem('japanTrip_v13_FullMaps');
                     if (saved) {
                         this.activities = JSON.parse(saved);
                     } else {
@@ -271,7 +273,7 @@
             },
             openModal(item = null) {
                 this.isEditing = !!item;
-                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', warning: '' };
+                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '' };
                 this.showModal = true;
             },
             saveActivity() {
@@ -295,14 +297,14 @@
                 }
             },
             saveToStorage() {
-                localStorage.setItem('japanTrip_v12_RapitAlpha', JSON.stringify(this.activities));
+                localStorage.setItem('japanTrip_v13_FullMaps', JSON.stringify(this.activities));
             },
             resetData() {
                 if(confirm('重置將會清除自訂行程，恢復預設值。確定嗎？')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
-                    alert('行程已更新為 Rapi:t α 版！');
+                    alert('全地圖連結版已更新！');
                 }
             }
         }
