@@ -3,268 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (美食嚮導版)</title>
+    <title>京阪神旅遊助手</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        body { background-color: #fff7ed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        #map { height: 100%; width: 100%; z-index: 1; }
-        [v-cloak] { display: none; }
-        .map-btn { transition: all 0.2s; }
-        .map-btn:active { transform: scale(0.95); }
-        .vip-badge { background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; box-shadow: 0 2px 4px rgba(0,0,0, 0.2); }
-        .food-card { background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.75rem; padding: 0.75rem; margin-top: 0.75rem; }
+        body {
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        /* 隱藏 Scrollbar 但保持滑動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 模擬手機 App 的容器 */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        /* 地圖高度 */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 0;
+        }
+        .slide-fade-enter-active {
+            transition: all 0.3s ease-out;
+        }
+        .slide-fade-leave-active {
+            transition: all 0.2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+        }
+        .slide-fade-enter-from,
+        .slide-fade-leave-to {
+            transform: translateY(20px);
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
 
-<div id="app" v-cloak class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
+<div id="app" class="app-container flex flex-col">
     
-    <header class="bg-orange-600 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20 sticky top-0">
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-b-3xl shadow-lg z-20 relative">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 🍱</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">美食與美景的饗宴 (v16)</p>
+                <h1 class="text-2xl font-bold tracking-tight">京阪神之旅 🇯🇵</h1>
+                <p class="text-blue-100 text-sm opacity-90"><i class="fas fa-map-marker-alt mr-1"></i> 大阪 • 京都 • 神戶</p>
             </div>
-            <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
+            <button @click="resetData" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
+                重置
+            </button>
         </div>
-        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
-            <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
-                :class="currentDay === index ? 'bg-white text-orange-700 font-bold shadow-lg scale-105 ring-2 ring-white/50' : 'bg-orange-800/40 text-orange-100 hover:bg-orange-700/60'"
-                class="px-3 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex-shrink-0 mb-2 flex flex-col items-center min-w-[4.5rem]">
-                <span>{{ day.date }}</span>
-                <span class="text-[10px] opacity-80 mt-0.5">{{ day.weather.temp_high }}°</span>
+
+        <div class="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
+            <button 
+                v-for="(day, index) in days" 
+                :key="index"
+                @click="currentDay = index; currentView = 'list'"
+                :class="currentDay === index ? 'bg-white text-blue-600 font-bold shadow-md' : 'bg-blue-700/50 text-blue-100'"
+                class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-300 flex-shrink-0">
+                {{ day.name }}
             </button>
         </div>
     </header>
 
-    <main class="flex-1 relative bg-stone-50 overflow-hidden">
+    <main class="flex-1 relative overflow-hidden bg-gray-50">
         
-        <div v-show="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-4 no-scrollbar">
+        <div v-if="currentView === 'list'" class="h-full overflow-y-auto pb-24 px-4 pt-6">
             
-            <div class="mb-5 bg-white rounded-2xl p-4 shadow-sm border border-stone-200 flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-bold text-stone-800">{{ days[currentDay].name }}</h2>
-                    <div class="flex items-center mt-1 text-sm font-medium" :class="days[currentDay].weather.color">
-                        <i :class="days[currentDay].weather.icon" class="mr-2 text-lg"></i>
-                        <span>{{ days[currentDay].weather.status }}</span>
-                    </div>
-                </div>
-                <div v-if="days[currentDay].weather.rain" class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">
-                    <i class="fas fa-umbrella mr-1"></i>帶傘
-                </div>
+            <div v-if="currentActivities.length === 0" class="text-center text-gray-400 mt-20">
+                <i class="fas fa-suitcase-rolling text-4xl mb-3"></i>
+                <p>這一天還沒有行程<br>點擊右下角新增</p>
             </div>
 
-            <div class="space-y-5 pb-20">
-                <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-[3px] border-stone-200 last:border-0">
-                    <div class="absolute -left-[10px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-sm transition-colors duration-300"
-                         :class="getIconColor(item)"></div>
+            <transition-group name="slide-fade" tag="div" class="space-y-4">
+                <div v-for="(item, idx) in sortedActivities" :key="item.id" class="relative pl-6 border-l-2 border-indigo-200">
+                    <div class="absolute -left-[9px] top-4 w-4 h-4 bg-indigo-500 rounded-full border-4 border-white shadow-sm"></div>
                     
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-all duration-300 group">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-200">
                         <div class="flex justify-between items-start">
-                            <div class="flex-1 mr-3">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="bg-stone-100 text-stone-600 text-[11px] font-bold px-2 py-0.5 rounded">{{ item.time }}</span>
-                                    <span v-if="item.isHotel" class="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 font-medium">
-                                        <i class="fas fa-bed mr-1"></i>住宿
-                                    </span>
-                                    <span v-if="item.recommend" class="vip-badge"><i class="fab fa-uber mr-1"></i>Uber</span>
-                                </div>
-                                <h3 class="font-bold text-stone-800 text-[15px] leading-tight">{{ item.location }}</h3>
-                                <p class="text-stone-600 text-sm mt-1 font-medium">{{ item.action }}</p>
-                                
-                                <div v-if="item.transport" class="mt-2.5 p-2.5 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p class="text-xs text-gray-800 font-semibold mb-1">
-                                        <i class="fas fa-route mr-1.5 w-3"></i>{{ item.transport }}
-                                    </p>
-                                    <p v-if="item.note" class="text-[11px] text-stone-600 leading-relaxed pl-5 border-l-2 border-gray-300 ml-1">
-                                        {{ item.note }}
-                                    </p>
-                                </div>
-                                <div v-else-if="item.note" class="mt-2 text-xs text-stone-500 bg-stone-50 p-2 rounded-lg">
-                                    <i class="fas fa-info-circle mr-1 text-stone-400"></i>{{ item.note }}
-                                </div>
-
-                                <div v-if="item.foodOptions" class="food-card">
-                                    <p class="text-xs font-bold text-amber-700 mb-2"><i class="fas fa-utensils mr-1"></i>推薦美食</p>
-                                    <div class="space-y-2">
-                                        <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" class="flex items-center justify-between bg-white p-2 rounded border border-amber-100">
-                                            <div>
-                                                <p class="text-xs font-bold text-gray-800">{{ food.name }}</p>
-                                                <p class="text-[10px] text-gray-500">{{ food.desc }}</p>
-                                            </div>
-                                            <a :href="food.link" target="_blank" class="text-amber-500 hover:text-amber-700 ml-2 p-1">
-                                                <i class="fas fa-map-marked-alt text-lg"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div v-if="item.tip" class="mt-2 text-[11px] bg-blue-50 text-blue-800 p-2 rounded-lg border border-blue-100 flex items-start">
-                                    <i class="fas fa-lightbulb mr-2 mt-0.5 flex-shrink-0"></i>
-                                    <span class="leading-relaxed">{{ item.tip }}</span>
-                                </div>
+                            <div>
+                                <span class="inline-block bg-indigo-50 text-indigo-600 text-xs font-bold px-2 py-1 rounded-md mb-2">
+                                    <i class="far fa-clock mr-1"></i>{{ item.time }}
+                                </span>
+                                <h3 class="font-bold text-gray-800 text-lg">{{ item.location }}</h3>
+                                <p class="text-gray-500 text-sm mt-1 leading-relaxed">{{ item.note }}</p>
                             </div>
-                            
-                            <div class="flex flex-col space-y-3 pt-1">
-                                <button v-if="item.link" @click="openSmartMap(item)" 
-                                    class="map-btn w-10 h-10 rounded-xl bg-black text-white shadow-gray-400 shadow-md hover:bg-gray-800 flex items-center justify-center">
+                            <div class="flex flex-col space-y-2">
+                                <button @click="openGoogleMaps(item.location)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 shadow-sm">
                                     <i class="fas fa-location-arrow text-sm"></i>
                                 </button>
-                                <button v-else class="w-10 h-10 rounded-xl bg-stone-100 text-stone-300 flex items-center justify-center cursor-default">
-                                    <i class="fas fa-map-marker-alt text-sm"></i>
-                                </button>
-                                
-                                <button @click="editActivity(item)" class="map-btn w-10 h-10 rounded-xl bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100">
+                                <button @click="editActivity(item)" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-gray-100">
                                     <i class="fas fa-pen text-xs"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </transition-group>
+            
+            <div class="h-20"></div>
+        </div>
+
+        <div v-show="currentView === 'map'" class="h-full w-full relative">
+            <div id="map" class="w-full h-full"></div>
+            <div class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg z-[500] text-sm">
+                <p class="font-bold text-gray-700">💡 提示</p>
+                <p class="text-gray-500">此地圖顯示概略位置。點擊行程列表中的 <i class="fas fa-location-arrow text-green-600"></i> 按鈕可開啟 Google Maps 導航。</p>
             </div>
         </div>
 
-        <div v-show="currentView === 'map'" class="absolute inset-0 z-0">
-            <div id="map"></div>
-        </div>
     </main>
 
-    <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur border-t border-stone-100 px-6 py-2 flex justify-between items-center z-30 pb-6 pt-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-orange-600' : 'text-stone-400'" class="flex flex-col items-center w-16 transition-colors">
-            <i class="fas fa-list-ul text-lg mb-1"></i><span class="text-[10px] font-medium">行程</span>
+    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-30 pb-safe">
+        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center space-y-1 w-16">
+            <i class="fas fa-list-ul text-xl"></i>
+            <span class="text-[10px] font-medium">行程</span>
         </button>
-        <button @click="openModal()" class="bg-orange-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-orange-200 -translate-y-5 hover:scale-105 active:scale-95 transition-all">
+        
+        <button @click="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-indigo-300 transform -translate-y-6 transition hover:scale-105 active:scale-95">
             <i class="fas fa-plus text-xl"></i>
         </button>
-        <button @click="switchMap" :class="currentView === 'map' ? 'text-orange-600' : 'text-stone-400'" class="flex flex-col items-center w-16 transition-colors">
-            <i class="fas fa-map-marked-alt text-lg mb-1"></i><span class="text-[10px] font-medium">地圖</span>
+
+        <button @click="switchMap" :class="currentView === 'map' ? 'text-indigo-600' : 'text-gray-400'" class="flex flex-col items-center space-y-1 w-16">
+            <i class="fas fa-map-marked-alt text-xl"></i>
+            <span class="text-[10px] font-medium">地圖</span>
         </button>
     </nav>
 
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-stone-900/60 p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-bounce-up">
-            <h2 class="text-lg font-bold mb-4 text-stone-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h2>
-            <div class="space-y-3">
-                <div class="flex gap-3">
-                    <input type="time" v-model="form.time" class="w-1/3 bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
-                    <input type="text" v-model="form.location" placeholder="地點" class="w-2/3 bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
+    <div v-if="showModal" class="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-bounce-up">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                {{ isEditing ? '編輯行程' : '新增行程' }}
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">時間</label>
+                    <input type="time" v-model="form.time" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <input type="text" v-model="form.action" placeholder="內容" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
-                <input type="text" v-model="form.transport" placeholder="交通" class="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl p-3 outline-none focus:border-orange-400 placeholder-stone-400 transition">
-                <textarea v-model="form.note" placeholder="備註" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 h-20 resize-none outline-none focus:border-orange-500 transition"></textarea>
-                <input type="text" v-model="form.link" placeholder="Google Maps 連結" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-500 outline-none focus:border-orange-500 transition">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">地點</label>
+                    <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">備註</label>
+                    <textarea v-model="form.note" placeholder="例如: 記得買御守、穿和服" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 h-20 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
             </div>
+
             <div class="flex gap-3 mt-6">
-                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold hover:bg-red-100 transition">刪除</button>
-                <button @click="showModal = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl font-medium hover:bg-stone-200 transition">取消</button>
-                <button @click="saveActivity" class="flex-[2] bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 shadow-lg shadow-orange-200 transition">儲存</button>
+                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 font-bold py-3 rounded-xl hover:bg-red-100">
+                    刪除
+                </button>
+                <button v-if="!isEditing" @click="showModal = false" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl hover:bg-gray-200">
+                    取消
+                </button>
+                <button @click="saveActivity" class="flex-[2] bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700">
+                    {{ isEditing ? '更新' : '新增' }}
+                </button>
             </div>
+            
+            <button v-if="isEditing" @click="showModal = false" class="mt-3 w-full text-gray-400 text-sm py-2">取消編輯</button>
         </div>
     </div>
+
 </div>
 
 <script>
     const { createApp } = Vue;
 
-    const detailedData = {
-        0: [
-            { id: 1, time: '16:00', location: '關西機場 T2', action: '轉搭接駁巴士', transport: '免費巴士 → Aeroplaza', note: '入境後，前往 Aeroplaza 搭乘接駁車至 T1/關西機場站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Terminal+2&destination=Aeroplaza&travelmode=transit' },
-            { id: 2, time: '16:30', location: '關西機場站', action: '南海特急 Rapi:t α', transport: 'Rapi:t α 6 (往難波)', note: '搭乘藍色的 Rapi:t 特急 α。全車指定席。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Namba+Station&travelmode=transit' },
-            { id: 3, time: '17:05', location: '南海難波站 (出站指引)', action: '步行出站', transport: '步行 (關鍵路徑)', note: '抵達 3F 月台 → 搭手扶梯下 1F → 找「北出口」或「東出口」。', tip: '不要走地下街，容易迷路。請走到戶外地面層。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station+Nankai&destination=Namba+City' },
-            { id: 4, time: '17:20', location: '前往日本橋/飯店', action: '地面步行', transport: '步行 (10-12分)', isHotel: true, note: '沿著「難波 CITY」外圍往東走，進入「電器街 (Den Den Town)」。看到堺筋大馬路左轉即是黑門市場。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station+Nankai&destination=Caption+by+Hyatt+Namba+Osaka&travelmode=walking' },
-            { id: 5, time: '19:00', location: '道頓堀 / 裏難波', action: '晚餐', transport: '步行', note: '步行至道頓堀約 8 分鐘。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Dotonbori&travelmode=walking', 
-                foodOptions: [
-                    { name: '福太郎 (Fukutaro)', desc: '米其林大阪燒，蔥燒必點', link: 'https://goo.gl/maps/8Np6334tLtTjaFX5A' },
-                    { name: '燒肉力丸 (Rikimaru)', desc: '優質國產牛吃到飽，適合家庭', link: 'https://goo.gl/maps/Qk3J7z8g1q7k8x5d9' }, // 示意連結
-                    { name: '神座拉麵', desc: '大量蔬菜清爽湯頭', link: 'https://goo.gl/maps/placeholder' } // 示意
-                ] 
-            }
-        ],
-        1: [
-            { id: 7, time: '09:00', location: '飯店 → 日本橋站', action: '步行至車站', transport: '步行 (3分鐘)', note: '走到堺筋線日本橋站 (10號入口有電梯)。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Nippombashi+Station&travelmode=walking' },
-            { id: 8, time: '09:10', location: '日本橋站', action: '前往神戶', transport: '阪神電車 (直達)', note: '搭乘往「尼崎/神戶三宮」方向的「快速急行」。', tip: '免換車，一班直達神戶三宮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Nippombashi+Station&destination=Kobe-Sannomiya+Station&travelmode=transit' },
-            { id: 9, time: '10:00', location: '神戶三宮 → 新神戶', action: '轉搭地鐵', transport: '神戶地鐵 (1站)', note: '轉乘西神山手線至「新神戶站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Shin-Kobe+Station&travelmode=transit' },
-            { id: 10, time: '10:20', location: '新神戶 → 香草園', action: '空中纜車', transport: '纜車', note: '出站後跟著指標走，搭乘纜車上山。', link: 'https://www.google.com/maps/dir/?api=1&origin=Shin-Kobe+Station&destination=Kobe+Nunobiki+Herb+Gardens&travelmode=walking' },
-            { id: 11, time: '13:00', location: '返回三宮', action: '午餐', transport: '纜車 + 地鐵', note: '下山回到三宮市區用餐。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Nunobiki+Herb+Gardens&destination=Kobe-Sannomiya+Station&travelmode=transit',
-                foodOptions: [
-                    { name: 'Mouriya (モーリヤ)', desc: '百年神戶牛鐵板燒老店 (需預約)', link: 'https://goo.gl/maps/mouriya' }, // 示意
-                    { name: 'Steakland', desc: '平價神戶牛排，CP值高', link: 'https://goo.gl/maps/steakland' },
-                    { name: 'The Veranda', desc: '香草園內景觀餐廳', link: 'https://goo.gl/maps/veranda' }
-                ]
-            },
-            { id: 12, time: '15:00', location: '三宮 → 神戶港', action: '移動', transport: 'JR神戶線', note: '搭JR從三宮到「神戶站」(3分鐘)。走路去 Mosaic。', link: 'https://www.google.com/maps/dir/?api=1&origin=Sannomiya+Station&destination=Kobe+Station&travelmode=transit' },
-            { id: 13, time: '15:15', location: '神戶站 → Mosaic', action: '步行', transport: '步行', note: '沿著地下街或天橋走到海邊。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Station&destination=Kobe+Harborland+umie&travelmode=walking' },
-            { id: 14, time: '18:30', location: 'Mosaic → 高速神戶', action: '回程步行', transport: '步行 或 Uber', note: '如果孩子累了，這段路可以直接叫 Uber 去「高速神戶站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Harborland+umie&destination=Kosokukobe+Station&travelmode=walking' },
-            { id: 15, time: '18:45', location: '高速神戶 → 大阪', action: '回飯店', transport: '阪神電車 (直達)', note: '搭乘阪神電車直達「近鐵日本橋站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kosokukobe+Station&destination=Nippombashi+Station&travelmode=transit' }
-        ],
-        2: [
-            { id: 16, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '飯店旁輕鬆逛。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Kuromon+Ichiba+Market&travelmode=walking' },
-            { id: 17, time: '11:00', location: '飯店 → 淀屋橋', action: '移動Step 1', transport: 'Uber / Taxi App', recommend: true, note: '【Uber 建議】請在飯店大廳叫 Uber 直接設定目的地「京阪淀屋橋站」。省去搬行李轉地鐵的麻煩，輕鬆又優雅。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Yodoyabashi+Station&travelmode=driving' },
-            { id: 18, time: '11:20', location: '淀屋橋 → 神宮丸太町', action: '移動Step 2', transport: '京阪電車特急', recommend: true, note: '在起點站悠哉搭車，記得選「特急」的雙層車廂座位！搭到「神宮丸太町」下車。', tip: '目的地已設定在京阪線，不用轉車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Yodoyabashi+Station&destination=Jingu-Marutamachi+Station&travelmode=transit' },
-            { id: 19, time: '12:10', location: '神宮丸太町 → 飯店', action: '移動Step 3', transport: 'Uber / Taxi App', isHotel: true, note: '【重點】出站到地面後，直接叫 Uber 去 Hyatt Place。雖然距離短，但有行李又有小孩，Uber 是最好的選擇。', link: 'https://www.google.com/maps/dir/?api=1&origin=Jingu-Marutamachi+Station&destination=Hyatt+Place+Kyoto&travelmode=driving' },
-            { id: 20, time: '15:00', location: '京都御苑', action: '散步', transport: '步行', note: '飯店對面，Check-in 後輕鬆逛。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Gyoen+National+Garden&travelmode=walking' },
-            { id: 21, time: '17:30', location: '飯店 → 四條', action: '晚餐', transport: 'Uber 或 地鐵', note: '可以直接 Uber 去「四條烏丸」附近，或搭地鐵。', link: 'https://www.google.com/maps/dir/?api=1&origin=Marutamachi+Station&destination=Shijo+Station&travelmode=transit',
-                foodOptions: [
-                    { name: 'Katsukura (名代炸豬排)', desc: '三条本店，白飯高麗菜吃到飽', link: 'https://goo.gl/maps/katsukura' },
-                    { name: '麵屋 豬一 (Inoichi)', desc: '必比登推介，清爽系拉麵', link: 'https://goo.gl/maps/inoichi' },
-                    { name: '本家尾張屋', desc: '500年歷史蕎麥麵', link: 'https://goo.gl/maps/owariya' }
-                ]
-            }
-        ],
-        3: [
-            { id: 22, time: '08:30', location: '飯店 → 伏見稻荷', action: '早起出發', transport: 'Uber (推薦)', note: '直接叫 Uber 去伏見稻荷大社。避開上班時間的電車人潮，直達入口最方便。', tip: '在車上可以補眠。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Fushimi+Inari+Taisha&travelmode=driving' },
-            { id: 23, time: '10:30', location: '伏見稻荷 → 清水五條', action: '移動', transport: '京阪電車', note: '體驗一下京阪電車，搭到「清水五條站」。', link: 'https://www.google.com/maps/dir/?api=1&origin=Fushimi-Inari+Station&destination=Kiyomizu-Gojo+Station&travelmode=transit' },
-            { id: 24, time: '11:00', location: '清水五條 → 清水寺', action: '攻頂策略', transport: 'Uber / Taxi App', recommend: true, note: '【絕對要搭】出站後馬上叫 Uber 設定去「清水道」或「清水寺入口」。千萬不要嘗試走路上山，那是體力殺手。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-Gojo+Station&destination=Kiyomizu-dera&travelmode=driving',
-                foodOptions: [
-                    { name: '奧丹清水 (Okutan)', desc: '300年湯豆腐名店，庭園美', link: 'https://goo.gl/maps/okutan' },
-                    { name: 'Omen (おめん)', desc: '名物烏龍沾麵，蔬菜豐富', link: 'https://goo.gl/maps/omen' }
-                ]
-            },
-            { id: 25, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '參拜完後，順著三年坂 → 二年坂一路「下坡」逛到八坂神社。這是最舒服的走法。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Gion&travelmode=walking' },
-            { id: 26, time: '17:30', location: '祇園四條 → 飯店', action: '回程', transport: 'Uber', note: '逛完祇園累了嗎？直接 Uber 回飯店，約 1500 日圓內，不用擠電車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Gion-Shijo+Station&destination=Hyatt+Place+Kyoto&travelmode=driving',
-                foodOptions: [
-                    { name: '祇園 Tanto', desc: '鴨川旁鐵板燒，氣氛佳', link: 'https://goo.gl/maps/tanto' },
-                    { name: '柚子元', desc: '人氣柚子火鍋，清爽解膩', link: 'https://goo.gl/maps/yuzugen' }
-                ]
-            }
-        ],
-        4: [
-            { id: 28, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: 'Uber / Taxi App', note: '帶著戰利品和行李，直接 Uber 去京都站「八條口」（後站，比較好下車）。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Station&travelmode=driving',
-                foodOptions: [
-                    { name: '京都 Porta 地下街', desc: '東洋亭漢堡排、KYK炸豬排', link: 'https://goo.gl/maps/porta' }
-                ]
-            },
-            { id: 29, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。請事先買好票券。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+Airport+Station&travelmode=transit' },
-            { id: 30, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: '車站出來過空橋去 Aeroplaza 搭車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Aeroplaza&travelmode=walking' },
-            { id: 31, time: '12:00', location: '回程', action: 'Safe Flight', transport: '飛機', note: '旅途愉快！' }
-        ]
-    };
-
-    const app = createApp({
+    createApp({
         data() {
             return {
-                currentDay: 0,
-                currentView: 'list',
+                currentDay: 0, // 0 = Day 1
+                currentView: 'list', // list or map
                 showModal: false,
                 isEditing: false,
                 mapInstance: null,
                 days: [
-                    { date: '12/12 (五)', name: 'Day 1: 抵達大阪', desc: 'Rapi:t α 直達難波', center: [34.6629, 135.5023], weather: { status: '晴時多雲', icon: 'fas fa-sun', temp_high: 11, temp_low: 5, color: 'text-orange-500', rain: false } },
-                    { date: '12/13 (六)', name: 'Day 2: 神戶觀景', desc: '布引香草園纜車', center: [34.6946, 135.1954], weather: { status: '多雲時陰', icon: 'fas fa-cloud', temp_high: 11, temp_low: 4, color: 'text-gray-500', rain: false } },
-                    { date: '12/14 (日)', name: 'Day 3: 移動京都', desc: 'Uber 接駁好輕鬆', center: [35.0163, 135.7592], weather: { status: '陰短暫雨', icon: 'fas fa-cloud-rain', temp_high: 14, temp_low: 7, color: 'text-blue-500', rain: true } },
-                    { date: '12/15 (一)', name: 'Day 4: 清水寺', desc: 'Uber 攻頂不累', center: [34.9949, 135.7850], weather: { status: '多雲', icon: 'fas fa-cloud', temp_high: 11, temp_low: 6, color: 'text-gray-500', rain: false } },
-                    { date: '12/16 (二)', name: 'Day 5: 返程', desc: 'Uber 直達京都站', center: [34.4320, 135.2304], weather: { status: '晴朗', icon: 'fas fa-sun', temp_high: 12, temp_low: 4, color: 'text-orange-500', rain: false } }
+                    { name: 'Day 1: 大阪', center: [34.6937, 135.5023] },
+                    { name: 'Day 2: 京都', center: [35.0116, 135.7681] },
+                    { name: 'Day 3: 神戶', center: [34.6901, 135.1955] },
+                    { name: 'Day 4: 環球影城', center: [34.6654, 135.4323] }
                 ],
-                activities: {},
-                form: { id: null, time: '', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', recommend: false }
+                // 資料結構：每頁一個 Array
+                activities: {
+                    0: [
+                        { id: 1, time: '10:00', location: '關西機場抵達', note: '領取周遊券，搭乘南海電鐵' },
+                        { id: 2, time: '13:00', location: '心齋橋 & 道頓堀', note: '午餐：一蘭拉麵、章魚燒' },
+                        { id: 3, time: '16:00', location: '大阪城公園', note: '參觀天守閣' },
+                        { id: 4, time: '19:00', location: '梅田藍天大廈', note: '看夜景' }
+                    ],
+                    1: [
+                        { id: 5, time: '09:00', location: '伏見稻荷大社', note: '千本鳥居拍照' },
+                        { id: 6, time: '12:00', location: '清水寺', note: '二年坂、三年坂逛街' },
+                        { id: 7, time: '15:00', location: '金閣寺', note: '夕陽非常漂亮' }
+                    ],
+                    2: [
+                        { id: 8, time: '10:00', location: '北野異人館', note: '參觀風見雞之館' },
+                        { id: 9, time: '12:30', location: '神戶牛排 Misono', note: '已預約' },
+                        { id: 10, time: '15:00', location: '神戶港塔', note: '散步看海景' }
+                    ],
+                    3: []
+                },
+                form: {
+                    id: null,
+                    time: '',
+                    location: '',
+                    note: ''
+                }
             }
         },
         computed: {
@@ -272,100 +232,133 @@
                 return this.activities[this.currentDay] || [];
             },
             sortedActivities() {
+                // 根據時間排序
                 return [...this.currentActivities].sort((a, b) => a.time.localeCompare(b.time));
             }
         },
         mounted() {
-            this.loadAndMergeData();
+            this.loadFromStorage();
         },
         methods: {
-            loadAndMergeData() {
-                try {
-                    const saved = localStorage.getItem('japanTrip_v16_FoodGuide');
-                    if (saved) {
-                        this.activities = JSON.parse(saved);
-                    } else {
-                        this.activities = JSON.parse(JSON.stringify(detailedData));
-                        this.saveToStorage();
-                    }
-                } catch(e) {
-                    this.activities = JSON.parse(JSON.stringify(detailedData));
-                }
-            },
-            changeDay(index) {
-                this.currentDay = index;
-                this.currentView = 'list';
-            },
+            // 切換到地圖模式
             switchMap() {
                 this.currentView = 'map';
+                // Leaflet 需要在 DOM 顯示後初始化，使用 nextTick
                 this.$nextTick(() => {
-                    if (!this.mapInstance) this.initMap();
-                    setTimeout(() => {
-                        this.mapInstance.invalidateSize();
-                        this.mapInstance.setView(this.days[this.currentDay].center, 14);
-                    }, 100);
+                    if (!this.mapInstance) {
+                        this.initMap();
+                    } else {
+                        // 切換到當天城市的中心點
+                        const center = this.days[this.currentDay].center;
+                        this.mapInstance.setView(center, 13);
+                        this.mapInstance.invalidateSize(); // 修正地圖渲染問題
+                    }
                 });
             },
             initMap() {
-                this.mapInstance = L.map('map').setView(this.days[this.currentDay].center, 14);
+                const center = this.days[this.currentDay].center;
+                this.mapInstance = L.map('map').setView(center, 13);
+                
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: 'OpenStreetMap', maxZoom: 19
+                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 19
                 }).addTo(this.mapInstance);
+
+                // 簡單標記當前城市中心
+                L.marker(center).addTo(this.mapInstance)
+                    .bindPopup(this.days[this.currentDay].name)
+                    .openPopup();
             },
-            openSmartMap(item) {
-                if (item.link) window.open(item.link, '_blank');
+            // 開啟 Google Maps 導航
+            openGoogleMaps(location) {
+                const query = encodeURIComponent(location);
+                // 使用 Google Maps Universal Link
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
             },
-            getIconColor(item) {
-                if (item.isHotel) return 'bg-purple-500';
-                if (item.recommend) return 'bg-black border-black'; 
-                if (item.transport) return 'bg-gray-500';
-                return 'bg-stone-300';
-            },
+            // Modal 操作
             openModal(item = null) {
-                this.isEditing = !!item;
-                this.form = item ? { ...item } : { id: Date.now(), time: '09:00', location: '', action: '', transport: '', note: '', link: '', isHotel: false, tip: '', recommend: false };
+                if (item) {
+                    this.isEditing = true;
+                    this.form = { ...item };
+                } else {
+                    this.isEditing = false;
+                    this.form = { id: Date.now(), time: '09:00', location: '', note: '' };
+                }
                 this.showModal = true;
             },
+            // CRUD
             saveActivity() {
                 if (!this.form.location) return alert('請輸入地點');
-                if (!this.activities[this.currentDay]) this.activities[this.currentDay] = [];
                 
+                if (!this.activities[this.currentDay]) {
+                    this.activities[this.currentDay] = [];
+                }
+
                 if (this.isEditing) {
-                    const idx = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
-                    if (idx !== -1) this.activities[this.currentDay][idx] = { ...this.form };
+                    const index = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
+                    if (index !== -1) {
+                        this.activities[this.currentDay][index] = { ...this.form };
+                    }
                 } else {
                     this.activities[this.currentDay].push({ ...this.form });
                 }
+
                 this.saveToStorage();
                 this.showModal = false;
             },
             deleteActivity() {
-                if(confirm('刪除此行程？')) {
+                if(confirm('確定要刪除這個行程嗎？')) {
                     this.activities[this.currentDay] = this.activities[this.currentDay].filter(x => x.id !== this.form.id);
                     this.saveToStorage();
                     this.showModal = false;
                 }
             },
+            editActivity(item) {
+                this.openModal(item);
+            },
+            // LocalStorage
             saveToStorage() {
-                localStorage.setItem('japanTrip_v16_FoodGuide', JSON.stringify(this.activities));
+                localStorage.setItem('japanTripData', JSON.stringify(this.activities));
+            },
+            loadFromStorage() {
+                const data = localStorage.getItem('japanTripData');
+                if (data) {
+                    this.activities = JSON.parse(data);
+                }
             },
             resetData() {
-                if(confirm('重置將會清除自訂行程，恢復為「美食嚮導版」。確定嗎？')) {
-                    this.activities = JSON.parse(JSON.stringify(detailedData));
-                    this.saveToStorage();
-                    this.currentDay = 0;
-                    alert('已載入 v16 美食嚮導版！');
+                if(confirm('確定要重置回預設行程嗎？所有自訂資料將消失。')) {
+                    localStorage.removeItem('japanTripData');
+                    location.reload();
+                }
+            }
+        },
+        watch: {
+            // 當切換日期時，如果在地圖模式，自動平移地圖
+            currentDay(newVal) {
+                if (this.currentView === 'map' && this.mapInstance) {
+                    const center = this.days[newVal].center;
+                    this.mapInstance.flyTo(center, 13);
                 }
             }
         }
-    });
-    
-    app.mount('#app');
+    }).mount('#app');
 </script>
 
 <style>
-@keyframes bounce-up { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-.animate-bounce-up { animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+/* CSS Animation for Modal */
+@keyframes bounce-up {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+.animate-bounce-up {
+    animation: bounce-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Safe Area for iPhone */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
 </style>
 
 </body>
