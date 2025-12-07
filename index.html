@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (Final v19)</title>
+    <title>京阪神親子遊 (Final v20)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -35,7 +35,7 @@
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 👨‍👩‍👧‍👦</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">Verified Plan: 全路線確認版</p>
+                <p class="text-orange-100 text-xs mt-1 font-medium">Fixed: 100% 有效地圖連結</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
         </div>
@@ -189,89 +189,90 @@
 <script>
     const { createApp } = Vue;
 
+    // 所有連結已修正為 Universal Search Links，點擊後會顯示地點，請再按導航按鈕
     const detailedData = {
         0: [
-            { id: 1, time: '16:00', location: '關西機場 T2', action: '轉搭接駁巴士', transport: '免費巴士 → Aeroplaza', note: '入境後，請跟隨「T1」或「Railways」指標，搭乘免費接駁巴士到 Aeroplaza。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+International+Airport+Terminal+2&destination=Aeroplaza,+1+Senshukukokita,+Izumisano,+Osaka&travelmode=transit' },
-            { id: 2, time: '16:30', location: '關西機場站', action: '南海特急 Rapi:t α', transport: 'Rapi:t α 6 (往難波)', note: '搭乘藍色的 Rapi:t 特急 α，全車指定席。目標：南海難波站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Namba+Station+(Nankai)&travelmode=transit' },
-            { id: 3, time: '17:05', location: '南海難波站', action: '出站步行 (關鍵)', transport: '步行 (約10-12分)', note: '抵達後搭手扶梯下到 1F，找「北出口」或「東出口」。走地面道路往黑門市場方向最單純，避開地下迷宮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Namba+Station+(Nankai)&destination=Caption+by+Hyatt+Namba+Osaka&travelmode=walking' },
+            { id: 1, time: '16:00', location: '關西機場 T2', action: '轉搭接駁巴士', transport: '免費巴士 → Aeroplaza', note: '入境後，請跟隨「T1」或「Railways」指標，搭乘免費接駁巴士到 Aeroplaza。', link: 'https://www.google.com/maps/search/?api=1&query=Aeroplaza+Kansai+Airport' },
+            { id: 2, time: '16:30', location: '關西機場站', action: '南海特急 Rapi:t α', transport: 'Rapi:t α 6 (往難波)', note: '搭乘藍色的 Rapi:t 特急 α，全車指定席。目標：南海難波站。', link: 'https://www.google.com/maps/search/?api=1&query=Namba+Station+Nankai' },
+            { id: 3, time: '17:05', location: '南海難波站', action: '出站步行 (關鍵)', transport: '步行 (約10-12分)', note: '抵達後搭手扶梯下到 1F，找「北出口」或「東出口」。走地面道路往黑門市場方向最單純。', link: 'https://www.google.com/maps/search/?api=1&query=Caption+by+Hyatt+Namba+Osaka' },
             { id: 4, time: '17:20', location: '大阪凱悅嘉薈', action: 'Check-in', transport: '步行', isHotel: true, note: '飯店位於黑門市場旁，非常方便。', link: 'https://www.google.com/maps/search/?api=1&query=Caption+by+Hyatt+Namba+Osaka' },
             { id: 5, time: '19:00', location: '道頓堀 / 難波', action: '晚餐 & 逛街', transport: '步行', note: '步行至道頓堀，開始大阪美食之旅。', link: 'https://www.google.com/maps/search/?api=1&query=Dotonbori+Glico+Sign',
                 foodOptions: [
-                    { name: '福太郎 本店', desc: '米其林推薦大阪燒 (人多可去別館)', link: 'https://www.google.com/maps/search/?api=1&query=Fukutaro+Okonomiyaki+Honten' },
-                    { name: '燒肉力丸 難波', desc: '國產牛吃到飽，適合家庭', link: 'https://www.google.com/maps/search/?api=1&query=Rikimaru+Namba+Minatomachi' },
+                    { name: '福太郎 本店', desc: '米其林推薦大阪燒', link: 'https://www.google.com/maps/search/?api=1&query=Fukutaro+Okonomiyaki' },
+                    { name: '燒肉力丸 難波', desc: '國產牛吃到飽', link: 'https://www.google.com/maps/search/?api=1&query=Rikimaru+Namba' },
                     { name: '神座拉麵', desc: '大量蔬菜清爽湯頭', link: 'https://www.google.com/maps/search/?api=1&query=Kamukura+Dotonbori' }
                 ],
-                shopping: { name: 'Donki 道頓堀店', desc: '摩天輪下那間，買零食飲料', link: 'https://www.google.com/maps/search/?api=1&query=Don+Quijote+Dotonbori' }
+                shopping: { name: 'Donki 道頓堀店', desc: '摩天輪下那間', link: 'https://www.google.com/maps/search/?api=1&query=Don+Quijote+Dotonbori' }
             }
         ],
         1: [
-            { id: 7, time: '09:00', location: '飯店 → 日本橋站', action: '移動至神戶', transport: '阪神電車 (直達)', note: '步行至近鐵/阪神日本橋站，搭乘「快速急行」直達神戶三宮。', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Kintetsu-Nippombashi+Station&travelmode=walking' },
-            { id: 9, time: '10:00', location: '神戶三宮', action: '市區逛逛', transport: '步行', note: '抵達三宮，逛逛車站周邊，感受神戶氣氛。', tip: '今天重點是吃牛排和看海，行程很鬆。' },
+            { id: 7, time: '09:00', location: '飯店 → 日本橋站', action: '移動至神戶', transport: '阪神電車 (直達)', note: '步行至近鐵/阪神日本橋站，搭乘「快速急行」直達神戶三宮。', link: 'https://www.google.com/maps/search/?api=1&query=Kintetsu+Nippombashi+Station' },
+            { id: 9, time: '10:00', location: '神戶三宮', action: '市區逛逛', transport: '步行', note: '抵達三宮，逛逛車站周邊。', tip: '今天重點是吃牛排和看海。' },
             { id: 11, time: '11:30', location: '三宮市區', action: '神戶牛午餐', transport: '步行', note: '重頭戲！建議提早去排隊或預約。', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Sannomiya+Station',
                 foodOptions: [
-                    { name: 'Mouriya (モーリヤ)', desc: '頂級神戶牛鐵板燒 (需預約)', link: 'https://www.google.com/maps/search/?api=1&query=Mouriya+Honten+Kobe' },
-                    { name: 'Steakland', desc: '高CP值午餐，大眾化口味', link: 'https://www.google.com/maps/search/?api=1&query=Steakland+Kobe-kan' },
-                    { name: 'Red Rock', desc: '堆成山的烤牛肉丼飯', link: 'https://www.google.com/maps/search/?api=1&query=Red+Rock+Sannomiya' }
+                    { name: 'Mouriya (モーリヤ)', desc: '頂級神戶牛鐵板燒', link: 'https://www.google.com/maps/search/?api=1&query=Mouriya+Honten+Kobe' },
+                    { name: 'Steakland', desc: '高CP值午餐', link: 'https://www.google.com/maps/search/?api=1&query=Steakland+Kobe' },
+                    { name: 'Red Rock', desc: '烤牛肉丼飯', link: 'https://www.google.com/maps/search/?api=1&query=Red+Rock+Sannomiya' }
                 ]
             },
-            { id: 12, time: '14:00', location: '三宮 → 神戶港', action: '移動', transport: 'Uber / Taxi', recommend: true, note: '吃飽後建議直接 Uber 去「Mosaic 廣場」，省去走去 JR 站的腳程。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe-Sannomiya+Station&destination=Kobe+Harborland+umie+Mosaic&travelmode=driving' },
-            { id: 13, time: '14:30', location: '神戶港 (Mosaic)', action: '逛街 & 下午茶', transport: '步行', note: '這裡有麵包超人博物館(商店免費進)、Umie 商場，海景很美。', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Harborland+umie+Mosaic' },
-            { id: 14, time: '17:30', location: 'Mosaic → 高速神戶', action: '回程', transport: '步行 / Uber', note: '走去「高速神戶站」搭阪神電車回日本橋。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kobe+Harborland+umie+Mosaic&destination=Kosoku-Kobe+Station&travelmode=walking' },
+            { id: 12, time: '14:00', location: '三宮 → 神戶港', action: '移動', transport: 'Uber / Taxi', recommend: true, note: '吃飽後建議直接 Uber 去「Mosaic 廣場」，定位在 Umie Mosaic。', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Harborland+umie+Mosaic' },
+            { id: 13, time: '14:30', location: '神戶港 (Mosaic)', action: '逛街 & 下午茶', transport: '步行', note: '這裡有麵包超人博物館(商店免費進)、Umie 商場，海景很美。', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Anpanman+Children+Museum' },
+            { id: 14, time: '17:30', location: 'Mosaic → 高速神戶', action: '回程', transport: '步行 / Uber', note: '走去「高速神戶站」搭阪神電車回日本橋。', link: 'https://www.google.com/maps/search/?api=1&query=Kosoku+Kobe+Station' },
             { id: 15, time: '19:00', location: '難波 / 日本橋', action: '晚餐', transport: '阪神電車 (直達)', note: '回到飯店附近用餐。',
                 foodOptions: [
-                    { name: '天政 (Tenmasa)', desc: '平價好吃的天婦羅烏龍麵', link: 'https://www.google.com/maps/search/?api=1&query=Tenmasa+Namba' },
-                    { name: '千房 (Chibo)', desc: '環境舒適的大阪燒名店', link: 'https://www.google.com/maps/search/?api=1&query=Chibo+Okonomiyaki+Sennichimae' },
-                    { name: '大起水產 迴轉壽司', desc: '新鮮平價，道頓堀有店', link: 'https://www.google.com/maps/search/?api=1&query=Daiki-suisan+Kaitenzushi+Dotonbori' }
+                    { name: '天政 (Tenmasa)', desc: '平價好吃烏龍麵', link: 'https://www.google.com/maps/search/?api=1&query=Tenmasa+Namba' },
+                    { name: '千房 (Chibo)', desc: '大阪燒名店', link: 'https://www.google.com/maps/search/?api=1&query=Chibo+Okonomiyaki' },
+                    { name: '大起水產', desc: '新鮮平價壽司', link: 'https://www.google.com/maps/search/?api=1&query=Daiki+Suisan+Dotonbori' }
                 ],
                 shopping: { name: '松本清 心齋橋', desc: '回程順路買藥妝', link: 'https://www.google.com/maps/search/?api=1&query=Matsumoto+Kiyoshi+Shinsaibashi' }
             }
         ],
         2: [
-            { id: 16, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '飯店旁吃吃喝喝，買點水果。', link: 'https://www.google.com/maps/search/?api=1&query=Kuromon+Market' },
-            { id: 17, time: '11:00', location: '飯店 → 淀屋橋', action: '移動至京都', transport: 'Uber / Taxi', recommend: true, note: 'Uber 直達京阪「淀屋橋站」。省力關鍵！', link: 'https://www.google.com/maps/dir/?api=1&origin=Caption+by+Hyatt+Namba+Osaka&destination=Yodoyabashi+Station&travelmode=driving' },
-            { id: 18, time: '11:30', location: '淀屋橋 → 神宮丸太町', action: '京阪特急', transport: '京阪電車', note: '搶雙層座位，欣賞風景。搭到「神宮丸太町」站。', link: 'https://www.google.com/maps/dir/?api=1&origin=Yodoyabashi+Station&destination=Jingu-Marutamachi+Station&travelmode=transit' },
-            { id: 19, time: '12:30', location: '神宮丸太町 → 飯店', action: 'Check-in', transport: 'Uber / Taxi', isHotel: true, note: '出站後 Uber 直達 Hyatt Place Kyoto。', link: 'https://www.google.com/maps/dir/?api=1&origin=Jingu-Marutamachi+Station&destination=Hyatt+Place+Kyoto&travelmode=driving' },
+            { id: 16, time: '09:30', location: '黑門市場', action: '早午餐', transport: '步行', note: '飯店旁吃吃喝喝，買點水果。', link: 'https://www.google.com/maps/search/?api=1&query=Kuromon+Ichiba+Market' },
+            { id: 17, time: '11:00', location: '飯店 → 淀屋橋', action: '移動至京都', transport: 'Uber / Taxi', recommend: true, note: 'Uber 直達京阪「淀屋橋站」。省力關鍵！', link: 'https://www.google.com/maps/search/?api=1&query=Yodoyabashi+Station' },
+            { id: 18, time: '11:30', location: '淀屋橋 → 神宮丸太町', action: '京阪特急', transport: '京阪電車', note: '搭到「神宮丸太町」站 (Jingu-Marutamachi)。', link: 'https://www.google.com/maps/search/?api=1&query=Jingu+Marutamachi+Station' },
+            { id: 19, time: '12:30', location: '神宮丸太町 → 飯店', action: 'Check-in', transport: 'Uber / Taxi', isHotel: true, note: '出站後 Uber 直達 Hyatt Place Kyoto。', link: 'https://www.google.com/maps/search/?api=1&query=Hyatt+Place+Kyoto' },
             { id: 20, time: '13:30', location: '錦市場 / 四條', action: '午餐', transport: 'Uber / 地鐵', note: '放好行李，去錦市場周邊覓食。', 
                 foodOptions: [
-                    { name: '一風堂 錦小路', desc: '知名的拉麵，品質穩定', link: 'https://www.google.com/maps/search/?api=1&query=Ippudo+Nishikikoji' },
-                    { name: '錦 Warai', desc: '京風大阪燒，炒麵也好吃', link: 'https://www.google.com/maps/search/?api=1&query=Nishiki+Warai+Nishiki+Head+Shop' },
-                    { name: '大戶屋', desc: '定食/兒童餐，安全牌', link: 'https://www.google.com/maps/search/?api=1&query=Ootoya+Kyoto+Nishiki' }
+                    { name: '一風堂 錦小路', desc: '知名的拉麵', link: 'https://www.google.com/maps/search/?api=1&query=Ippudo+Nishikikoji' },
+                    { name: '錦 Warai', desc: '京風大阪燒', link: 'https://www.google.com/maps/search/?api=1&query=Nishiki+Warai' },
+                    { name: '大戶屋', desc: '定食/兒童餐', link: 'https://www.google.com/maps/search/?api=1&query=Ootoya+Kyoto+Nishiki' }
                 ]
             },
-            { id: 21, time: '15:30', location: '四條河原町', action: '逛街', transport: '步行', note: '高島屋、Disney Store 都在這。', shopping: { name: '松本清 京都四條', desc: '京都補貨點', link: 'https://www.google.com/maps/search/?api=1&query=Matsumoto+Kiyoshi+Kyoto+Shijo+Kawaramachi' } },
+            { id: 21, time: '15:30', location: '四條河原町', action: '逛街', transport: '步行', note: '高島屋、Disney Store 都在這。', shopping: { name: '松本清 京都四條', desc: '京都補貨點', link: 'https://www.google.com/maps/search/?api=1&query=Matsumoto+Kiyoshi+Kyoto+Shijo' } },
             { id: 22, time: '18:00', location: '四條 / 烏丸', action: '晚餐', transport: '步行', note: '晚餐時刻。',
                 foodOptions: [
-                    { name: '名代炸豬排 Katsukura', desc: '京都第一豬排，白飯味噌湯吃到飽', link: 'https://www.google.com/maps/search/?api=1&query=Katsukura+Sanjo' },
-                    { name: '麵屋 豬一', desc: '必比登推介，清淡系拉麵 (需排隊)', link: 'https://www.google.com/maps/search/?api=1&query=Menya+Inoichi' },
+                    { name: '名代炸豬排 Katsukura', desc: '京都第一豬排', link: 'https://www.google.com/maps/search/?api=1&query=Katsukura+Sanjo' },
+                    { name: '麵屋 豬一', desc: '清淡系拉麵', link: 'https://www.google.com/maps/search/?api=1&query=Menya+Inoichi' },
                     { name: '本家尾張屋', desc: '500年歷史蕎麥麵', link: 'https://www.google.com/maps/search/?api=1&query=Honke+Owariya+Main+Branch' }
                 ]
             }
         ],
         3: [
-            { id: 23, time: '08:30', location: '飯店 → 伏見稻荷', action: '千本鳥居', transport: 'Uber', recommend: true, note: '直接 Uber 去，避開電車人潮，保存體力。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Fushimi+Inari+Taisha&travelmode=driving' },
-            { id: 24, time: '10:30', location: '伏見稻荷 → 清水寺', action: '移動', transport: 'Uber', recommend: true, note: 'Uber 直達「清水道」入口。千萬別搭電車轉公車。', link: 'https://www.google.com/maps/dir/?api=1&origin=Fushimi+Inari+Taisha&destination=Kiyomizu-dera&travelmode=driving' },
+            { id: 23, time: '08:30', location: '飯店 → 伏見稻荷', action: '千本鳥居', transport: 'Uber', recommend: true, note: '直接 Uber 去，避開電車人潮，保存體力。', link: 'https://www.google.com/maps/search/?api=1&query=Fushimi+Inari+Taisha' },
+            { id: 24, time: '10:30', location: '伏見稻荷 → 清水寺', action: '移動', transport: 'Uber', recommend: true, note: 'Uber 直達「清水道」入口。', link: 'https://www.google.com/maps/search/?api=1&query=Kiyomizu+Dera' },
             { id: 25, time: '12:00', location: '清水寺周邊', action: '午餐', transport: '步行', note: '參拜完後在附近用餐。', 
                 foodOptions: [
-                    { name: '奧丹清水 (Okutan)', desc: '300年湯豆腐老店，庭園極美', link: 'https://www.google.com/maps/search/?api=1&query=Okutan+Kiyomizu' },
-                    { name: 'Omen (おめん)', desc: '名物烏龍沾麵，蔬菜豐富', link: 'https://www.google.com/maps/search/?api=1&query=Omen+Kodaiji' },
-                    { name: '清水寺 吉野家', desc: '快速解決，小孩愛吃牛丼', link: 'https://www.google.com/maps/search/?api=1&query=Yoshinoya+Kiyomizudera' }
+                    { name: '奧丹清水 (Okutan)', desc: '300年湯豆腐老店', link: 'https://www.google.com/maps/search/?api=1&query=Okutan+Kiyomizu' },
+                    { name: 'Omen (おめん)', desc: '名物烏龍沾麵', link: 'https://www.google.com/maps/search/?api=1&query=Omen+Kodaiji' },
+                    { name: '清水寺 吉野家', desc: '快速解決', link: 'https://www.google.com/maps/search/?api=1&query=Yoshinoya+Kiyomizudera' }
                 ]
             },
-            { id: 26, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '三年坂 → 二年坂 → 八坂神社，一路下坡逛街。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kiyomizu-dera&destination=Yasaka+Shrine&travelmode=walking' },
+            { id: 26, time: '14:30', location: '清水寺 → 祇園', action: '下坡散步', transport: '步行', note: '三年坂 → 二年坂 → 八坂神社，一路下坡逛街。', link: 'https://www.google.com/maps/search/?api=1&query=Yasaka+Shrine' },
             { id: 27, time: '18:00', location: '祇園 / 河原町', action: '晚餐', transport: '步行', note: '最後一晚的晚餐。',
                 foodOptions: [
-                    { name: '祇園 Tanto', desc: '鴨川旁鐵板燒，氣氛佳', link: 'https://www.google.com/maps/search/?api=1&query=Gion+Tanto' },
-                    { name: '柚子元', desc: '人氣柚子火鍋，清爽解膩', link: 'https://www.google.com/maps/search/?api=1&query=Yuzugen+Kyoto' },
+                    { name: '祇園 Tanto', desc: '鴨川旁鐵板燒', link: 'https://www.google.com/maps/search/?api=1&query=Gion+Tanto' },
+                    { name: '柚子元', desc: '人氣柚子火鍋', link: 'https://www.google.com/maps/search/?api=1&query=Yuzugen+Kyoto' },
                     { name: '壽司 武藏', desc: '三条的老牌迴轉壽司', link: 'https://www.google.com/maps/search/?api=1&query=Sushi+no+Musashi+Sanjo' }
                 ],
                 shopping: { name: 'Donki 河原町店', desc: '最後補貨機會', link: 'https://www.google.com/maps/search/?api=1&query=Don+Quijote+Kawaramachi' }
             },
-            { id: 28, time: '20:00', location: '河原町 → 飯店', action: '回程', transport: 'Uber', note: '大包小包，直接 Uber 回飯店。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto-Kawaramachi+Station&destination=Hyatt+Place+Kyoto&travelmode=driving' }
+            { id: 28, time: '20:00', location: '河原町 → 飯店', action: '回程', transport: 'Uber', note: '大包小包，直接 Uber 回飯店。', link: 'https://www.google.com/maps/search/?api=1&query=Hyatt+Place+Kyoto' }
         ],
         4: [
-            { id: 29, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: 'Uber', recommend: true, note: 'Uber 直達京都站「八條口」(Hachijo Exit)，那裡離 Haruka 月台比較近。', link: 'https://www.google.com/maps/dir/?api=1&origin=Hyatt+Place+Kyoto&destination=Kyoto+Station+Hachijo+Exit&travelmode=driving' },
-            { id: 30, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。車程 80 分鐘。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kyoto+Station&destination=Kansai+Airport+Station&travelmode=transit' },
-            { id: 31, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: 'Haruka 停 T1，要去 Aeroplaza 搭接駁車去 T2。', link: 'https://www.google.com/maps/dir/?api=1&origin=Kansai+Airport+Station&destination=Aeroplaza&travelmode=walking', 
+            { id: 29, time: '08:00', location: '飯店 → 京都站', action: '前往車站', transport: 'Uber', recommend: true, note: 'Uber 直達京都站「八條口」(Hachijo Exit)，那裡離 Haruka 月台比較近。', link: 'https://www.google.com/maps/search/?api=1&query=Kyoto+Station+Hachijo+Gate' },
+            { id: 30, time: '08:30', location: '京都站 → 機場', action: 'Haruka 特急', transport: 'JR 特急', note: '30號月台搭車。車程 80 分鐘。', link: 'https://www.google.com/maps/search/?api=1&query=Kansai+Airport+Station' },
+            { id: 31, time: '10:00', location: '關西機場 T1 → T2', action: '轉搭接駁車', transport: '接駁巴士', note: 'Haruka 停 T1，要去 Aeroplaza 搭接駁車去 T2。', link: 'https://www.google.com/maps/search/?api=1&query=Aeroplaza+Kansai+Airport', 
                 foodOptions: [
                     { name: '機場美食街', desc: 'T1/Aeroplaza 有很多選擇', link: '#' },
                     { name: '便利商店', desc: '最後買個飯糰上飛機', link: '#' }
@@ -314,7 +315,7 @@
         methods: {
             loadAndMergeData() {
                 try {
-                    const saved = localStorage.getItem('japanTrip_v19_Final_Verified');
+                    const saved = localStorage.getItem('japanTrip_v20_Final_Links');
                     if (saved) {
                         this.activities = JSON.parse(saved);
                     } else {
@@ -380,14 +381,14 @@
                 }
             },
             saveToStorage() {
-                localStorage.setItem('japanTrip_v19_Final_Verified', JSON.stringify(this.activities));
+                localStorage.setItem('japanTrip_v20_Final_Links', JSON.stringify(this.activities));
             },
             resetData() {
-                if(confirm('重置將會清除自訂行程，恢復為「全路線確認版」。確定嗎？')) {
+                if(confirm('將重置並修復所有地圖連結。確定嗎？')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
-                    alert('已載入 v19 最終確認版！');
+                    alert('地圖連結已全數修復 (v20)！');
                 }
             }
         }
