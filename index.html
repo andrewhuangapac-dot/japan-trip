@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神亲子游 (v27)</title>
+    <title>京阪神亲子游 (v28: 地图全览版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -23,14 +23,11 @@
         .map-btn:active { transform: scale(0.95); }
         .vip-badge { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; box-shadow: 0 2px 4px rgba(0,0,0, 0.2); }
         .hotel-badge { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; }
-        .transport-badge { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid #bae6fd; }
+        .game-tag { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
         .food-card { background-color: #fffbeb; border: 1px solid #fed7aa; border-radius: 0.75rem; padding: 0.75rem; margin-top: 0.75rem; box-shadow: 0 2px 5px rgba(251, 146, 60, 0.05); }
         .shop-card { background-color: #fff1f2; border: 1px solid #fda4af; border-radius: 0.75rem; padding: 0.75rem; margin-top: 0.5rem; color: #9f1239; }
         .transport-detail { background-color: #f8fafc; border-left: 3px solid #64748b; padding: 0.75rem; margin-top: 0.5rem; border-radius: 0 0.5rem 0.5rem 0; }
         .jp-text { font-family: "Hiragino Sans", "Yu Gothic", sans-serif; }
-        
-        /* 针对大龄小孩的特别样式 */
-        .game-tag { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -40,8 +37,8 @@
     <header class="flex-none bg-gradient-to-r from-orange-600 to-red-600 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 🎮</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">v27: 增加任天堂/Pokemon/扭蛋</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 (全览版)</h1>
+                <p class="text-orange-100 text-xs mt-1 font-medium">9&12岁少年团 | 大阪·神户·京都</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
         </div>
@@ -58,7 +55,6 @@
     <main class="scroll-container bg-stone-50">
         
         <div v-show="currentView === 'list'" class="pb-24 px-4 pt-4">
-            
             <div class="mb-5 bg-white rounded-2xl p-4 shadow-sm border border-stone-200 flex items-center justify-between">
                 <div>
                     <h2 class="text-lg font-bold text-stone-800">{{ days[currentDay].name }}</h2>
@@ -90,51 +86,33 @@
                                     <p class="text-xs text-slate-800 font-bold mb-1"><i class="fas fa-info-circle mr-1 text-slate-500"></i>指引：</p>
                                     <p class="text-[11px] text-slate-600 leading-relaxed whitespace-pre-line jp-text">{{ item.transport_detail }}</p>
                                 </div>
-
                                 <div v-if="item.note && !item.transport_detail" class="mt-2 text-xs text-stone-500 bg-stone-50 p-2 rounded-lg">
                                     <i class="fas fa-info-circle mr-1 text-stone-400"></i>{{ item.note }}
                                 </div>
-
                                 <div v-if="item.foodOptions" class="food-card">
-                                    <p class="text-xs font-bold text-orange-700 mb-2 border-b border-orange-100 pb-1">
-                                        <i class="fas fa-utensils mr-1"></i>餐饮推荐
-                                    </p>
+                                    <p class="text-xs font-bold text-orange-700 mb-2 border-b border-orange-100 pb-1"><i class="fas fa-utensils mr-1"></i>餐饮推荐</p>
                                     <div class="space-y-2">
                                         <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" class="flex items-center justify-between">
                                             <div>
                                                 <p class="text-xs font-bold text-gray-800 jp-text">{{ food.name }}</p>
                                                 <p class="text-[10px] text-gray-500">{{ food.desc }}</p>
                                             </div>
-                                            <a :href="food.link" target="_blank" class="text-orange-500 hover:text-orange-700 ml-2 p-1 bg-orange-50 rounded-lg">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                            </a>
+                                            <a :href="food.link" target="_blank" class="text-orange-500 hover:text-orange-700 ml-2 p-1 bg-orange-50 rounded-lg"><i class="fas fa-map-marker-alt"></i></a>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div v-if="item.shopping" class="shop-card flex items-center justify-between">
                                     <div>
                                         <p class="text-xs font-bold jp-text"><i class="fas fa-shopping-cart mr-1"></i>{{ item.shopping.name }}</p>
                                         <p class="text-[10px] opacity-80">{{ item.shopping.desc }}</p>
                                     </div>
-                                    <a :href="item.shopping.link" target="_blank" class="bg-white text-pink-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm">
-                                        <i class="fas fa-map-pin text-[10px]"></i>
-                                    </a>
+                                    <a :href="item.shopping.link" target="_blank" class="bg-white text-pink-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm"><i class="fas fa-map-pin text-[10px]"></i></a>
                                 </div>
                             </div>
-                            
                             <div class="flex flex-col space-y-3 pt-1">
-                                <button v-if="item.link" @click="openSmartMap(item)" 
-                                    class="map-btn w-10 h-10 rounded-xl bg-black text-white shadow-gray-400 shadow-md hover:bg-gray-800 flex items-center justify-center">
-                                    <i class="fas fa-location-arrow text-sm"></i>
-                                </button>
-                                <button v-else class="w-10 h-10 rounded-xl bg-stone-100 text-stone-300 flex items-center justify-center cursor-default">
-                                    <i class="fas fa-map-marker-alt text-sm"></i>
-                                </button>
-                                
-                                <button @click="editActivity(item)" class="map-btn w-10 h-10 rounded-xl bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100">
-                                    <i class="fas fa-pen text-xs"></i>
-                                </button>
+                                <button v-if="item.link" @click="openSmartMap(item)" class="map-btn w-10 h-10 rounded-xl bg-black text-white shadow-md hover:bg-gray-800 flex items-center justify-center"><i class="fas fa-location-arrow text-sm"></i></button>
+                                <button v-else class="w-10 h-10 rounded-xl bg-stone-100 text-stone-300 flex items-center justify-center cursor-default"><i class="fas fa-map-marker-alt text-sm"></i></button>
+                                <button @click="editActivity(item)" class="map-btn w-10 h-10 rounded-xl bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100"><i class="fas fa-pen text-xs"></i></button>
                             </div>
                         </div>
                     </div>
@@ -144,12 +122,20 @@
 
         <div v-show="currentView === 'map'" class="absolute inset-0 z-0 bg-gray-100 h-full w-full">
             <div id="map"></div>
+            
             <div class="absolute top-4 left-4 z-[500] bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-stone-200">
                 <p class="text-xs font-bold text-stone-700 mb-1">地图图例</p>
                 <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-purple-500"></span><span class="text-[10px]">饭店</span></div>
                 <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-[10px]">景点/交通</span></div>
                 <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-red-500"></span><span class="text-[10px]">动漫/游戏</span></div>
                 <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span><span class="text-[10px]">餐厅</span></div>
+            </div>
+
+            <div class="absolute bottom-24 left-4 z-[500]">
+                <button @click="toggleMapMode" class="bg-white text-stone-800 px-4 py-2 rounded-full shadow-lg font-bold text-xs flex items-center border border-stone-200 hover:bg-stone-50 active:scale-95 transition-all">
+                    <i class="fas mr-2" :class="showAllMap ? 'fa-map' : 'fa-map-pin'"></i>
+                    {{ showAllMap ? '显示全览 (All)' : `仅看 Day ${currentDay + 1}` }}
+                </button>
             </div>
         </div>
     </main>
@@ -191,146 +177,43 @@
 <script>
     const { createApp } = Vue;
 
-    // v27 Data: Optimized for 9 and 12 years old (ACG, Food, No Strollers)
+    // v28 Data: Same detailed data, optimized for map display
     const detailedData = {
         0: [
-            { id: 1, time: '16:50', location: '关西机场 T2 (関西空港 T2)', action: '转搭接驳巴士', transport: '免费巴士', 
-              transport_detail: '入境后，搭乘免费接驳巴士约 7-10 分钟前往 T1/Aeroplaza。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Aeroplaza+Kansai+Airport',
-              coords: [34.4357, 135.2443] },
-            { id: 2, time: '17:35', location: '关西机场站 (関西空港駅)', action: '南海特急 Rapi:t α', transport: '17:35 发车 (全车指定席)', 
-              transport_detail: '深蓝色像机器人的列车 (铁人28号)，小孩会觉得很帅。直达难波。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Nankai+Kansai+Airport+Station',
-              coords: [34.4367, 135.2435] },
-            { id: 3, time: '18:15', location: '南海难波站 (Namba St.)', action: '出站步行', transport: '步行 (约10分)', 
-              transport_detail: '请走「地面道路」，经过南海通 (Nankai Dori)，热闹且有遮雨棚。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Namba+Station+Nankai',
-              coords: [34.6631, 135.5023] },
-            { id: 4, time: '18:30', location: 'Caption by Hyatt', action: 'Check-in', transport: '步行', isHotel: true, note: '放行李，准备出门。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Caption+by+Hyatt+Namba+Osaka',
-              coords: [34.6655, 135.5065] },
-            { id: 5, time: '19:15', location: '道顿堀 (Dotonbori)', action: '晚餐 & 夹娃娃', transport: '步行', note: '这里有超多夹娃娃店 (GIGO/Round1)。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Dotonbori+Glico+Sign',
-              coords: [34.6687, 135.5013],
-                foodOptions: [
-                    { name: '一兰拉面 (Ichiran)', desc: '小孩指定必吃', link: 'https://www.google.com/maps/search/?api=1&query=Ichiran+Dotonbori' },
-                    { name: '烧肉力丸 (Yakiniku Rikimaru)', desc: '国产牛吃到饱', link: 'https://www.google.com/maps/search/?api=1&query=Yakiniku+Rikimaru+Namba+Dotonbori' }
-                ],
-                shopping: { name: '唐吉诃德摩天轮 (Don Quijote)', desc: '可以搭摩天轮看夜景', link: 'https://www.google.com/maps/search/?api=1&query=Don+Quijote+Dotonbori' }
-            }
+            { id: 1, time: '16:50', location: '关西机场 T2', action: '接驳巴士', transport: '免费巴士', link: 'https://www.google.com/maps/search/?api=1&query=Aeroplaza+Kansai+Airport', coords: [34.4357, 135.2443] },
+            { id: 2, time: '17:35', location: '关西机场站', action: 'Rapi:t α 特急', transport: '17:35 发车', transport_detail: '深蓝色铁人28号列车。', link: 'https://www.google.com/maps/search/?api=1&query=Nankai+Kansai+Airport+Station', coords: [34.4367, 135.2435] },
+            { id: 3, time: '18:15', location: '南海难波站', action: '出站步行', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Namba+Station+Nankai', coords: [34.6631, 135.5023] },
+            { id: 4, time: '18:30', location: 'Caption by Hyatt', action: 'Check-in', transport: '步行', isHotel: true, link: 'https://www.google.com/maps/search/?api=1&query=Caption+by+Hyatt+Namba+Osaka', coords: [34.6655, 135.5065] },
+            { id: 5, time: '19:15', location: '道顿堀', action: '晚餐 & 夹娃娃', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Dotonbori+Glico+Sign', coords: [34.6687, 135.5013], foodOptions: [{name:'一兰', desc:'拉面'}, {name:'力丸烧肉', desc:'吃到饱'}] }
         ],
         1: [
-            { id: 7, time: '09:00', location: '日本桥 → 神户', action: '移动', transport: '阪神电车 (快速急行)', 
-              transport_detail: '刷 IC 卡直接进站，搭往「神户三宫」的快速急行。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Kintetsu+Nippombashi+Station',
-              coords: [34.6672, 135.5065] },
-            { id: 11, time: '11:30', location: '三宫市区 (Sannomiya)', action: '神户牛午餐', transport: '步行', note: '9/12岁小孩可以自己切牛排了。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Sannomiya+Station',
-              coords: [34.6930, 135.1915],
-                foodOptions: [
-                    { name: 'Steakland (ステーキランド)', desc: 'CP值高，师傅会表演', link: 'https://www.google.com/maps/search/?api=1&query=Steakland+Kobekan' },
-                    { name: 'Red Rock (レッドロック)', desc: '堆得像山的烤牛肉饭', link: 'https://www.google.com/maps/search/?api=1&query=Red+Rock+Sannomiya' }
-                ]
-            },
-            { id: 12, time: '14:00', location: '三宫 → 神户港', action: '移动', transport: 'Uber / Taxi', recommend: true, 
-              transport_detail: '直接前往「Umie Mosaic」。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Harborland+umie+Mosaic',
-              coords: [34.6795, 135.1843] },
-            { id: 13, time: '14:30', location: '神户港 (Mosaic)', action: '逛街', transport: '步行', 
-              note: '这里有超大 Gashapon (扭蛋百货) 和 Jump Shop。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Mosaic+Kobe',
-              coords: [34.6795, 135.1843],
-              shopping: { name: 'Gashapon Department Store', desc: 'Mosaic 3F 扭蛋专门店', link: 'https://www.google.com/maps/search/?api=1&query=Gashapon+Department+Store+Kobe' }
-            },
-            { id: 14, time: '17:30', location: 'Mosaic → 大阪', action: '回程', transport: 'Uber -> 阪神电车', 
-              transport_detail: '可以看神户港塔夜景，然后回大阪。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Port+Tower',
-              coords: [34.6815, 135.1765] },
-            { id: 15, time: '19:00', location: '日本桥 (Nippombashi)', action: '晚餐', transport: '步行',
-              coords: [34.6672, 135.5065],
-              foodOptions: [
-                    { name: '天政乌龙麵 (Tenmasa)', desc: '快速便宜好吃', link: 'https://www.google.com/maps/search/?api=1&query=Tenmasa+Namba' },
-                    { name: '千房大阪烧 (Chibo)', desc: '看师傅美乃滋拉花', link: 'https://www.google.com/maps/search/?api=1&query=Chibo+Dotonbori+Building' }
-                ]
-            }
+            { id: 7, time: '09:00', location: '日本桥 → 神户', action: '移动', transport: '阪神电车', coords: [34.6672, 135.5065] },
+            { id: 11, time: '11:30', location: '三宫市区', action: '神户牛午餐', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Sannomiya+Station', coords: [34.6930, 135.1915], foodOptions: [{name:'Steakland', desc:'CP值高'}] },
+            { id: 12, time: '14:00', location: '三宫 → 神户港', action: '移动', transport: 'Uber', recommend: true, link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Harborland+umie+Mosaic', coords: [34.6795, 135.1843] },
+            { id: 13, time: '14:30', location: '神户港 (Mosaic)', action: '逛街/扭蛋', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Mosaic+Kobe', coords: [34.6795, 135.1843], shopping: {name:'扭蛋百货', desc:'3F 必去'} },
+            { id: 14, time: '17:30', location: 'Mosaic → 大阪', action: '回程', transport: '阪神电车', coords: [34.6815, 135.1765] },
+            { id: 15, time: '19:00', location: '日本桥', action: '晚餐', transport: '步行', coords: [34.6672, 135.5065], foodOptions: [{name:'天政乌龙面', desc:'快速便宜'}] }
         ],
         2: [
-            { id: 16, time: '09:30', location: '黑门市场 (Kuromon Market)', action: '早午餐', transport: '步行', note: '小孩爱吃的烤牛肉串、大草莓、哈密瓜。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Kuromon+Ichiba+Market',
-              coords: [34.6654, 135.5065] },
-            { id: 17, time: '11:00', location: '饭店 → 淀屋桥', action: '移动至京都', transport: 'Uber', recommend: true, 
-              transport_detail: '行李多还是建议搭 Taxi 到京阪淀屋桥站。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Yodoyabashi+Station+Keihan',
-              coords: [34.6930, 135.5015] },
-            { id: 18, time: '11:30', location: '淀屋桥 → 神宫丸太町', action: '京阪特急', transport: 'Premium Car', 
-              transport_detail: '★强烈建议加购 Premium Car，座位大、有桌子，小孩可以在车上玩 Switch/手机。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Jingu-Marutamachi+Station',
-              coords: [35.0175, 135.7725] },
-            { id: 19, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', transport: 'Uber', isHotel: true, 
-              coords: [35.0163, 135.7592] },
-            { id: 20, time: '13:30', location: '锦市场 (Nishiki Market)', action: '小吃午餐', transport: 'Uber/地铁', 
-              note: '章鱼蛋串、史努比茶屋，9&12岁会很爱这里。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Nishiki+Market',
-              coords: [35.0050, 135.7630] },
-            { id: 21, time: '15:30', location: '四条河原町 (Nintendo Kyoto)', action: '朝圣采购', transport: '步行', isGame: true,
-              note: '★重点行程：Nintendo Kyoto (高岛屋T8) + Pokemon Center (Suina室町)。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Nintendo+Kyoto',
-              coords: [35.0038, 135.7695],
-              shopping: { name: 'Nintendo Kyoto', desc: '高岛屋 S.C. T8 7楼，必去！', link: 'https://www.google.com/maps/search/?api=1&query=Nintendo+Kyoto' } 
-            },
-            { id: 22, time: '18:00', location: '四条 / 乌丸', action: '晚餐', transport: '步行', 
-              coords: [35.0035, 135.7595],
-                foodOptions: [
-                    { name: '名代炸猪排 (Katsukura)', desc: '自己磨芝麻很好玩', link: 'https://www.google.com/maps/search/?api=1&query=Katsukura+Sanjo+Honten' },
-                    { name: 'Shake Shack', desc: '如果小孩不想吃日式，这里有汉堡', link: 'https://www.google.com/maps/search/?api=1&query=Shake+Shack+Kyoto+Shijo+Karasuma' }
-                ]
-            }
+            { id: 16, time: '09:30', location: '黑门市场', action: '早午餐', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Kuromon+Ichiba+Market', coords: [34.6654, 135.5065] },
+            { id: 17, time: '11:00', location: '淀屋桥站', action: '转乘京阪', transport: 'Uber', link: 'https://www.google.com/maps/search/?api=1&query=Yodoyabashi+Station', coords: [34.6930, 135.5015] },
+            { id: 18, time: '11:30', location: '京阪特急', action: '移动至京都', transport: 'Premium Car', link: 'https://www.google.com/maps/search/?api=1&query=Jingu-Marutamachi+Station', coords: [35.0175, 135.7725] },
+            { id: 19, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', transport: 'Uber', isHotel: true, coords: [35.0163, 135.7592] },
+            { id: 20, time: '13:30', location: '锦市场', action: '小吃午餐', transport: 'Uber', coords: [35.0050, 135.7630] },
+            { id: 21, time: '15:30', location: 'Nintendo Kyoto', action: '朝圣采购', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Nintendo+Kyoto', coords: [35.0038, 135.7695], shopping: {name:'Nintendo Store', desc:'高岛屋T8'} },
+            { id: 22, time: '18:00', location: '四条 / 乌丸', action: '晚餐', transport: '步行', coords: [35.0035, 135.7595] }
         ],
         3: [
-            { id: 23, time: '08:30', location: '饭店 → 伏见稻荷 (Fushimi Inari)', action: '千本鸟居', transport: 'Uber', recommend: true, 
-              transport_detail: '像探险一样的鸟居隧道，9&12岁体力好，可以挑战走到半山腰。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Fushimi+Inari+Taisha',
-              coords: [34.9671, 135.7726] },
-            { id: 24, time: '10:30', location: '伏见稻荷 → 清水寺', action: '移动', transport: 'Uber', recommend: true, 
-              transport_detail: '直达「清水道」。',
-              coords: [34.9949, 135.7850] },
-            { id: 25, time: '12:00', location: '清水寺周边', action: '午餐', transport: '步行', 
-              coords: [34.9960, 135.7830],
-                foodOptions: [
-                    { name: '清水顺正 (Junsei)', desc: '汤豆腐', link: 'https://www.google.com/maps/search/?api=1&query=Kiyomizu+Junsei+Okabeya' },
-                    { name: 'Hello Kitty 茶寮', desc: '如果不爱豆腐，可以吃这个', link: 'https://www.google.com/maps/search/?api=1&query=Hello+Kitty+Saryo+Ninenzaka' }
-                ]
-            },
-            { id: 26, time: '14:30', location: '三年坂 / 二年坂', action: '逛街寻宝', transport: '步行', 
-              note: '这里有吉卜力专卖店 (橡子共和国)、角落生物店，小孩会逛疯。', 
-              link: 'https://www.google.com/maps/search/?api=1&query=Donguri+Kyowakoku+Ninenzaka',
-              coords: [35.0035, 135.7780],
-              shopping: { name: '橡子共和国 (吉卜力)', desc: '龙猫周边', link: 'https://www.google.com/maps/search/?api=1&query=Donguri+Kyowakoku+Ninenzaka' } 
-            },
-            { id: 27, time: '18:00', location: '河原町', action: '晚餐 & 补货', transport: '步行', 
-              note: '如果昨天任天堂没买够，今天继续。',
-              coords: [35.0040, 135.7730],
-                foodOptions: [
-                    { name: '寿しのむさし (Musashi Sushi)', desc: '迴转寿司，可以选自己爱的', link: 'https://www.google.com/maps/search/?api=1&query=Sushi+no+Musashi+Sanjo+Honten' },
-                    { name: '烧肉弘 (Yakiniku Hiro)', desc: '需预约，京都不错的烧肉', link: 'https://www.google.com/maps/search/?api=1&query=Yakiniku+Hiro+Kiyamachi' }
-                ]
-            }
+            { id: 23, time: '08:30', location: '伏见稻荷', action: '千本鸟居', transport: 'Uber', recommend: true, link: 'https://www.google.com/maps/search/?api=1&query=Fushimi+Inari+Taisha', coords: [34.9671, 135.7726] },
+            { id: 24, time: '10:30', location: '伏见稻荷 → 清水寺', action: '移动', transport: 'Uber', coords: [34.9949, 135.7850] },
+            { id: 25, time: '12:00', location: '清水寺周边', action: '午餐', transport: '步行', coords: [34.9960, 135.7830], foodOptions: [{name:'清水顺正', desc:'汤豆腐'}] },
+            { id: 26, time: '14:30', location: '三年坂 / 二年坂', action: '吉卜力/角落生物', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Donguri+Kyowakoku+Ninenzaka', coords: [35.0035, 135.7780], shopping: {name:'橡子共和国', desc:'吉卜力周边'} },
+            { id: 27, time: '18:00', location: '河原町', action: '晚餐', transport: '步行', coords: [35.0040, 135.7730] }
         ],
         4: [
-            { id: 29, time: '08:05', location: '饭店 → 京都站 (Kyoto St.)', action: '前往车站', transport: 'Uber', recommend: true, 
-              transport_detail: '请设定目的地为京都站「八条口」。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Kyoto+Station+Hachijo+Exit',
-              coords: [34.9850, 135.7580] },
-            { id: 30, time: '08:45', location: '京都站 → 机场', action: 'Haruka 特急 (Hello Kitty)', transport: '08:45 发车', 
-              transport_detail: 'Haruka 经常有 Hello Kitty 彩绘涂装，拍照留念。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Kyoto+Station+Platform+30',
-              coords: [34.9850, 135.7580] },
-            { id: 31, time: '10:05', location: '关西机场 T1 (Kansai Airport)', action: '最后采购', transport: '接驳车', 
-              note: '机场也有 Pokemon Store (T1 2F)。',
-              link: 'https://www.google.com/maps/search/?api=1&query=Pokemon+Store+Kansai+Airport', 
-              coords: [34.4357, 135.2443],
-                shopping: { name: 'Pokemon Store', desc: '关西机场店 (T1 2F)', link: 'https://www.google.com/maps/search/?api=1&query=Pokemon+Store+Kansai+Airport' }
-            }
+            { id: 29, time: '08:05', location: '京都站 (八条口)', action: '前往机场', transport: 'Uber', coords: [34.9850, 135.7580] },
+            { id: 30, time: '08:45', location: 'Haruka 特急', action: '前往机场', transport: 'Hello Kitty列车', coords: [34.9850, 135.7580] },
+            { id: 31, time: '10:05', location: '关西机场 T1', action: '最后采购', transport: '接驳车', coords: [34.4357, 135.2443], shopping: {name:'Pokemon Store', desc:'2F 商店'} }
         ]
     };
 
@@ -341,14 +224,15 @@
                 currentView: 'list',
                 showModal: false,
                 isEditing: false,
+                showAllMap: true, // v28: Default to showing ALL map points
                 mapInstance: null,
                 markerGroup: null,
                 days: [
-                    { date: '12/12 (五)', name: 'Day 1: 抵达大阪', desc: '道顿堀 & 夹娃娃', center: [34.6655, 135.5015], weather: { status: '晴时多云', icon: 'fas fa-sun', temp_high: 11, temp_low: 5, color: 'text-orange-500', rain: false } },
-                    { date: '12/13 (六)', name: 'Day 2: 神户/扭蛋', desc: '牛排 & Mosaic', center: [34.6901, 135.1955], weather: { status: '多云时阴', icon: 'fas fa-cloud', temp_high: 11, temp_low: 4, color: 'text-gray-500', rain: false } },
-                    { date: '12/14 (日)', name: 'Day 3: 京都/任天堂', desc: 'Nintendo Kyoto', center: [35.0037, 135.7592], weather: { status: '阴短暂雨', icon: 'fas fa-cloud-rain', temp_high: 14, temp_low: 7, color: 'text-blue-500', rain: true } },
-                    { date: '12/15 (一)', name: 'Day 4: 清水寺/寻宝', desc: '三年坂逛街', center: [34.9949, 135.7850], weather: { status: '多云', icon: 'fas fa-cloud', temp_high: 11, temp_low: 6, color: 'text-gray-500', rain: false } },
-                    { date: '12/16 (二)', name: 'Day 5: 返程', desc: 'Haruka 08:45', center: [34.4320, 135.2304], weather: { status: '晴朗', icon: 'fas fa-sun', temp_high: 12, temp_low: 4, color: 'text-orange-500', rain: false } }
+                    { date: '12/12 (五)', name: 'Day 1: 抵达大阪', weather: { status: '晴时多云', icon: 'fas fa-sun', temp_high: 11, color: 'text-orange-500' } },
+                    { date: '12/13 (六)', name: 'Day 2: 神户/扭蛋', weather: { status: '多云时阴', icon: 'fas fa-cloud', temp_high: 11, color: 'text-gray-500' } },
+                    { date: '12/14 (日)', name: 'Day 3: 京都/任天堂', weather: { status: '阴短暂雨', icon: 'fas fa-cloud-rain', temp_high: 14, color: 'text-blue-500' } },
+                    { date: '12/15 (一)', name: 'Day 4: 清水寺/寻宝', weather: { status: '多云', icon: 'fas fa-cloud', temp_high: 11, color: 'text-gray-500' } },
+                    { date: '12/16 (二)', name: 'Day 5: 返程', weather: { status: '晴朗', icon: 'fas fa-sun', temp_high: 12, color: 'text-orange-500' } }
                 ],
                 activities: {},
                 form: { id: null, time: '', location: '', action: '', transport: '', note: '', transport_detail: '', link: '', isHotel: false, isGame: false, recommend: false }
@@ -362,7 +246,7 @@
         methods: {
             loadAndMergeData() {
                 try {
-                    const saved = localStorage.getItem('japanTrip_v27_Kids912');
+                    const saved = localStorage.getItem('japanTrip_v28_MapFix');
                     if (saved) { this.activities = JSON.parse(saved); } 
                     else { this.activities = JSON.parse(JSON.stringify(detailedData)); this.saveToStorage(); }
                 } catch(e) { this.activities = JSON.parse(JSON.stringify(detailedData)); }
@@ -370,14 +254,20 @@
             changeDay(index) {
                 this.currentDay = index;
                 this.currentView = 'list';
+                this.showAllMap = false; // When clicking a specific day in header, switch map mode to specific
                 if (this.mapInstance) this.$nextTick(() => { this.updateMapMarkers(); });
             },
             switchMap() {
                 this.currentView = 'map';
+                this.showAllMap = true; // Default to Show All when clicking Map tab
                 this.$nextTick(() => {
                     if (!this.mapInstance) this.initMap();
                     else { this.mapInstance.invalidateSize(); this.updateMapMarkers(); }
                 });
+            },
+            toggleMapMode() {
+                this.showAllMap = !this.showAllMap;
+                this.updateMapMarkers();
             },
             initMap() {
                 this.mapInstance = L.map('map');
@@ -388,14 +278,33 @@
             updateMapMarkers() {
                 if (!this.mapInstance || !this.markerGroup) return;
                 this.markerGroup.clearLayers();
-                const acts = this.currentActivities;
+                
+                let actsToShow = [];
                 const bounds = [];
-                acts.forEach(item => {
+
+                if (this.showAllMap) {
+                    // Flatten all days
+                    Object.keys(this.activities).forEach(key => {
+                        const dayIndex = parseInt(key);
+                        const dayActs = this.activities[key];
+                        dayActs.forEach(act => {
+                            actsToShow.push({ ...act, dayLabel: `Day ${dayIndex + 1}` });
+                        });
+                    });
+                } else {
+                    // Show only current day
+                    const dayActs = this.currentActivities;
+                    dayActs.forEach(act => {
+                        actsToShow.push({ ...act, dayLabel: `Day ${this.currentDay + 1}` });
+                    });
+                }
+
+                actsToShow.forEach(item => {
                     if (item.coords) {
                         let color = 'blue';
                         if (item.isHotel) color = 'purple';
                         else if (item.foodOptions) color = 'orange';
-                        else if (item.isGame) color = 'red'; // New color for Game/Shopping
+                        else if (item.isGame) color = 'red';
 
                         const marker = L.circleMarker(item.coords, {
                             color: color === 'purple' ? '#8b5cf6' : (color === 'orange' ? '#f97316' : (color === 'red' ? '#ef4444' : '#3b82f6')),
@@ -403,12 +312,22 @@
                             fillOpacity: 0.8,
                             radius: 8
                         }).addTo(this.markerGroup);
-                        marker.bindPopup(`<b>${item.location}</b><br>${item.action}`);
+                        
+                        // Enhanced Popup
+                        marker.bindPopup(`
+                            <div style="font-family: sans-serif;">
+                                <div style="font-size:10px; color:#666; font-weight:bold;">[${item.dayLabel}] ${item.time}</div>
+                                <div style="font-size:14px; font-weight:bold; margin-bottom:2px;">${item.location}</div>
+                                <div style="font-size:12px;">${item.action}</div>
+                            </div>
+                        `);
                         bounds.push(item.coords);
                     }
                 });
-                if (bounds.length > 0) this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
-                else this.mapInstance.setView(this.days[this.currentDay].center, 13);
+
+                if (bounds.length > 0) {
+                    this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
+                }
             },
             openSmartMap(item) { if (item.link) window.open(item.link, '_blank'); },
             getIconColor(item) {
@@ -441,9 +360,9 @@
                     this.showModal = false;
                 }
             },
-            saveToStorage() { localStorage.setItem('japanTrip_v27_Kids912', JSON.stringify(this.activities)); },
+            saveToStorage() { localStorage.setItem('japanTrip_v28_MapFix', JSON.stringify(this.activities)); },
             resetData() {
-                if(confirm('重置为 9 & 12 岁少年版？')) {
+                if(confirm('重置数据？')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
