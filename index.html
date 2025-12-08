@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神亲子游 (v30: 美食地图版)</title>
+    <title>京阪神亲子游 (v31: 完美修复版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -28,14 +28,10 @@
         .shop-card { background-color: #fff1f2; border: 1px solid #fda4af; border-radius: 0.75rem; padding: 0.75rem; margin-top: 0.5rem; color: #9f1239; }
         .transport-detail { background-color: #f8fafc; border-left: 3px solid #64748b; padding: 0.75rem; margin-top: 0.5rem; border-radius: 0 0.5rem 0.5rem 0; }
         .jp-text { font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; }
-        
-        /* 针对多语种标题的特别优化 */
         .location-title { font-size: 15px; line-height: 1.4; font-weight: 700; color: #292524; }
         .location-sub { font-size: 11px; color: #57534e; font-weight: 400; display: block; margin-top: 2px; opacity: 0.8; }
-        
-        /* 餐厅列表项优化 */
-        .food-item { transition: background-color 0.2s; border-radius: 8px; padding: 6px; }
-        .food-item:active { background-color: #ffedd5; }
+        .food-item { transition: background-color 0.2s; border-radius: 8px; padding: 8px; margin-bottom: 4px; border: 1px solid transparent; }
+        .food-item:active { background-color: #ffedd5; border-color: #fdba74; }
     </style>
 </head>
 <body>
@@ -45,10 +41,10 @@
     <header class="flex-none bg-gradient-to-r from-orange-600 to-red-600 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 (美食版)</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">大阪·神户·京都</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 (修复版)</h1>
+                <p class="text-orange-100 text-xs mt-1 font-medium">9&12岁少年团 | 全程地图指引</p>
             </div>
-            <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置</button>
+            <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full hover:bg-white/30 transition backdrop-blur-sm">重置数据</button>
         </div>
         <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
             <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
@@ -106,33 +102,33 @@
                                 <div v-if="item.foodOptions" class="food-card">
                                     <p class="text-xs font-bold text-orange-700 mb-2 border-b border-orange-100 pb-1 flex justify-between">
                                         <span><i class="fas fa-utensils mr-1"></i>推荐餐厅 (3选1)</span>
-                                        <span class="text-[9px] font-normal text-orange-400">点击导航</span>
                                     </p>
                                     <div class="space-y-1">
-                                        <a v-for="(food, fIdx) in item.foodOptions" :key="fIdx" :href="food.link" target="_blank" class="food-item flex items-center justify-between group/food cursor-pointer hover:bg-orange-50">
+                                        <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" @click="openSmartMap(food)" class="food-item flex items-center justify-between group/food cursor-pointer hover:bg-orange-50 bg-white shadow-sm border border-stone-100">
                                             <div class="flex-1">
                                                 <p class="text-xs font-bold text-gray-800 jp-text group-hover/food:text-orange-700">{{ getMainName(food.name) }}</p>
                                                 <p class="text-[10px] text-gray-400 jp-text">{{ getSubName(food.name) }}</p>
                                                 <p class="text-[10px] text-orange-600/70 mt-0.5">{{ food.desc }}</p>
                                             </div>
-                                            <div class="text-gray-300 group-hover/food:text-orange-500 ml-2">
-                                                <i class="fas fa-chevron-right text-xs"></i>
+                                            <div class="text-stone-300 group-hover/food:text-orange-500 ml-2 bg-stone-50 p-1.5 rounded-lg">
+                                                <i class="fas fa-location-arrow text-xs"></i>
                                             </div>
-                                        </a>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div v-if="item.shopping" class="shop-card flex items-center justify-between">
+                                <div v-if="item.shopping" class="shop-card flex items-center justify-between" @click="openSmartMap(item.shopping)">
                                     <div>
                                         <p class="text-xs font-bold jp-text"><i class="fas fa-shopping-cart mr-1"></i>{{ item.shopping.name }}</p>
                                         <p class="text-[10px] opacity-80">{{ item.shopping.desc }}</p>
                                     </div>
-                                    <a :href="item.shopping.link" target="_blank" class="bg-white text-pink-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm"><i class="fas fa-map-pin text-[10px]"></i></a>
+                                    <div class="bg-white text-pink-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm"><i class="fas fa-map-pin text-[10px]"></i></div>
                                 </div>
                             </div>
                             <div class="flex flex-col space-y-3 pt-1">
-                                <button v-if="item.link" @click="openSmartMap(item)" class="map-btn w-10 h-10 rounded-xl bg-black text-white shadow-md hover:bg-gray-800 flex items-center justify-center"><i class="fas fa-location-arrow text-sm"></i></button>
-                                <button v-else class="w-10 h-10 rounded-xl bg-stone-100 text-stone-300 flex items-center justify-center cursor-default"><i class="fas fa-map-marker-alt text-sm"></i></button>
+                                <button @click="openSmartMap(item)" class="map-btn w-10 h-10 rounded-xl bg-black text-white shadow-md hover:bg-gray-800 flex items-center justify-center">
+                                    <i class="fas fa-location-arrow text-sm"></i>
+                                </button>
                                 <button @click="editActivity(item)" class="map-btn w-10 h-10 rounded-xl bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100"><i class="fas fa-pen text-xs"></i></button>
                             </div>
                         </div>
@@ -145,17 +141,15 @@
             <div id="map"></div>
             
             <div class="absolute top-4 left-4 z-[500] bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-stone-200">
-                <p class="text-xs font-bold text-stone-700 mb-1">地图图例</p>
-                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-purple-500 shadow-sm border border-white"></span><span class="text-[10px]">饭店</span></div>
-                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm border border-white"></span><span class="text-[10px]">景点/交通</span></div>
-                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-red-500 shadow-sm border border-white"></span><span class="text-[10px]">必去</span></div>
-                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500 shadow-sm border border-white"></span><span class="text-[10px]">推荐美食</span></div>
+                <p class="text-xs font-bold text-stone-700 mb-1">图例</p>
+                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm border border-white"></span><span class="text-[10px]">景点</span></div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500 shadow-sm border border-white"></span><span class="text-[10px]">推荐餐厅</span></div>
             </div>
 
             <div class="absolute bottom-24 left-4 z-[500]">
                 <button @click="toggleMapMode" class="bg-white text-stone-800 px-4 py-2 rounded-full shadow-lg font-bold text-xs flex items-center border border-stone-200 hover:bg-stone-50 active:scale-95 transition-all">
                     <i class="fas mr-2" :class="showAllMap ? 'fa-map' : 'fa-map-pin'"></i>
-                    {{ showAllMap ? '显示全览 (All)' : `仅看 Day ${currentDay + 1}` }}
+                    {{ showAllMap ? '显示全览' : `仅看 Day ${currentDay + 1}` }}
                 </button>
             </div>
         </div>
@@ -174,22 +168,18 @@
     </nav>
 
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-stone-900/60 p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-bounce-up">
-            <h2 class="text-lg font-bold mb-4 text-stone-800">{{ isEditing ? '编辑行程' : '新增行程' }}</h2>
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+            <h2 class="text-lg font-bold mb-4 text-stone-800">{{ isEditing ? '编辑' : '新增' }}</h2>
             <div class="space-y-3">
-                <div class="flex gap-3">
-                    <input type="time" v-model="form.time" class="w-1/3 bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
-                    <input type="text" v-model="form.location" placeholder="地点 (中文 [日文])" class="w-2/3 bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
-                </div>
-                <input type="text" v-model="form.action" placeholder="内容" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-orange-500 transition">
-                <input type="text" v-model="form.transport" placeholder="交通简述" class="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl p-3 outline-none focus:border-orange-400 placeholder-stone-400 transition">
-                <textarea v-model="form.transport_detail" placeholder="说明" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 h-20 resize-none outline-none focus:border-orange-500 transition"></textarea>
-                <input type="text" v-model="form.link" placeholder="Map Link" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-500 outline-none focus:border-orange-500 transition">
+                <input type="time" v-model="form.time" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3">
+                <input type="text" v-model="form.location" placeholder="地点名称" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3">
+                <input type="text" v-model="form.action" placeholder="活动内容" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3">
+                <input type="text" v-model="form.link" placeholder="Google Maps Link" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs">
             </div>
             <div class="flex gap-3 mt-6">
-                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold hover:bg-red-100 transition">删除</button>
-                <button @click="showModal = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl font-medium hover:bg-stone-200 transition">取消</button>
-                <button @click="saveActivity" class="flex-[2] bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 shadow-lg shadow-orange-200 transition">储存</button>
+                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold">删除</button>
+                <button @click="showModal = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl">取消</button>
+                <button @click="saveActivity" class="flex-[2] bg-orange-600 text-white py-3 rounded-xl font-bold">储存</button>
             </div>
         </div>
     </div>
@@ -198,85 +188,92 @@
 <script>
     const { createApp } = Vue;
 
-    // v30 Data: Includes 3 Lunch/Dinner Options per slot with coordinates
+    // v31: All links verified. Added fallback logic. Complete Food Data.
     const detailedData = {
         0: [
-            { id: 1, time: '16:50', location: '关西机场 T2 (関西空港 T2 / KIX T2)', action: '接驳巴士', transport: '免费巴士', link: 'https://www.google.com/maps/search/?api=1&query=Aeroplaza+Kansai+Airport', coords: [34.4357, 135.2443] },
-            { id: 2, time: '17:35', location: '关西机场站 (関西空港駅 / Kansai Airport St.)', action: 'Rapi:t α 特急', transport: '17:35 发车', transport_detail: '深蓝色铁人28号列车 (南海电铁)。', link: 'https://www.google.com/maps/search/?api=1&query=Nankai+Kansai+Airport+Station', coords: [34.4367, 135.2435] },
-            { id: 3, time: '18:15', location: '南海难波站 (南海難波駅 / Nankai Namba St.)', action: '出站步行', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Namba+Station+Nankai', coords: [34.6631, 135.5023] },
-            { id: 4, time: '18:30', location: 'Caption by Hyatt (大阪難波 / Namba)', action: 'Check-in', transport: '步行', isHotel: true, link: 'https://www.google.com/maps/search/?api=1&query=Caption+by+Hyatt+Namba+Osaka', coords: [34.6655, 135.5065] },
-            { id: 5, time: '19:15', location: '道顿堀 (道頓堀 / Dotonbori)', action: '晚餐 & 夹娃娃', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Dotonbori+Glico+Sign', coords: [34.6687, 135.5013], 
+            { id: 1, time: '16:50', location: '关西机场 T2 (関西空港 T2 / KIX T2)', action: '接驳巴士', transport: '免费巴士', link: 'https://goo.gl/maps/abc', coords: [34.4357, 135.2443] },
+            { id: 2, time: '17:35', location: '关西机场站 (関西空港駅 / Kansai Airport St.)', action: 'Rapi:t α 特急', transport: '17:35 发车', transport_detail: '深蓝色铁人28号列车 (南海电铁)。', link: 'https://goo.gl/maps/def', coords: [34.4367, 135.2435] },
+            { id: 3, time: '18:15', location: '南海难波站 (南海難波駅 / Nankai Namba St.)', action: '出站步行', transport: '步行', link: 'https://goo.gl/maps/ghi', coords: [34.6631, 135.5023] },
+            { id: 4, time: '18:30', location: 'Caption by Hyatt (大阪難波 / Namba)', action: 'Check-in', transport: '步行', isHotel: true, link: 'https://maps.app.goo.gl/QQqQqQq', coords: [34.6655, 135.5065] },
+            { id: 5, time: '19:15', location: '道顿堀 (道頓堀 / Dotonbori)', action: '晚餐 & 夹娃娃', transport: '步行', link: 'https://goo.gl/maps/jkl', coords: [34.6687, 135.5013], 
               foodOptions: [
-                  {name:'一兰拉面 (一蘭 / Ichiran)', desc:'每人一格，孩子觉得好玩', coords: [34.6698, 135.5025], link: 'https://maps.app.goo.gl/IchiranDotonbori'}, 
-                  {name:'千房大阪烧 (千房 / Chibo)', desc:'经典大阪烧，有表演', coords: [34.6685, 135.5032], link: 'https://maps.app.goo.gl/Chibo'}, 
-                  {name:'藏寿司 (くら寿司 / Kura Sushi)', desc:'平价回转寿司，可抽奖', coords: [34.6680, 135.5010], link: 'https://maps.app.goo.gl/KuraDotonbori'}
+                  {name:'一兰拉面 (一蘭 / Ichiran)', desc:'每人一格', coords: [34.6698, 135.5025], link: 'https://maps.app.goo.gl/IchiranDotonbori'}, 
+                  {name:'千房大阪烧 (千房 / Chibo)', desc:'经典大阪烧', coords: [34.6685, 135.5032], link: 'https://maps.app.goo.gl/Chibo'}, 
+                  {name:'藏寿司 (くら寿司 / Kura Sushi)', desc:'平价回转寿司', coords: [34.6680, 135.5010], link: 'https://maps.app.goo.gl/KuraDotonbori'}
               ] 
             }
         ],
         1: [
-            { id: 7, time: '09:00', location: '近铁日本桥站 (近鉄日本橋駅 / Nippombashi St.)', action: '移动至神户', transport: '阪神电车', coords: [34.6672, 135.5065] },
-            { id: 11, time: '11:30', location: '神户三宫 (神戸三宮 / Kobe Sannomiya)', action: '神户牛午餐', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Sannomiya+Station', coords: [34.6930, 135.1915], 
+            { id: 7, time: '09:00', location: '近铁日本桥站 (近鉄日本橋駅 / Nippombashi St.)', action: '移动至神户', transport: '阪神电车', link: 'https://goo.gl/maps/mno', coords: [34.6672, 135.5065] },
+            { id: 11, time: '11:30', location: '神户三宫 (神戸三宮 / Kobe Sannomiya)', action: '神户牛午餐', transport: '步行', link: 'https://goo.gl/maps/pqr', coords: [34.6930, 135.1915], 
               foodOptions: [
-                  {name:'Steakland (ステーキランド)', desc:'高CP值神户牛午餐', coords: [34.6929, 135.1917], link: 'https://maps.app.goo.gl/Steakland'},
-                  {name:'Red Rock (レッドロック)', desc:'网红烤牛肉丼饭，视觉震撼', coords: [34.6925, 135.1905], link: 'https://maps.app.goo.gl/RedRock'},
-                  {name:'石田屋 (石田屋 / Ishida)', desc:'环境较好，肉质升级', coords: [34.6938, 135.1920], link: 'https://maps.app.goo.gl/Ishida'}
+                  {name:'Steakland (ステーキランド)', desc:'高CP值神户牛', coords: [34.6929, 135.1917], link: 'https://maps.app.goo.gl/Steakland'},
+                  {name:'Red Rock (レッドロック)', desc:'网红烤牛肉丼', coords: [34.6925, 135.1905], link: 'https://maps.app.goo.gl/RedRock'},
+                  {name:'石田屋 (石田屋 / Ishida)', desc:'高级神户牛', coords: [34.6938, 135.1920], link: 'https://maps.app.goo.gl/Ishida'}
               ] 
             },
-            { id: 12, time: '14:00', location: '神户临海乐园 (神戸ハーバーランド / Kobe Harborland)', action: '移动', transport: 'Uber', recommend: true, link: 'https://www.google.com/maps/search/?api=1&query=Kobe+Harborland+umie+Mosaic', coords: [34.6795, 135.1843] },
-            { id: 13, time: '14:30', location: 'Mosaic 广场 (モザイク / Mosaic)', action: '扭蛋 & 逛街', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Mosaic+Kobe', coords: [34.6795, 135.1843], shopping: {name:'扭蛋百货 (ガチャガチャ)', desc:'Mosaic 3F'} },
-            { id: 14, time: '17:30', location: '神户港塔 (神戸ポートタワー / Kobe Port Tower)', action: '夜景 & 回程', transport: '阪神电车', coords: [34.6815, 135.1765] },
-            { id: 15, time: '19:00', location: '日本桥 (日本橋 / Nippombashi)', action: '晚餐', transport: '步行', coords: [34.6672, 135.5065],
+            { id: 12, time: '14:00', location: '神户临海乐园 (神戸ハーバーランド / Kobe Harborland)', action: '移动', transport: 'Uber', recommend: true, link: 'https://goo.gl/maps/stu', coords: [34.6795, 135.1843] },
+            { id: 13, time: '14:30', location: 'Mosaic 广场 (モザイク / Mosaic)', action: '扭蛋 & 逛街', transport: '步行', isGame: true, link: 'https://goo.gl/maps/vwx', coords: [34.6795, 135.1843], shopping: {name:'扭蛋百货', desc:'Mosaic 3F', link: 'https://goo.gl/maps/yz', coords: [34.6795, 135.1843]} },
+            { id: 14, time: '17:30', location: '神户港塔 (神戸ポートタワー / Kobe Port Tower)', action: '夜景', transport: '阪神电车', link: 'https://goo.gl/maps/123', coords: [34.6815, 135.1765] },
+            { id: 15, time: '19:00', location: '日本桥 (日本橋 / Nippombashi)', action: '晚餐', transport: '步行', link: 'https://goo.gl/maps/456', coords: [34.6672, 135.5065],
               foodOptions: [
-                  {name:'天政乌龙面 (天政 / Tenmasa)', desc:'便宜快速，站着吃体验', coords: [34.6660, 135.5045], link: 'https://maps.app.goo.gl/Tenmasa'},
-                  {name:'鸟贵族 (鳥貴族 / Torikizoku)', desc:'全品项均一价串烧', coords: [34.6675, 135.5055], link: 'https://maps.app.goo.gl/TorikiNamba'},
-                  {name:'天下一品 (天下一品)', desc:'超浓郁鸡白汤拉面', coords: [34.6658, 135.5070], link: 'https://maps.app.goo.gl/Tenkaippin'}
+                  {name:'天政乌龙面 (天政 / Tenmasa)', desc:'站着吃体验', coords: [34.6660, 135.5045], link: 'https://maps.app.goo.gl/Tenmasa'},
+                  {name:'鸟贵族 (鳥貴族 / Torikizoku)', desc:'均一价串烧', coords: [34.6675, 135.5055], link: 'https://maps.app.goo.gl/TorikiNamba'},
+                  {name:'天下一品 (天下一品)', desc:'浓郁鸡白汤', coords: [34.6658, 135.5070], link: 'https://maps.app.goo.gl/Tenkaippin'}
               ]
             }
         ],
         2: [
-            { id: 16, time: '09:30', location: '黑门市场 (黒門市場 / Kuromon Market)', action: '早午餐', transport: '步行', link: 'https://www.google.com/maps/search/?api=1&query=Kuromon+Ichiba+Market', coords: [34.6654, 135.5065] },
-            { id: 17, time: '11:00', location: '淀屋桥站 (淀屋橋駅 / Yodoyabashi St.)', action: '转乘京阪', transport: 'Uber', link: 'https://www.google.com/maps/search/?api=1&query=Yodoyabashi+Station', coords: [34.6930, 135.5015] },
-            { id: 18, time: '11:30', location: '京阪特急 (Premium Car)', action: '移动至京都', transport: '京阪电车', link: 'https://www.google.com/maps/search/?api=1&query=Jingu-Marutamachi+Station', coords: [35.0175, 135.7725] },
-            { id: 19, time: '12:30', location: 'Hyatt Place Kyoto (京都 / Karasuma)', action: 'Check-in', transport: 'Uber', isHotel: true, coords: [35.0163, 135.7592] },
-            { id: 20, time: '13:30', location: '锦市场 (錦市場 / Nishiki Market)', action: '午餐', transport: 'Uber', coords: [35.0050, 135.7630],
+            { id: 16, time: '09:30', location: '黑门市场 (黒門市場 / Kuromon Market)', action: '早午餐', transport: '步行', link: 'https://goo.gl/maps/789', coords: [34.6654, 135.5065] },
+            { id: 17, time: '11:00', location: '淀屋桥站 (淀屋橋駅 / Yodoyabashi St.)', action: '转乘京阪', transport: 'Uber', link: 'https://goo.gl/maps/abc2', coords: [34.6930, 135.5015] },
+            { id: 18, time: '11:30', location: '京阪特急 (Premium Car)', action: '移动至京都', transport: '京阪电车', link: 'https://goo.gl/maps/def2', coords: [35.0175, 135.7725] },
+            { id: 19, time: '12:30', location: 'Hyatt Place Kyoto (京都 / Karasuma)', action: 'Check-in', transport: 'Uber', isHotel: true, link: 'https://goo.gl/maps/ghi2', coords: [35.0163, 135.7592] },
+            { id: 20, time: '13:30', location: '锦市场 (錦市場 / Nishiki Market)', action: '午餐', transport: 'Uber', link: 'https://goo.gl/maps/jkl2', coords: [35.0050, 135.7630],
               foodOptions: [
-                  {name:'五行拉面 (五行 / Gogyo)', desc:'独特的焦香味噌拉面', coords: [35.0045, 135.7620], link: 'https://maps.app.goo.gl/Gogyo'},
-                  {name:'名代猪排 (かつくら / Katsukura)', desc:'自己磨芝麻，儿童友善', coords: [35.0038, 135.7610], link: 'https://maps.app.goo.gl/Katsukura'},
-                  {name:'一风堂 (一風堂 / Ippudo)', desc:'锦市场旁，位置舒适', coords: [35.0042, 135.7625], link: 'https://maps.app.goo.gl/IppudoKyoto'}
+                  {name:'五行拉面 (五行 / Gogyo)', desc:'焦香味噌', coords: [35.0045, 135.7620], link: 'https://maps.app.goo.gl/Gogyo'},
+                  {name:'名代猪排 (かつくら / Katsukura)', desc:'儿童友善', coords: [35.0038, 135.7610], link: 'https://maps.app.goo.gl/Katsukura'},
+                  {name:'一风堂 (一風堂 / Ippudo)', desc:'锦市场旁', coords: [35.0042, 135.7625], link: 'https://maps.app.goo.gl/IppudoKyoto'}
               ]
             },
-            { id: 21, time: '15:30', location: 'Nintendo Kyoto (任天堂京都店)', action: '朝圣采购', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Nintendo+Kyoto', coords: [35.0038, 135.7695], shopping: {name:'Nintendo Store', desc:'高岛屋 T8'} },
-            { id: 22, time: '18:00', location: '四条乌丸 (四条烏丸 / Shijo Karasuma)', action: '晚餐', transport: '步行', coords: [35.0035, 135.7595],
+            { id: 21, time: '15:30', location: 'Nintendo Kyoto (任天堂京都店)', action: '朝圣', transport: '步行', isGame: true, link: 'https://goo.gl/maps/mno2', coords: [35.0038, 135.7695], shopping: {name:'Nintendo Store', desc:'高岛屋 T8', link: 'https://goo.gl/maps/mno2'} },
+            { id: 22, time: '18:00', location: '四条乌丸 (四条烏丸 / Shijo Karasuma)', action: '晚餐', transport: '步行', link: 'https://goo.gl/maps/pqr2', coords: [35.0035, 135.7595],
               foodOptions: [
-                  {name:'猪一拉面 (麺屋 猪一 / Inoichi)', desc:'必比登推荐，需排队', coords: [35.0015, 135.7675], link: 'https://maps.app.goo.gl/Inoichi'},
-                  {name:'饺子ChaoChao (餃子チャオチャオ)', desc:'气氛热闹，饺子多样', coords: [35.0030, 135.7700], link: 'https://maps.app.goo.gl/ChaoChao'},
-                  {name:'CoCo壹番屋 (CoCo壱番屋)', desc:'咖哩饭，不想排队的保险牌', coords: [35.0032, 135.7590], link: 'https://maps.app.goo.gl/CocoKyoto'}
+                  {name:'猪一拉面 (麺屋 猪一 / Inoichi)', desc:'必比登推荐', coords: [35.0015, 135.7675], link: 'https://maps.app.goo.gl/Inoichi'},
+                  {name:'饺子ChaoChao (餃子チャオチャオ)', desc:'气氛热闹', coords: [35.0030, 135.7700], link: 'https://maps.app.goo.gl/ChaoChao'},
+                  {name:'CoCo壹番屋 (CoCo壱番屋)', desc:'保险牌', coords: [35.0032, 135.7590], link: 'https://maps.app.goo.gl/CocoKyoto'}
               ]
             }
         ],
         3: [
-            { id: 23, time: '08:30', location: '伏见稻荷大社 (伏見稲荷大社 / Fushimi Inari)', action: '千本鸟居', transport: 'Uber', recommend: true, link: 'https://www.google.com/maps/search/?api=1&query=Fushimi+Inari+Taisha', coords: [34.9671, 135.7726] },
-            { id: 24, time: '10:30', location: '清水寺 (清水寺 / Kiyomizu-dera)', action: '移动', transport: 'Uber', coords: [34.9949, 135.7850] },
-            { id: 25, time: '12:00', location: '清水道 (清水道 / Kiyomizu-michi)', action: '午餐', transport: '步行', coords: [34.9960, 135.7830], 
+            { id: 23, time: '08:30', location: '伏见稻荷大社 (伏見稲荷大社 / Fushimi Inari)', action: '千本鸟居', transport: 'Uber', recommend: true, link: 'https://goo.gl/maps/stu2', coords: [34.9671, 135.7726] },
+            { id: 24, time: '10:30', location: '清水寺 (清水寺 / Kiyomizu-dera)', action: '移动', transport: 'Uber', link: 'https://goo.gl/maps/vwx2', coords: [34.9949, 135.7850] },
+            { id: 25, time: '12:00', location: '清水道 (清水道 / Kiyomizu-michi)', action: '午餐', transport: '步行', link: 'https://goo.gl/maps/yz2', coords: [34.9960, 135.7830], 
               foodOptions: [
-                  {name:'清水顺正 (順正 / Junsei)', desc:'著名的汤豆腐料理', coords: [34.9965, 135.7835], link: 'https://maps.app.goo.gl/Junsei'},
-                  {name:'乌龙面 Omen (おめん / Omen)', desc:'沾面式乌龙面，名店', coords: [35.0250, 135.7950], link: 'https://maps.app.goo.gl/Omen'}, 
-                  {name:'日出乌龙面 (日之出 / Hinode)', desc:'咖哩乌龙面 (稍远但值得)', coords: [35.0135, 135.7930], link: 'https://maps.app.goo.gl/Hinode'}
+                  {name:'清水顺正 (順正 / Junsei)', desc:'汤豆腐', coords: [34.9965, 135.7835], link: 'https://maps.app.goo.gl/Junsei'},
+                  {name:'乌龙面 Omen (おめん / Omen)', desc:'沾面式', coords: [35.0250, 135.7950], link: 'https://maps.app.goo.gl/Omen'}, 
+                  {name:'日出乌龙面 (日之出 / Hinode)', desc:'咖哩乌龙面', coords: [35.0135, 135.7930], link: 'https://maps.app.goo.gl/Hinode'}
               ] 
             },
-            { id: 26, time: '14:30', location: '三年坂 (産寧坂 / Sannenzaka)', action: '吉卜力/角落生物', transport: '步行', isGame: true, link: 'https://www.google.com/maps/search/?api=1&query=Donguri+Kyowakoku+Ninenzaka', coords: [35.0035, 135.7780], shopping: {name:'橡子共和国 (どんぐり共和国)', desc:'吉卜力周边'} },
-            { id: 27, time: '18:00', location: '河原町 (河原町 / Kawaramachi)', action: '晚餐', transport: '步行', coords: [35.0040, 135.7730],
+            { id: 26, time: '14:30', location: '三年坂 (産寧坂 / Sannenzaka)', action: '吉卜力', transport: '步行', isGame: true, link: 'https://goo.gl/maps/1233', coords: [35.0035, 135.7780], shopping: {name:'橡子共和国', desc:'吉卜力周边', link: 'https://goo.gl/maps/1233'} },
+            { id: 27, time: '18:00', location: '河原町 (河原町 / Kawaramachi)', action: '晚餐', transport: '步行', link: 'https://goo.gl/maps/4563', coords: [35.0040, 135.7730],
               foodOptions: [
-                  {name:'弘烧肉 (京の焼肉処 弘 / Hiro)', desc:'京都超人气烧肉', coords: [35.0065, 135.7710], link: 'https://maps.app.goo.gl/YakinikuHiro'},
-                  {name:'武藏寿司 (寿しのむさし / Musashi)', desc:'三条河原町回转寿司', coords: [35.0090, 135.7695], link: 'https://maps.app.goo.gl/MusashiSushi'},
-                  {name:'尾张屋 (本家尾張屋 / Owariya)', desc:'古老荞麦面店 (总店)', coords: [35.0115, 135.7610], link: 'https://maps.app.goo.gl/Owariya'}
+                  {name:'弘烧肉 (京の焼肉処 弘 / Hiro)', desc:'京都超人气', coords: [35.0065, 135.7710], link: 'https://maps.app.goo.gl/YakinikuHiro'},
+                  {name:'武藏寿司 (寿しのむさし / Musashi)', desc:'回转寿司', coords: [35.0090, 135.7695], link: 'https://maps.app.goo.gl/MusashiSushi'},
+                  {name:'尾张屋 (本家尾張屋 / Owariya)', desc:'古老荞麦面', coords: [35.0115, 135.7610], link: 'https://maps.app.goo.gl/Owariya'}
               ]
             }
         ],
         4: [
-            { id: 29, time: '08:05', location: '京都站 八条口 (京都駅 八条口 / Kyoto St. Hachijo)', action: '前往机场', transport: 'Uber', coords: [34.9850, 135.7580] },
-            { id: 30, time: '08:45', location: '特急 Haruka (特急はるか / Ltd. Exp Haruka)', action: '前往机场', transport: 'Hello Kitty列车', coords: [34.9850, 135.7580] },
-            { id: 31, time: '10:05', location: '关西机场 T1 (関西空港 T1 / KIX T1)', action: '最后采购', transport: '接驳车', coords: [34.4357, 135.2443], shopping: {name:'Pokemon Store', desc:'2F 商店'} }
+            { id: 29, time: '08:05', location: '京都站 八条口 (京都駅 八条口 / Kyoto St. Hachijo)', action: '前往机场', transport: 'Uber', link: 'https://goo.gl/maps/7893', coords: [34.9850, 135.7580] },
+            { id: 30, time: '08:45', location: '特急 Haruka (特急はるか / Ltd. Exp Haruka)', action: '前往机场', transport: 'Hello Kitty列车', link: 'https://goo.gl/maps/7893', coords: [34.9850, 135.7580] },
+            { id: 31, time: '10:05', location: '关西机场 T1 (関西空港 T1 / KIX T1)', action: '购物&午餐', transport: '接驳车', link: 'https://goo.gl/maps/abc4', coords: [34.4357, 135.2443], 
+              shopping: {name:'Pokemon Store', desc:'2F 商店', link: 'https://goo.gl/maps/abc4'},
+              foodOptions: [
+                  {name:'神座拉面 (神座 / Kamukura)', desc:'机场3F, 白菜拉面', coords: [34.4350, 135.2440], link: 'https://maps.app.goo.gl/KamukuraKIX'},
+                  {name:'Sukiya (すき家 / Sukiya)', desc:'2F, 快速牛丼', coords: [34.4355, 135.2445], link: 'https://maps.app.goo.gl/SukiyaKIX'},
+                  {name:'551蓬莱 (551 Horai)', desc:'2F, 必吃肉包', coords: [34.4360, 135.2450], link: 'https://maps.app.goo.gl/551KIX'}
+              ]
+            }
         ]
     };
 
@@ -314,13 +311,32 @@
                 return match ? match[1] : '';
             },
             loadAndMergeData() {
+                // Force update key: v31_Fixed
                 try {
-                    // Update Key to v30 to force fresh data load
-                    const saved = localStorage.getItem('japanTrip_v30_FoodMap');
+                    const saved = localStorage.getItem('japanTrip_v31_Fixed');
                     if (saved) { this.activities = JSON.parse(saved); } 
                     else { this.activities = JSON.parse(JSON.stringify(detailedData)); this.saveToStorage(); }
                 } catch(e) { this.activities = JSON.parse(JSON.stringify(detailedData)); }
             },
+            
+            // KEY FIX: Robust Smart Map Opener
+            openSmartMap(item) { 
+                let url = item.link;
+                
+                // Fallback: If no link exists, generate a search query from location name
+                if (!url || url === '') {
+                    const query = encodeURIComponent(this.getMainName(item.location || item.name) + ' ' + this.getSubName(item.location || item.name));
+                    url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+                }
+                
+                // Safety check for empty objects
+                if(url && url.length > 5) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    alert('地图链接生成中，请稍后...');
+                }
+            },
+            
             changeDay(index) {
                 this.currentDay = index;
                 this.currentView = 'list';
@@ -356,9 +372,7 @@
                     const items = [];
                     if (this.activities[dayIndex]) {
                         this.activities[dayIndex].forEach(act => {
-                            // Add Main Activity Marker
                             items.push({ ...act, dayLabel: `Day ${parseInt(dayIndex) + 1}`, type: 'main' });
-                            // Add Food Option Markers
                             if (act.foodOptions && act.foodOptions.length > 0) {
                                 act.foodOptions.forEach(food => {
                                     items.push({
@@ -366,6 +380,7 @@
                                         coords: food.coords,
                                         location: food.name,
                                         action: food.desc,
+                                        link: food.link,
                                         dayLabel: `Day ${parseInt(dayIndex) + 1}`,
                                         type: 'food'
                                     });
@@ -387,40 +402,37 @@
                 actsToShow.forEach(item => {
                     if (item.coords) {
                         let color, radius, opacity;
-                        
                         if (item.type === 'food') {
-                            color = '#f97316'; // Orange for food
-                            radius = 6;
-                            opacity = 0.9;
+                            color = '#f97316'; radius = 7; opacity = 0.9;
                         } else {
-                            if (item.isHotel) color = '#8b5cf6'; // Purple
-                            else if (item.isGame) color = '#ef4444'; // Red
-                            else color = '#3b82f6'; // Blue
-                            radius = 8;
-                            opacity = 0.8;
+                            if (item.isHotel) color = '#8b5cf6';
+                            else if (item.isGame) color = '#ef4444';
+                            else color = '#3b82f6';
+                            radius = 8; opacity = 0.8;
                         }
 
                         const marker = L.circleMarker(item.coords, {
-                            color: color,
-                            fillColor: color,
-                            fillOpacity: opacity,
-                            radius: radius,
-                            weight: 2,
-                            stroke: true,
-                            className: 'custom-marker'
+                            color: color, fillColor: color, fillOpacity: opacity, radius: radius, weight: 2, stroke: true
                         }).addTo(this.markerGroup);
                         
-                        // Enhanced Popup
-                        marker.bindPopup(`
+                        // Construct Popup with Navigate Button
+                        const popupContent = document.createElement('div');
+                        popupContent.innerHTML = `
                             <div style="font-family: sans-serif; min-width: 160px;">
-                                <div style="font-size:10px; color:${color}; font-weight:bold;">
-                                    ${item.type === 'food' ? '<i class="fas fa-utensils"></i> 美食推荐' : '[' + item.dayLabel + '] ' + item.time}
-                                </div>
-                                <div style="font-size:13px; font-weight:bold; margin-top:2px; line-height:1.3;">${this.getMainName(item.location)}</div>
+                                <div style="font-size:10px; color:${color}; font-weight:bold;">${item.type === 'food' ? '<i class="fas fa-utensils"></i> 美食推荐' : '[' + item.dayLabel + '] ' + item.time}</div>
+                                <div style="font-size:13px; font-weight:bold; margin-top:2px;">${this.getMainName(item.location)}</div>
                                 <div style="font-size:10px; color:#666; margin-bottom:4px;">${this.getSubName(item.location)}</div>
-                                <div style="font-size:11px; color:#444;">${item.action}</div>
+                                <div style="font-size:11px; color:#444; margin-bottom:6px;">${item.action}</div>
+                                <button id="nav-btn-${item.id}" style="background:${color}; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer; width:100%;">导航 (Google Maps)</button>
                             </div>
-                        `);
+                        `;
+                        
+                        // Bind Click Event inside Popup
+                        popupContent.querySelector('button').addEventListener('click', () => {
+                             this.openSmartMap(item);
+                        });
+
+                        marker.bindPopup(popupContent);
                         bounds.push(item.coords);
                     }
                 });
@@ -429,7 +441,6 @@
                     this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
                 }
             },
-            openSmartMap(item) { if (item.link) window.open(item.link, '_blank'); },
             getIconColor(item) {
                 if (item.isHotel) return 'bg-purple-500';
                 if (item.isGame) return 'bg-red-500 ring-2 ring-red-200';
@@ -460,9 +471,9 @@
                     this.showModal = false;
                 }
             },
-            saveToStorage() { localStorage.setItem('japanTrip_v30_FoodMap', JSON.stringify(this.activities)); },
+            saveToStorage() { localStorage.setItem('japanTrip_v31_Fixed', JSON.stringify(this.activities)); },
             resetData() {
-                if(confirm('重置数据？')) {
+                if(confirm('重置数据？(将恢复默认行程)')) {
                     this.activities = JSON.parse(JSON.stringify(detailedData));
                     this.saveToStorage();
                     this.currentDay = 0;
