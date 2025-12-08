@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神亲子游 (v36: 终极修复)</title>
+    <title>京阪神亲子游 (v37: 滑动切换版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
@@ -38,7 +38,6 @@
         .location-title { font-size: 16px; line-height: 1.3; font-weight: 700; color: #1c1917; }
         .location-sub { font-size: 12px; color: #57534e; margin-top: 2px; display: block; }
         
-        /* 导航按钮：原生 A 标签，确保跳转 */
         .nav-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 52px; height: 52px; border-radius: 14px;
@@ -47,6 +46,11 @@
         }
         .nav-btn i { font-size: 18px; margin-bottom: 2px; }
         .nav-btn span { font-size: 9px; font-weight: bold; }
+        
+        /* 滑动过渡动画 */
+        .slide-enter-active, .slide-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+        .slide-enter-from { opacity: 0; transform: translateX(10px); }
+        .slide-leave-to { opacity: 0; transform: translateX(-10px); }
     </style>
 </head>
 <body>
@@ -56,8 +60,8 @@
     <header class="flex-none bg-gradient-to-r from-orange-600 to-red-600 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 v36</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">修复：导航跳转 / 餐厅状态</p>
+                <h1 class="text-xl font-bold tracking-wide">京阪神亲子游 v37</h1>
+                <p class="text-orange-100 text-xs mt-1 font-medium">左右滑动切换日期</p>
             </div>
             <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full btn-press backdrop-blur-md">重置</button>
         </div>
@@ -71,8 +75,11 @@
         </div>
     </header>
 
-    <main class="scroll-container bg-stone-50">
-        <div v-show="currentView === 'list'" class="px-4 pt-4">
+    <main class="scroll-container bg-stone-50" 
+          @touchstart="handleTouchStart" 
+          @touchend="handleTouchEnd">
+        
+        <div v-if="currentView === 'list'" class="px-4 pt-4 pb-24 min-h-full">
             <div class="mb-5 bg-white rounded-2xl p-4 shadow-sm border border-stone-200 flex items-center justify-between">
                 <div>
                     <h2 class="text-lg font-bold text-stone-800">{{ days[currentDay].name }}</h2>
@@ -81,9 +88,12 @@
                         <span>{{ days[currentDay].weather.status }}</span>
                     </div>
                 </div>
+                <div class="text-[10px] text-stone-400 font-medium">
+                    <i class="fas fa-arrows-alt-h mr-1"></i>左右滑换日
+                </div>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-6 transition-all duration-300">
                 <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-[3px] border-stone-200 last:border-0">
                     <div class="absolute -left-[10px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-sm" :class="getIconColor(item)"></div>
                     
@@ -198,23 +208,17 @@
 
 <script>
     const { createApp } = Vue;
-
-    // V36 数据集：针对导航关键字 (nav_query) 进行了全面优化
-    // 餐厅修正：已移除 "京都五行"，替换为 "面屋 猪一"
+    // v37 Data
     const masterDataV36 = {
         0: [
             { id: 101, time: '16:50', location: '关西机场 T2 (Kansai Airport T2)', action: '接驳巴士', transport_detail: '出关后，寻找 "Terminal 1 / Railways" 免费接驳巴士站台。', 
               nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] },
-            
             { id: 102, time: '17:35', location: '关西机场站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海电铁 (Nankai Line)，深蓝色列车。全车指定席。', 
               nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] },
-            
             { id: 103, time: '18:15', location: '南海难波站 (Namba Station)', action: '抵达/出站', transport_detail: '请走 "2F 中央改札口" (2F Central Exit)，下电扶梯往北出口。', 
               nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] },
-            
             { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '饭店 Check-in', isHotel: true, 
               nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] },
-            
             { id: 105, time: '19:15', location: '道顿堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行约10分钟。', 
               nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], 
               foodOptions: [
@@ -229,7 +233,6 @@
             { id: 201, time: '09:00', location: '近铁日本桥站 (Kintetsu-Nippombashi)', action: '移动至神户', 
               transport_detail: '搭乘阪神电车 "快速急行" (Rapid Exp.) 往神户三宫。', 
               nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] },
-            
             { id: 202, time: '11:30', location: '神户三宫 (Kobe-Sannomiya)', action: '神户牛午餐', 
               nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
               foodOptions: [
@@ -238,18 +241,14 @@
                   {name:'Ishida 三宫店', desc:'高级铁板烧(需预订)', query:'Kobe Beef Steak Ishida Sannomiya', coords:[34.6938, 135.1920]}
               ] 
             },
-            
             { id: 203, time: '14:00', location: '神户 Mosaic 广场', action: '搭 Uber前往', recommend: true, 
               transport_detail: '请直接在 Uber 输入 "Kobe Harborland umie Mosaic"。', 
               nav_query: 'Kobe Harborland umie Mosaic', transport_mode: 'driving', coords: [34.6795, 135.1843] },
-            
             { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百货', action: '必去', isGame: true, 
               nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843], 
               shopping: {name:'扭蛋百货', desc:'Mosaic 3F', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
-            
             { id: 205, time: '17:30', location: '神户港塔 (Kobe Port Tower)', action: '夜景/散步', 
               nav_query: 'Kobe Port Tower', transport_mode: 'walking', coords: [34.6815, 135.1765] },
-            
             { id: 206, time: '19:00', location: '日本桥 (Nippombashi)', action: '返回大阪/晚餐', 
               nav_query: 'Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065],
               foodOptions: [
@@ -262,15 +261,12 @@
         2: [
             { id: 301, time: '09:30', location: '黑门市场 (Kuromon Market)', action: '早午餐', 
               nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] },
-            
             { id: 302, time: '11:00', location: '淀屋桥站 (Yodoyabashi)', action: '移动至京都', recommend: true, 
               transport_detail: '建议叫 Uber 到 "京阪淀屋桥站" (Keihan Yodoyabashi)，这里是京阪电车起点，有座位。', 
               nav_query: 'Yodoyabashi Station Keihan', transport_mode: 'driving', coords: [34.6930, 135.5015] },
-            
             { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: '饭店 Check-in', isHotel: true, 
               transport_detail: '神宫丸太町站出来，直接搭 Uber 去饭店最快。', 
               nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] },
-            
             { id: 304, time: '13:30', location: '锦市场 (Nishiki Market)', action: '午餐', 
               nav_query: 'Nishiki Market', transport_mode: 'driving', coords: [35.0050, 135.7630],
               foodOptions: [
@@ -279,11 +275,9 @@
                   {name:'一风堂 锦小路', desc:'博多豚骨拉面', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]}
               ]
             },
-            
             { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗舰店', isGame: true, 
               nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695], 
               shopping: {name:'Nintendo Kyoto', desc:'高岛屋 T8 7F', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
-            
             { id: 306, time: '18:00', location: '四条乌丸 (Shijo Karasuma)', action: '晚餐', 
               nav_query: 'Shijo Station', transport_mode: 'walking', coords: [35.0035, 135.7595],
               foodOptions: [
@@ -297,11 +291,9 @@
             { id: 401, time: '08:30', location: '伏见稻荷大社', action: '千本鸟居', recommend: true, 
               transport_detail: '请直接 Uber 设定目的地："Fushimi Inari Taisha Parking Lot" (停车场)，少走一段上坡。', 
               nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] },
-            
             { id: 402, time: '10:30', location: '清水寺 (Kiyomizu-dera)', action: '移动', transport: 'Uber', recommend: true, 
               transport_detail: 'Uber 设定目的地："Kiyomizu-michi Bus Stop" (清水道公车站)，从这边走上去比较顺。', 
               nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] },
-            
             { id: 403, time: '12:00', location: '清水道 (Kiyomizu-michi)', action: '午餐', 
               nav_query: 'Okutan Kiyomizu', transport_mode: 'walking', coords: [34.9960, 135.7830], 
               foodOptions: [
@@ -310,11 +302,9 @@
                   {name:'吉野家', desc:'快速解决', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
               ] 
             },
-            
             { id: 404, time: '14:30', location: '三年坂 (Sannenzaka)', action: '老街/吉卜力', isGame: true, 
               nav_query: 'Sannenzaka', transport_mode: 'walking', coords: [35.0035, 135.7780], 
               shopping: {name:'橡子共和国', desc:'龙猫周边', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
-            
             { id: 405, time: '18:00', location: '河原町 (Kawaramachi)', action: '鸭川晚餐', 
               nav_query: 'Gion Tanto', transport_mode: 'walking', coords: [35.0040, 135.7730],
               foodOptions: [
@@ -324,7 +314,6 @@
               ],
               shopping: { name: '唐吉诃德 河原町', desc: '最后补货', query: 'Don Quijote Kyoto Kawaramachi', coords:[35.0040, 135.7700] }
             },
-            
             { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回饭店', transport: 'Uber', 
               nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }
         ],
@@ -332,11 +321,9 @@
             { id: 501, time: '08:05', location: '京都站 八条口', action: '前往车站', recommend: true, 
               transport_detail: 'Uber 设定："Kyoto Station Hachijo Exit" (八条口)。', 
               nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] },
-            
             { id: 502, time: '08:45', location: '关空特急 Haruka', action: '前往机场', 
               transport_detail: '从八条口进站，找 "30号月台" (Platform 30)。', 
               nav_query: 'Kyoto Station Platform 30', transport_mode: 'transit', coords: [34.9850, 135.7580] },
-            
             { id: 503, time: '10:05', location: '关西机场 T1', action: '最后采购/登机', 
               nav_query: 'Pokemon Store Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443], 
               shopping: {name:'Pokemon Store', desc:'T1 2F', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
@@ -359,6 +346,10 @@
                 showAllMap: true, 
                 mapInstance: null,
                 markerGroup: null,
+                touchStartX: 0, // 触摸手势变数
+                touchStartY: 0,
+                touchEndX: 0,
+                touchEndY: 0,
                 days: [
                     { date: '12/12', name: 'Day 1: 大阪', weather: { status: '晴', icon: 'fas fa-sun', temp_high: 11, color: 'text-orange-500' } },
                     { date: '12/13', name: 'Day 2: 神户', weather: { status: '阴', icon: 'fas fa-cloud', temp_high: 11, color: 'text-gray-500' } },
@@ -383,16 +374,48 @@
                 return match ? match[1] : '';
             },
             
-            // 终极修复：数据加载逻辑
-            // 自动从 LocalStorage 读取 'japanTrip_v36_FINAL'
-            // 如果读取不到，强制使用 masterDataV36 进行初始化
+            // 触摸事件处理
+            handleTouchStart(e) {
+                // 仅在列表模式启用
+                if(this.currentView !== 'list') return;
+                this.touchStartX = e.changedTouches[0].screenX;
+                this.touchStartY = e.changedTouches[0].screenY;
+            },
+            handleTouchEnd(e) {
+                if(this.currentView !== 'list') return;
+                this.touchEndX = e.changedTouches[0].screenX;
+                this.touchEndY = e.changedTouches[0].screenY;
+                this.handleSwipe();
+            },
+            handleSwipe() {
+                const diffX = this.touchStartX - this.touchEndX;
+                const diffY = this.touchStartY - this.touchEndY;
+                
+                // 1. 水平滑动距离必须大于垂直滑动距离 (防止卷动页面时误触)
+                // 2. 滑动距离必须大于 50px (防止点击误判)
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                    if (diffX > 0) {
+                        // 向左滑 -> 下一天
+                        if (this.currentDay < this.days.length - 1) {
+                            this.changeDay(this.currentDay + 1);
+                        } else {
+                            // 已经是最后一天，这里可以加个弹跳动画，暂时先不做
+                        }
+                    } else {
+                        // 向右滑 -> 上一天
+                        if (this.currentDay > 0) {
+                            this.changeDay(this.currentDay - 1);
+                        }
+                    }
+                }
+            },
+
             loadAndMergeData() {
                 try {
                     const saved = localStorage.getItem('japanTrip_v36_FINAL');
                     if (saved) { 
                         this.activities = JSON.parse(saved); 
                     } else { 
-                        // 强制初始化，确保存储的是最新结构的数据
                         this.activities = JSON.parse(JSON.stringify(masterDataV36)); 
                         this.saveToStorage(); 
                     }
@@ -400,31 +423,14 @@
                     this.activities = JSON.parse(JSON.stringify(masterDataV36)); 
                 }
             },
-
-            // 终极修复：URL 生成器
-            // 使用最稳健的 query 参数生成链接
             generateGoogleLink(query, fallbackName, mode) {
-                // 1. 优先使用精确的 query
                 let q = query;
-                // 2. 如果 query 为空 (旧数据问题)，使用地点名称 fallback
                 if (!q) q = fallbackName;
-                // 3. 如果还是空，只能返回 #
                 if (!q) return '#';
-
                 const encodedQ = encodeURIComponent(q);
-                
-                // 模式：walking, driving (Uber), transit
-                // iOS Universal Link 最佳实践：
-                // 使用 maps.google.com/maps?q=... 这种老式但万能的格式
-                // 或者是 dir (direction)
-                
-                // 如果是单纯查看地点（餐厅/购物）
                 if (mode === 'walking' && !query.includes('Station')) {
-                     // 搜索模式，会显示卡片
                      return `https://www.google.com/maps/search/?api=1&query=${encodedQ}`;
                 }
-
-                // 如果是需要导航移动 (Uber/Transit)
                 return `https://www.google.com/maps/dir/?api=1&destination=${encodedQ}&travelmode=${mode}`;
             },
 
@@ -432,6 +438,10 @@
                 this.currentDay = index;
                 this.currentView = 'list';
                 this.showAllMap = false; 
+                // 切换日期时，自动滚回顶部
+                const container = document.querySelector('.scroll-container');
+                if(container) container.scrollTop = 0;
+                
                 if (this.mapInstance) this.$nextTick(() => { this.updateMapMarkers(); });
             },
             switchMap() {
