@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (v40: 完美UI版)</title>
+    <title>京阪神親子遊 (v42: 美食購物分離版)</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,66 +18,83 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; -webkit-tap-highlight-color: transparent; }
         
-        .app-container { max-width: 430px; margin: 0 auto; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        .app-container { 
+            max-width: 430px; 
+            margin: 0 auto; 
+            background: #f8fafc; 
+            min-height: 100vh; 
+            position: relative; 
+            box-shadow: 0 0 25px rgba(0,0,0,0.15); 
+            display: flex; 
+            flex-direction: column; 
+        }
         
         .scroll-container::-webkit-scrollbar { display: none; }
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* v40修正：軸線定位在 57px (圓點中心)，避免與時間重疊 */
-        .timeline-line { position: absolute; left: 57px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
+        .bg-gradient-brand { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); }
+
+        .timeline-line { position: absolute; left: 57px; top: 35px; bottom: -20px; width: 2px; background: #e2e8f0; z-index: 0; }
         .last-item .timeline-line { display: none; }
         
         #map { height: 100%; width: 100%; min-height: 300px; z-index: 0; background: #e5e5e5; }
         
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
-        .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+        .photo-item { aspect-ratio: 1; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div v-if="!isAccessGranted" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-xs rounded-2xl p-6 text-center shadow-2xl">
-            <div class="mb-4 text-4xl">👨‍👩‍👧‍👦</div>
-            <h2 class="text-xl font-bold mb-2">旅程鎖定中</h2>
-            <p class="text-gray-500 text-sm mb-6">請輸入通行碼 (Hint: Alfred)</p>
-            <input type="password" v-model="passcode" class="w-full text-center text-xl border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="Passcode">
-            <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-blue-500/30">解鎖行程</button>
+        <div class="bg-white w-full max-w-xs rounded-3xl p-8 text-center shadow-2xl">
+            <div class="mb-6 text-5xl animate-bounce">🔐</div>
+            <h2 class="text-xl font-bold mb-2 text-slate-800">旅程鎖定中</h2>
+            <p class="text-gray-400 text-sm mb-8">請輸入通行碼 (Hint: Alfred)</p>
+            <input type="password" v-model="passcode" class="w-full text-center text-xl bg-slate-50 border-2 border-slate-100 rounded-xl py-3 mb-6 outline-none focus:border-blue-500 transition" placeholder="Passcode">
+            <button @click="checkPasscode" class="w-full bg-gradient-brand text-white py-3.5 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-blue-500/30">開啟旅程</button>
         </div>
     </div>
 
     <div v-else class="app-container">
-        <header class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2 flex-none">
-            <div class="px-5 pt-12 pb-2 flex justify-between items-end">
+        <header class="bg-gradient-brand sticky top-0 z-40 pb-2 flex-none shadow-md">
+            <div class="px-6 pt-12 pb-4 flex justify-between items-end text-white">
                 <div>
-                    <div class="text-xs text-blue-600 font-bold tracking-wider mb-1">FAMILY TRIP 2025</div>
-                    <h1 class="text-2xl font-bold text-slate-800">京阪神家族之旅 ⛩️</h1>
+                    <div class="text-[10px] font-bold tracking-[0.2em] opacity-80 mb-1">FAMILY TRIP 2025</div>
+                    <h1 class="text-2xl font-bold tracking-wide">京阪神家族之旅 <span class="text-xl">⛩️</span></h1>
                 </div>
                 <div class="flex gap-3">
-                    <button @click="downloadMemories" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition">
-                        <i class="fas fa-cloud-download-alt"></i>
+                    <button @click="downloadMemories" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-white/30 transition border border-white/10">
+                        <i class="fas fa-cloud-download-alt text-sm"></i>
                     </button>
-                    <button @click="resetData" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-red-500 hover:bg-red-50 transition">
-                        <i class="fas fa-redo"></i>
+                    <button @click="resetData" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-red-500/50 transition border border-white/10">
+                        <i class="fas fa-redo text-sm"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="flex overflow-x-auto px-4 pb-2 gap-3 scroll-container snap-x">
+            <div class="flex overflow-x-auto px-4 pb-3 gap-3 scroll-container snap-x">
                 <div v-for="(day, index) in days" :key="index" 
                      @click="changeDay(index)"
-                     class="snap-center flex-shrink-0 flex flex-col items-center justify-center w-[72px] h-[85px] rounded-2xl transition-all duration-300 border cursor-pointer"
-                     :class="currentDay === index ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105' : 'bg-white text-gray-400 border-gray-100'">
+                     class="snap-center flex-shrink-0 flex flex-col items-center justify-center w-[70px] h-[82px] rounded-2xl transition-all duration-300 cursor-pointer relative overflow-hidden"
+                     :class="currentDay === index ? 'bg-white text-blue-600 shadow-lg translate-y-0.5' : 'bg-white/10 text-white/70 border border-white/10 hover:bg-white/20'">
                     
-                    <span class="text-xs font-medium">{{ day.date }}</span>
+                    <span class="text-[10px] font-medium opacity-80">{{ day.date }}</span>
                     <span class="text-sm font-bold my-0.5">{{ day.weekday }}</span>
                     
                     <div class="mt-1 flex flex-col items-center">
-                        <i :class="[day.weather.icon, currentDay === index ? 'text-white' : day.weather.color]" class="text-sm"></i>
-                        <span class="text-[10px] mt-0.5" :class="currentDay === index ? 'text-blue-100' : 'text-gray-400'">
+                        <i :class="[day.weather.icon]" class="text-xs mb-0.5"></i>
+                        <span class="text-[10px] font-bold">
                             {{ day.weather.temp_high !== '-' ? day.weather.temp_high + '°' : '--' }}
                         </span>
                     </div>
@@ -85,7 +102,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto scroll-container relative bg-white" 
+        <main class="flex-1 overflow-y-auto scroll-container relative" 
               @touchstart="handleTouchStart" @touchend="handleTouchEnd">
             
             <div v-if="isLoading" class="absolute inset-0 z-30 bg-white/80 backdrop-blur flex flex-col items-center justify-center">
@@ -96,10 +113,11 @@
                 </div>
             </div>
 
-            <div v-if="currentView === 'list'" class="px-5 py-6 pb-24">
-                <div v-if="sortedActivities.length === 0" class="text-center py-20 text-gray-400">
-                    <p>本日尚無行程</p>
-                    <button @click="openModal()" class="mt-4 text-blue-600 text-sm font-bold">立即新增</button>
+            <div v-if="currentView === 'list'" class="px-5 py-6 pb-28">
+                <div v-if="sortedActivities.length === 0" class="text-center py-20">
+                    <div class="text-6xl mb-4 opacity-20">📝</div>
+                    <p class="text-gray-400">本日尚無行程</p>
+                    <button @click="openModal()" class="mt-6 text-blue-600 text-sm font-bold bg-blue-50 px-6 py-2 rounded-full">立即新增</button>
                 </div>
 
                 <div v-for="(item, idx) in sortedActivities" :key="item.id" 
@@ -108,117 +126,139 @@
                     
                     <div class="timeline-line"></div>
                     
-                    <div class="absolute left-0 top-1 w-[48px] text-xs font-bold text-gray-500 text-right">{{ item.time }}</div>
+                    <div class="absolute left-0 top-1 w-[48px] text-xs font-bold text-gray-400 text-right font-mono">{{ item.time }}</div>
                     
-                    <div class="absolute left-[52px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10"
+                    <div class="absolute left-[52px] top-1.5 w-3 h-3 rounded-full border-2 border-slate-50 shadow-sm z-10"
                          :class="getIconColor(item)"></div>
 
-                    <div @click="openModal(item)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.99] transition-transform duration-200">
+                    <div @click="openModal(item)" class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 active:scale-[0.99] transition-transform duration-200">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-gray-800 text-lg leading-tight">{{ getMainName(item.location) }}</h3>
+                            <h3 class="font-bold text-slate-800 text-lg leading-tight">{{ getMainName(item.location) }}</h3>
                             <div class="flex gap-2">
-                                <a v-if="item.coords" :href="generateGoogleLink(item.location, item.location, item.transport_mode)" target="_blank" @click.stop class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs hover:bg-blue-100 transition">
+                                <a v-if="item.coords" :href="generateGoogleLink(item.location, item.location, item.transport_mode)" target="_blank" @click.stop class="w-8 h-8 rounded-full bg-slate-50 text-blue-500 flex items-center justify-center text-xs hover:bg-blue-50 transition border border-slate-100 shadow-sm">
                                     <i class="fas fa-location-arrow"></i>
                                 </a>
                             </div>
                         </div>
                         
-                        <p v-if="getSubName(item.location)" class="text-xs text-gray-400 mb-2 font-medium">{{ getSubName(item.location) }}</p>
+                        <p v-if="getSubName(item.location)" class="text-xs text-gray-400 mb-2.5 font-medium">{{ getSubName(item.location) }}</p>
                         
-                        <div class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium mb-3"
-                             :class="item.isHotel ? 'bg-purple-100 text-purple-700' : (item.isGame ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')">
-                            <i class="mr-1.5" :class="item.isHotel ? 'fas fa-bed' : (item.isGame ? 'fas fa-gamepad' : 'fas fa-walking')"></i>
+                        <div class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold mb-3 tracking-wide"
+                             :class="getTagStyle(item)">
+                            <i class="mr-1.5" :class="getTagIcon(item)"></i>
                             {{ item.action }}
                         </div>
 
-                        <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-2 mb-2 bg-orange-50/50 rounded-xl p-3 border border-orange-100" @click.stop>
+                        <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-1 mb-2 bg-orange-50/60 rounded-xl p-3 border border-orange-100" @click.stop>
                             <div class="px-1 mb-2 flex items-center gap-1.5 text-xs font-bold text-orange-600">
-                                <i class="fas fa-utensils"></i> 附近美食推薦
+                                <i class="fas fa-utensils"></i> 附近美食 (3選1)
                             </div>
-                            
                             <div class="flex flex-col gap-2">
                                 <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" 
-                                     class="bg-white p-3 rounded-lg border border-orange-100 shadow-sm flex justify-between items-center">
-                                     
+                                     class="bg-white p-2.5 rounded-lg border border-orange-100 shadow-sm flex justify-between items-center">
                                      <div class="flex-1 min-w-0 mr-3">
-                                        <div class="font-bold text-gray-800 text-sm mb-0.5 truncate">{{ food.name }}</div>
-                                        <div class="text-[11px] text-gray-500 leading-tight">{{ food.desc }}</div>
+                                        <div class="font-bold text-slate-700 text-sm mb-0.5 truncate">{{ food.name }}</div>
+                                        <div class="text-[11px] text-gray-400 leading-tight">{{ food.desc }}</div>
                                      </div>
-                                     
                                      <a :href="generateGoogleLink(food.query, food.name, 'walking')" target="_blank" 
-                                        class="shrink-0 w-8 h-8 flex items-center justify-center bg-orange-50 text-orange-600 rounded-full text-xs active:scale-95 transition">
+                                        class="shrink-0 w-7 h-7 flex items-center justify-center bg-orange-50 text-orange-500 rounded-full text-xs active:scale-95 transition">
                                         <i class="fas fa-location-arrow"></i>
                                      </a>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <div class="photo-grid" v-if="item.images && item.images.length">
-                                <div v-for="(img, imgIdx) in item.images" :key="imgIdx" class="photo-item bg-gray-100" @click.stop="viewImage(img.url)">
-                                    <img :src="img.url" loading="lazy">
-                                    <button @click.stop="deleteSingleImage(item, imgIdx)" class="absolute top-1 right-1 bg-black/50 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">✕</button>
+                        <div v-if="item.shopOptions && item.shopOptions.length > 0" class="mt-2 mb-2 bg-pink-50/60 rounded-xl p-3 border border-pink-100" @click.stop>
+                            <div class="px-1 mb-2 flex items-center gap-1.5 text-xs font-bold text-pink-600">
+                                <i class="fas fa-shopping-bag"></i> 購物掃貨 (Donki/藥妝)
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <div v-for="(shop, sIdx) in item.shopOptions" :key="sIdx" 
+                                     class="bg-white p-2.5 rounded-lg border border-pink-100 shadow-sm flex justify-between items-center">
+                                     <div class="flex-1 min-w-0 mr-3">
+                                        <div class="font-bold text-slate-700 text-sm mb-0.5 truncate">{{ shop.name }}</div>
+                                        <div class="text-[11px] text-gray-400 leading-tight">{{ shop.desc }}</div>
+                                     </div>
+                                     <a :href="generateGoogleLink(shop.query, shop.name, 'walking')" target="_blank" 
+                                        class="shrink-0 w-7 h-7 flex items-center justify-center bg-pink-50 text-pink-500 rounded-full text-xs active:scale-95 transition">
+                                        <i class="fas fa-location-arrow"></i>
+                                     </a>
                                 </div>
                             </div>
-                            
-                            <label class="mt-3 flex items-center gap-2 text-xs text-gray-400 py-2 cursor-pointer hover:text-blue-500 transition w-fit" @click.stop>
-                                <i class="fas fa-camera"></i>
-                                <span>新增照片</span>
-                                <input type="file" multiple accept="image/*" class="hidden" @change="uploadImages($event, item)">
-                            </label>
                         </div>
+
+                        <div v-if="item.images && item.images.length">
+                            <div class="photo-grid">
+                                <div v-for="(img, imgIdx) in item.images" :key="imgIdx" class="photo-item bg-gray-100" @click.stop="viewImage(img.url)">
+                                    <img :src="img.url" loading="lazy">
+                                    <button @click.stop="deleteSingleImage(item, imgIdx)" class="absolute top-1 right-1 bg-black/40 backdrop-blur text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                            
+                        <label class="mt-3 flex items-center gap-2 text-xs text-gray-400 py-2 cursor-pointer hover:text-blue-600 transition w-fit" @click.stop>
+                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-camera"></i></div>
+                            <span class="font-medium">新增照片</span>
+                            <input type="file" multiple accept="image/*" class="hidden" @change="uploadImages($event, item)">
+                        </label>
                     </div>
                 </div>
             </div>
 
             <div v-show="currentView === 'map'" class="h-full w-full relative">
                 <div id="map"></div>
-                <div class="absolute bottom-24 right-4 z-[400] flex flex-col gap-2">
-                    <button @click="toggleMapMode" class="w-12 h-12 bg-white rounded-full shadow-lg text-gray-700 flex items-center justify-center font-bold text-xs border border-gray-200">
-                        {{ showAllMap ? 'All' : 'Day' }}
+                <div class="absolute bottom-28 right-4 z-[400] flex flex-col gap-3">
+                    <button @click="toggleMapMode" class="w-12 h-12 bg-white rounded-full shadow-xl text-slate-700 flex items-center justify-center font-bold text-xs border border-gray-100 active:scale-95 transition">
+                        {{ showAllMap ? '全部' : '當天' }}
                     </button>
                 </div>
             </div>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-around items-center z-50 max-w-[430px] mx-auto pb-safe">
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 px-6 py-3 flex justify-around items-center z-50 max-w-[430px] mx-auto pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.02)]">
             <button @click="changeDay(currentDay)" class="flex flex-col items-center gap-1 transition" :class="currentView === 'list' ? 'text-blue-600' : 'text-gray-300'">
                 <i class="fas fa-list-ul text-xl"></i>
-                <span class="text-[10px] font-medium">行程</span>
+                <span class="text-[10px] font-bold">行程</span>
             </button>
             
-            <button @click="openModal()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg shadow-blue-200 flex items-center justify-center text-white text-2xl -mt-8 border-4 border-white active:scale-95 transition hover:bg-blue-700">
+            <button @click="openModal()" class="w-14 h-14 bg-gradient-brand rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center text-white text-2xl -mt-10 border-4 border-white active:scale-95 transition hover:shadow-blue-500/60">
                 <i class="fas fa-plus"></i>
             </button>
             
             <button @click="switchMap" class="flex flex-col items-center gap-1 transition" :class="currentView === 'map' ? 'text-blue-600' : 'text-gray-300'">
                 <i class="fas fa-map-marked-alt text-xl"></i>
-                <span class="text-[10px] font-medium">地圖</span>
+                <span class="text-[10px] font-bold">地圖</span>
             </button>
         </nav>
 
         <div v-if="showModal" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
-            <div class="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl p-6 relative z-10 animate-slide-up shadow-2xl">
-                <h3 class="text-lg font-bold mb-4 text-gray-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h3>
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="showModal = false"></div>
+            <div class="bg-white w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl p-6 relative z-10 animate-slide-up shadow-2xl">
+                <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+                <h3 class="text-lg font-bold mb-6 text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-edit text-blue-500"></i>
+                    {{ isEditing ? '編輯行程' : '新增行程' }}
+                </h3>
+                
                 <div class="space-y-4">
                     <div class="grid grid-cols-3 gap-3">
                         <div class="col-span-1">
-                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">時間</label>
-                            <input type="time" v-model="form.time" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500">
+                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1.5 block">時間</label>
+                            <input type="time" v-model="form.time" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition">
                         </div>
                         <div class="col-span-2">
-                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">地點名稱</label>
-                            <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
+                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1.5 block">地點名稱</label>
+                            <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition">
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">活動內容 / 備註</label>
-                        <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
+                        <label class="text-xs text-gray-500 font-bold ml-1 mb-1.5 block">活動內容 / 備註</label>
+                        <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition">
                     </div>
-                    <div class="flex gap-2 pt-2">
-                        <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold text-sm">刪除</button>
-                        <button @click="saveActivity" class="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-200">儲存</button>
+                    
+                    <div class="flex gap-3 pt-4">
+                        <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3.5 rounded-xl font-bold text-sm hover:bg-red-100 transition">刪除</button>
+                        <button @click="saveActivity" class="flex-[2] bg-gradient-brand text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/30 active:scale-95 transition">儲存變更</button>
                     </div>
                 </div>
             </div>
@@ -227,7 +267,6 @@
 </div>
 
 <script>
-    // 1. Firebase 初始化
     const firebaseConfig = {
         apiKey: "AIzaSyByeBl_M9-TjF2i-5D71AjVm5j-vNCbAUc",
         authDomain: "jp-travel-ef684.firebaseapp.com",
@@ -246,128 +285,116 @@
 
     const { createApp } = Vue;
 
-    // 2. 完整行程資料：中/日/英 三語標示 (v39 版本)
+    // v42 資料：美食3選1 + 購物Donki/藥妝 分離版
     const masterDataVFinal = {
        0: [
-           { id: 101, time: '16:50', location: '關西機場 T2 (関西空港 T2 / KIX T2)', action: '接駁巴士', transport_detail: '出關後，尋找 "Terminal 1 / Railways" 免費接駁巴士站台。', 
-             nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] },
-           { id: 102, time: '17:35', location: '關西機場站 (関西空港駅 / Kansai Airport St.)', action: '搭乘特急 Rapi:t', transport_detail: '南海電鐵 (Nankai Line)，深藍色列車。全車指定席。', 
-             nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] },
-           { id: 103, time: '18:15', location: '南海難波站 (南海難波駅 / Nankai Namba St.)', action: '抵達/出站', transport_detail: '請走 "2F 中央改札口" (2F Central Exit)，下電扶梯往北出口。', 
-             nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] },
-           { id: 104, time: '18:30', location: 'Caption by Hyatt Namba (キャプション by Hyatt)', action: '飯店 Check-in', isHotel: true, 
-             nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] },
-           { id: 105, time: '19:15', location: '道頓堀 (道頓堀 / Dotonbori)', action: '晚餐/逛街', transport_detail: '步行約10分鐘。', 
-             nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], 
+           { id: 101, time: '16:50', location: '關西機場 T2', action: '接駁巴士', transport_mode: 'transit', coords: [34.4357, 135.2443] },
+           { id: 102, time: '17:35', location: '關西機場站', action: '搭乘特急 Rapi:t', transport_mode: 'transit', coords: [34.4367, 135.2435] },
+           { id: 103, time: '18:15', location: '南海難波站', action: '抵達/出站', transport_mode: 'walking', coords: [34.6631, 135.5023] },
+           { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '飯店 Check-in', isHotel: true, transport_mode: 'walking', coords: [34.6655, 135.5065] },
+           { id: 105, time: '19:15', location: '道頓堀 (Dotonbori)', action: '晚餐', transport_mode: 'walking', coords: [34.6687, 135.5013], 
              foodOptions: [
-                 {name:'一蘭拉麵 道頓堀本館', desc:'24hr 獨立隔間，經典豚骨', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, 
-                 {name:'千房大阪燒 道頓堀', desc:'經典大阪燒，口感鬆軟', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
-                 {name:'藏壽司 道頓堀店', desc:'扭蛋壽司，便宜好玩', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]}
-             ],
-             shopping: {name:'唐吉訶德 (摩天輪店)', desc:'人多，建議速戰速決', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]}
+                 {name:'一蘭拉麵 道頓堀', desc:'24hr 經典豚骨，獨立隔間', query:'Ichiran Dotonbori', coords:[34.6698, 135.5025]}, 
+                 {name:'千房大阪燒', desc:'道地大阪燒，口感鬆軟', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
+                 {name:'串炸達人 (Kushikatsu Daruma)', desc:'大阪名物炸串，禁止沾兩次醬', query:'Kushikatsu Daruma Dotonbori', coords:[34.6690, 135.5035]}
+             ]
+           },
+           { id: 106, time: '20:45', location: '道頓堀購物區', action: '購物掃貨', isShop: true, transport_mode: 'walking', coords: [34.6690, 135.5020],
+             shopOptions: [
+                 {name:'唐吉訶德 道頓堀店', desc:'摩天輪下那間，東西最全', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]},
+                 {name:'大國藥妝 (激安店)', desc:'價格極具競爭力，可退稅', query:'Daikoku Drug Ultra Shift', coords:[34.6680, 135.5020]}
+             ]
            }
        ],
        1: [
-           { id: 201, time: '09:00', location: '近鐵日本橋站 (近鉄日本橋駅 / Kintetsu Nippombashi St.)', action: '移動至神戶', 
-             transport_detail: '搭乘阪神電車 "快速急行" (Rapid Exp.) 往神戶三宮。', 
-             nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] },
-           { id: 202, time: '11:30', location: '神戶三宮站 (神戸三宮駅 / Kobe Sannomiya St.)', action: '神戶牛午餐', 
-             nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
+           { id: 201, time: '09:00', location: '近鐵日本橋站', action: '移動至神戶', transport_mode: 'transit', coords: [34.6672, 135.5065] },
+           { id: 202, time: '11:30', location: '神戶三宮站', action: '神戶牛午餐', transport_mode: 'walking', coords: [34.6930, 135.1915], 
              foodOptions: [
-                 {name:'Steakland 神戶館', desc:'高CP值鐵板燒，觀光客首選', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]}, 
-                 {name:'Red Rock 本店', desc:'烤牛肉丼，肉量十足', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
-                 {name:'Moriya 凜', desc:'志玲姐姐推薦，頂級神戶牛', query:'Mouriya Rin', coords:[34.6920, 135.1910]}
+                 {name:'Steakland 神戶館', desc:'高CP值鐵板燒，觀光客首選', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]},
+                 {name:'Moriya (モーリヤ)', desc:'志玲姐姐推薦，頂級神戶牛', query:'Mouriya Sannomiya', coords:[34.6925, 135.1910]},
+                 {name:'石田屋 (Ishida)', desc:'精緻燒肉風格，肉質極佳', query:'Kobe Beef Ishida', coords:[34.6935, 135.1920]}
              ] 
            },
-           { id: 203, time: '14:00', location: '神戶 Mosaic 廣場 (神戸モザイク / Kobe Mosaic)', action: '搭 Uber前往', recommend: true, 
-             transport_detail: '請直接在 Uber 輸入 "Kobe Harborland umie Mosaic"。', 
-             nav_query: 'Kobe Harborland umie Mosaic', transport_mode: 'driving', coords: [34.6795, 135.1843] },
-           { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百貨', action: '孩子天堂', isGame: true, 
-             nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843], 
-             shopping: {name:'扭蛋百貨', desc:'關西最大級，2000台扭蛋機', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
-           { id: 205, time: '17:30', location: '神戶港塔 (神戸ポートタワー / Kobe Port Tower)', action: '夜景/散步', 
-             nav_query: 'Kobe Port Tower', transport_mode: 'walking', coords: [34.6815, 135.1765] },
-           { id: 206, time: '19:00', location: '大阪日本橋 (日本橋 / Nippombashi)', action: '返回/晚餐', 
-             nav_query: 'Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065],
+           { id: 203, time: '14:00', location: '神戶 Mosaic 廣場', action: '搭 Uber前往', recommend: true, transport_mode: 'driving', coords: [34.6795, 135.1843] },
+           { id: 204, time: '14:30', location: 'Mosaic 3F', action: '孩子天堂', isGame: true, transport_mode: 'walking', coords: [34.6795, 135.1843] },
+           { id: 205, time: '17:30', location: '神戶港塔', action: '夜景/散步', transport_mode: 'walking', coords: [34.6815, 135.1765] },
+           { id: 206, time: '19:00', location: '大阪難波', action: '返回/晚餐', transport_mode: 'transit', coords: [34.6672, 135.5065],
              foodOptions: [
-                 {name:'鳥貴族 難波', desc:'均一價串燒居酒屋', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
-                 {name:'天政烏龍麵', desc:'便宜快速，孩子累了吃這個', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
-                 {name:'燒肉力丸', desc:'吃到飽，大孩子最愛', query:'Yakiniku Rikimaru Namba', coords:[34.6650, 135.5030]}
+                 {name:'鳥貴族 難波', desc:'均一價串燒居酒屋，便宜好吃', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
+                 {name:'天政烏龍麵', desc:'快速便宜，湯頭鮮甜', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
+                 {name:'燒肉力丸', desc:'燒肉吃到飽，大孩子最愛', query:'Yakiniku Rikimaru Namba', coords:[34.6650, 135.5030]}
+             ]
+           },
+           { id: 207, time: '20:30', location: '千日前商店街', action: '補貨', isShop: true, transport_mode: 'walking', coords: [34.6660, 135.5040],
+             shopOptions: [
+                {name:'唐吉訶德 難波店', desc:'千日前店，比道頓堀人少一點', query:'Don Quijote Namba Sennichimae', coords:[34.6655, 135.5035]},
+                {name:'Sundrug 藥妝', desc:'營業到較晚，特價品多', query:'Sundrug Namba', coords:[34.6665, 135.5045]}
              ]
            }
        ],
        2: [
-           { id: 301, time: '09:30', location: '黑門市場 (黒門市場 / Kuromon Market)', action: '早午餐/吃水果', 
-             nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] },
-           { id: 302, time: '11:00', location: '淀屋橋站 (淀屋橋駅 / Yodoyabashi St.)', action: '移動至京都', recommend: true, 
-             transport_detail: '建議叫 Uber 到 "京阪淀屋橋站" (Keihan Yodoyabashi)，這裡是京阪電車起點，全家有座位。', 
-             nav_query: 'Yodoyabashi Station Keihan', transport_mode: 'driving', coords: [34.6930, 135.5015] },
-           { id: 303, time: '12:30', location: 'Hyatt Place Kyoto (ハイアットプレイス京都)', action: 'Check-in', isHotel: true, 
-             transport_detail: '神宮丸太町站出來，直接搭 Uber 去飯店最快。', 
-             nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] },
-           { id: 304, time: '13:30', location: '錦市場 (錦市場 / Nishiki Market)', action: '午餐', 
-             nav_query: 'Nishiki Market', transport_mode: 'driving', coords: [35.0050, 135.7630],
+           { id: 301, time: '09:30', location: '黑門市場', action: '吃海鮮', transport_mode: 'walking', coords: [34.6654, 135.5065] },
+           { id: 302, time: '11:00', location: '淀屋橋站', action: '移動至京都 (京阪電車)', recommend: true, transport_mode: 'driving', coords: [34.6930, 135.5015] },
+           { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', isHotel: true, transport_mode: 'driving', coords: [35.0163, 135.7592] },
+           { id: 304, time: '13:30', location: '錦市場周邊', action: '午餐', transport_mode: 'driving', coords: [35.0050, 135.7630],
              foodOptions: [
-                 {name:'名代豬排 三條本店', desc:'【首選】座位寬敞，白飯高麗菜吃到飽', query:'Katsukura Sanjo Main Store', coords:[35.0088, 135.7665]},
+                 {name:'名代豬排 三條本店', desc:'座位寬敞，白飯味噌湯吃到飽', query:'Katsukura Sanjo', coords:[35.0088, 135.7665]},
                  {name:'一風堂 錦小路', desc:'豚骨拉麵，不辣適合小孩', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]},
-                 {name:'富山黑拉麵', desc:'重口味醬油，可嘗試', query:'Menya Iroha Kyoto', coords:[35.0010, 135.7590]}
+                 {name:'錦 Warai (わらい)', desc:'京風大阪燒，炒麵也好吃', query:'Nishiki Warai', coords:[35.0045, 135.7615]}
              ]
            },
-           { id: 305, time: '15:30', location: 'Nintendo Kyoto (ニンテンドー京都)', action: '任天堂旗艦店', isGame: true, 
-             nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695], 
-             shopping: {name:'Nintendo Kyoto', desc:'高島屋 T8 7F，建議先拿整理券', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
-           { id: 306, time: '18:00', location: '四條烏丸 (四条烏丸 / Shijo Karasuma)', action: '晚餐', 
-             nav_query: 'Shijo Station', transport_mode: 'walking', coords: [35.0035, 135.7595],
+           { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗艦店', isGame: true, transport_mode: 'walking', coords: [35.0038, 135.7695] },
+           { id: 306, time: '18:00', location: '四條河原町', action: '晚餐', transport_mode: 'walking', coords: [35.0040, 135.7690],
              foodOptions: [
-                 {name:'CoCo壹番屋', desc:'日式咖哩，可調辣度/份量', query:'CoCo Ichibanya Shijo Karasuma', coords:[35.0032, 135.7590]},
-                 {name:'大戶屋 四條', desc:'定食類，有魚有肉很健康', query:'Ootoya Shijo Karasuma', coords:[35.0030, 135.7600]},
-                 {name:'壽司郎 河原町', desc:'如果第一天沒吃壽司可來這', query:'Sushiro Kawaramachi', coords:[35.0040, 135.7690]}
+                 {name:'武藏壽司 (Musashi)', desc:'河原町人氣迴轉壽司，老字號', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
+                 {name:'祇園 Tanto', desc:'鐵板燒/大阪燒，就在運河旁', query:'Gion Tanto', coords:[35.0055, 135.7735]},
+                 {name:'Chao Chao 餃子', desc:'一口餃子，皮薄酥脆', query:'Chao Chao Sanjo Kiyamachi', coords:[35.0080, 135.7710]}
+             ]
+           },
+           { id: 307, time: '19:30', location: '河原町購物區', action: '大型採購', isShop: true, transport_mode: 'walking', coords: [35.0050, 135.7700],
+             shopOptions: [
+                 {name:'唐吉訶德 河原町店', desc:'京都最大間，整棟超好逛', query:'Don Quijote Kawaramachi', coords:[35.0050, 135.7700]},
+                 {name:'松本清 (京都四條)', desc:'藥妝品項齊全', query:'Matsumoto Kiyoshi Kyoto Shijo', coords:[35.0035, 135.7695]}
              ]
            }
        ],
        3: [
-           { id: 401, time: '08:30', location: '伏見稻荷大社 (伏見稲荷大社 / Fushimi Inari)', action: '千本鳥居', recommend: true, 
-             transport_detail: '請直接 Uber 設定目的地："Fushimi Inari Taisha Parking Lot" (停車場)，少走一段上坡。', 
-             nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] },
-           { id: 402, time: '10:30', location: '清水寺 (清水寺 / Kiyomizu-dera)', action: '移動', transport: 'Uber', recommend: true, 
-             transport_detail: 'Uber 設定目的地："Kiyomizu-michi Bus Stop" (清水道公車站)，從這邊走上去比較順。', 
-             nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] },
-           { id: 403, time: '12:00', location: '清水道 (清水道 / Kiyomizu-michi)', action: '午餐', 
-             nav_query: 'Omen Kodaiji', transport_mode: 'walking', coords: [34.9960, 135.7830], 
+           { id: 401, time: '08:30', location: '伏見稻荷大社', action: '千本鳥居', recommend: true, transport_mode: 'driving', coords: [34.9671, 135.7726] },
+           { id: 402, time: '10:30', location: '清水寺', action: '觀光', recommend: true, transport_mode: 'driving', coords: [34.9949, 135.7850] },
+           { id: 403, time: '12:00', location: '清水道', action: '午餐', transport_mode: 'walking', coords: [34.9960, 135.7830],
              foodOptions: [
-                 {name:'Omen 烏龍麵', desc:'【推】名店，烏龍麵小孩接受度高', query:'Omen Kodaiji', coords:[34.9990, 135.7800]},
-                 {name:'奧丹 清水', desc:'湯豆腐，環境美但小孩可能吃不慣', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
-                 {name:'吉野家 清水寺店', desc:'如果小孩吵著要吃飯/牛丼', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
-             ] 
-           },
-           { id: 404, time: '14:30', location: '三年坂 (産寧坂 / Sannenzaka)', action: '吉卜力/角落生物', isGame: true, 
-             nav_query: 'Sannenzaka', transport_mode: 'walking', coords: [35.0035, 135.7780], 
-             shopping: {name:'橡子共和國', desc:'龍貓周邊', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
-           { id: 405, time: '18:00', location: '河原町 (河原町 / Kawaramachi)', action: '晚餐/逛街', 
-             nav_query: 'Gion Tanto', transport_mode: 'walking', coords: [35.0040, 135.7730],
-             foodOptions: [
-                 {name:'祇園 Tanto', desc:'鐵板燒/大阪燒，座位稍擠但好吃', query:'Gion Tanto', coords:[35.0055, 135.7735]},
-                 {name:'武藏壽司', desc:'河原町人氣迴轉壽司', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
-                 {name:'星乃咖啡店', desc:'也有義大利麵/舒芙蕾', query:'Hoshino Coffee Kawaramachi', coords:[35.0050, 135.7690]}
+                 {name:'Omen 烏龍麵', desc:'名店，蔬菜烏龍麵小孩愛吃', query:'Omen Kodaiji', coords:[34.9990, 135.7800]},
+                 {name:'奧丹 (Okutan)', desc:'湯豆腐老店，環境優美', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
+                 {name:'日出烏龍麵 (Hinode)', desc:'咖哩烏龍麵最有名(需排隊)', query:'Hinode Udon', coords:[35.0150, 135.7950]}
              ]
            },
-           { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回飯店', transport: 'Uber', 
-             nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }
+           { id: 404, time: '14:30', location: '三年坂', action: '逛街散步', isGame: true, transport_mode: 'walking', coords: [35.0035, 135.7780] },
+           { id: 405, time: '17:00', location: '京都車站 (Avanti)', action: '最後採購', isShop: true, transport_mode: 'transit', coords: [34.9840, 135.7590],
+             shopOptions: [
+                 {name:'唐吉訶德 Avanti店', desc:'京都站八條口對面 2F', query:'Don Quijote Kyoto Avanti', coords:[34.9840, 135.7590]},
+                 {name:'松本清 (Porta)', desc:'站前地下街，方便補貨', query:'Matsumoto Kiyoshi Kyoto Station Porta', coords:[34.9860, 135.7590]}
+             ]
+           },
+           { id: 406, time: '18:30', location: '京都車站 (Kyoto St.)', action: '晚餐', transport_mode: 'walking', coords: [34.9858, 135.7588],
+             foodOptions: [
+                 {name:'拉麵小路 (10F)', desc:'各地拉麵集合，選擇多', query:'Kyoto Ramen Koji', coords:[34.9858, 135.7588]},
+                 {name:'名代豬排 (車站店)', desc:'伊勢丹百貨 11F', query:'Katsukura Kyoto Station', coords:[34.9855, 135.7585]},
+                 {name:'Donguri (どんぐり)', desc:'京都風大阪燒，氣氛熱鬧', query:'Donguri Kyoto Station', coords:[34.9865, 135.7595]}
+             ]
+           },
+           { id: 407, time: '20:30', location: 'Hyatt Place Kyoto', action: '回飯店', transport_mode: 'driving', coords: [35.0163, 135.7592] }
        ],
        4: [
-           { id: 501, time: '08:05', location: '京都站 八條口 (京都駅 八条口 / Kyoto St. Hachijo)', action: '前往車站', recommend: true, 
-             transport_detail: 'Uber 設定："Kyoto Station Hachijo Exit" (八條口)。', 
-             nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] },
-           { id: 502, time: '08:45', location: '關空特急 Haruka (関空特急はるか / Haruka Exp.)', action: '前往機場', 
-             transport_detail: '從八條口進站，找 "30號月台" (Platform 30)。', 
-             nav_query: 'Kyoto Station Platform 30', transport_mode: 'transit', coords: [34.9850, 135.7580] },
-           { id: 503, time: '10:05', location: '關西機場 T1 (関西空港 T1 / KIX T1)', action: '最後採購/登機', 
-             nav_query: 'Pokemon Store Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443], 
-             shopping: {name:'Pokemon Store', desc:'T1 2F，最後一站', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
+           { id: 501, time: '08:05', location: '京都站 八條口', action: '前往機場', recommend: true, transport_mode: 'driving', coords: [34.9850, 135.7580] },
+           { id: 502, time: '10:05', location: '關西機場 T1', action: '登機/免稅店', transport_mode: 'walking', coords: [34.4357, 135.2443],
              foodOptions: [
-                 {name:'神座拉麵 機場店', desc:'T1 3F，大量白菜湯頭很甜', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
+                 {name:'神座拉麵 機場店', desc:'T1 3F，大量白菜湯頭', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
                  {name:'Sukiya 機場店', desc:'T1 2F，快速解決', query:'Sukiya Kansai Airport', coords:[34.4355, 135.2445]},
                  {name:'551蓬萊', desc:'T1 2F 必買豬肉包(可外帶)', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2450]}
+             ],
+             shopOptions: [
+                 {name:'Cocokara Fine 藥妝', desc:'T1 3F 最後補貨機會', query:'Cocokara Fine Kansai Airport', coords:[34.4355, 135.2445]},
+                 {name:'Pokemon Store', desc:'T1 2F 孩子最後一站', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]}
              ]
            }
        ]
@@ -387,22 +414,17 @@
                 showAllMap: true, 
                 mapInstance: null,
                 markerGroup: null,
-                
-                isLoading: false, 
-                loadingText: '讀取中...',
-                progress: 0,
-
-                touchStartX: 0, touchStartY: 0, touchEndX: 0, touchEndY: 0,
+                isLoading: false, loadingText: '讀取中...', progress: 0,
                 
                 days: [
-                    { date: '12/05', weekday: '週五', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/06', weekday: '週六', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/07', weekday: '週日', name: 'Day 3: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/08', weekday: '週一', name: 'Day 4: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/09', weekday: '週二', name: 'Day 5: 返程', locCoords: {lat: 34.4320, lon: 135.2304}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } }
+                    { date: '12/05', weekday: '週五', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { icon: 'fas fa-spinner fa-spin', temp_high: '-' } },
+                    { date: '12/06', weekday: '週六', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { icon: 'fas fa-spinner fa-spin', temp_high: '-' } },
+                    { date: '12/07', weekday: '週日', name: 'Day 3: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { icon: 'fas fa-spinner fa-spin', temp_high: '-' } },
+                    { date: '12/08', weekday: '週一', name: 'Day 4: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { icon: 'fas fa-spinner fa-spin', temp_high: '-' } },
+                    { date: '12/09', weekday: '週二', name: 'Day 5: 返程', locCoords: {lat: 34.4320, lon: 135.2304}, weather: { icon: 'fas fa-spinner fa-spin', temp_high: '-' } }
                 ],
                 activities: {},
-                form: { id: null, time: '', location: '', action: '', transport_detail: '', coords: [], images: [] }
+                form: { id: null, time: '', location: '', action: '', coords: [], images: [], foodOptions: [], shopOptions: [] }
             }
         },
         computed: {
@@ -412,57 +434,67 @@
         mounted() { 
             this.loadAndMergeData(); 
             this.fetchRealTimeWeather();
-            
-            if(localStorage.getItem('trip_unlocked') === 'true') {
-                this.isAccessGranted = true;
-            }
+            if(localStorage.getItem('trip_unlocked') === 'true') this.isAccessGranted = true;
         },
         methods: {
-            // --- 天氣 API ---
+            getMainName(str) { return str ? str.split('(')[0] : ''; },
+            getSubName(str) { 
+                if(!str) return '';
+                const match = str.match(/\(([^)]+)\)/);
+                return match ? match[1] : '';
+            },
+            getIconColor(item) {
+                if (item.isShop) return 'bg-pink-500 ring-2 ring-pink-200';
+                if (item.isHotel) return 'bg-indigo-500 ring-2 ring-indigo-200';
+                if (item.isGame) return 'bg-orange-500 ring-2 ring-orange-200';
+                if (item.recommend) return 'bg-slate-800 ring-2 ring-slate-300';
+                return 'bg-blue-500 ring-2 ring-blue-200';
+            },
+            getTagStyle(item) {
+                if (item.isShop) return 'bg-pink-50 text-pink-600 border border-pink-100';
+                if (item.isHotel) return 'bg-indigo-50 text-indigo-600 border border-indigo-100';
+                if (item.isGame) return 'bg-orange-50 text-orange-600 border border-orange-100';
+                return 'bg-blue-50 text-blue-600 border border-blue-100';
+            },
+            getTagIcon(item) {
+                if (item.isShop) return 'fas fa-shopping-bag';
+                if (item.isHotel) return 'fas fa-bed';
+                if (item.isGame) return 'fas fa-gamepad';
+                return 'fas fa-walking';
+            },
             async fetchRealTimeWeather() {
                 const year = new Date().getFullYear(); 
                 this.days.forEach(async (day, index) => {
                     const [m, d] = day.date.split('/');
                     const apiDate = `${year}-${m}-${d}`;
-                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${day.locCoords.lat}&longitude=${day.locCoords.lon}&daily=weathercode,temperature_2m_max&timezone=Asia%2FTokyo&start_date=${apiDate}&end_date=${apiDate}`;
-
                     try {
-                        const res = await fetch(url);
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${day.locCoords.lat}&longitude=${day.locCoords.lon}&daily=weathercode,temperature_2m_max&timezone=Asia%2FTokyo&start_date=${apiDate}&end_date=${apiDate}`);
                         const data = await res.json();
-                        if (data.daily && data.daily.weathercode) {
+                        if (data.daily) {
                             const code = data.daily.weathercode[0];
-                            const temp = Math.round(data.daily.temperature_2m_max[0]);
-                            const wInfo = this.getWeatherFromCode(code);
-                            this.days[index].weather = { status: wInfo.status, icon: wInfo.icon, color: wInfo.color, temp_high: temp };
+                            this.days[index].weather = { 
+                                icon: this.getWeatherIcon(code), 
+                                temp_high: Math.round(data.daily.temperature_2m_max[0])
+                            };
                         }
-                    } catch (err) {
-                        console.error("天氣讀取失敗", err);
-                    }
+                    } catch (err) {}
                 });
             },
-            getWeatherFromCode(code) {
-                if (code === 0) return { status: '晴朗', icon: 'fas fa-sun', color: 'text-orange-500' };
-                if ([1, 2, 3].includes(code)) return { status: '多雲', icon: 'fas fa-cloud', color: 'text-gray-500' };
-                if ([45, 48].includes(code)) return { status: '起霧', icon: 'fas fa-smog', color: 'text-slate-400' };
-                if (code >= 51 && code <= 67) return { status: '下雨', icon: 'fas fa-umbrella', color: 'text-blue-500' };
-                if (code >= 80) return { status: '陣雨', icon: 'fas fa-cloud-rain', color: 'text-blue-600' };
-                return { status: '陰天', icon: 'fas fa-cloud', color: 'text-gray-500' };
+            getWeatherIcon(code) {
+                if (code === 0) return 'fas fa-sun text-yellow-400';
+                if ([1, 2, 3].includes(code)) return 'fas fa-cloud-sun text-gray-300';
+                if (code >= 51) return 'fas fa-umbrella text-blue-300';
+                return 'fas fa-cloud text-gray-400';
             },
-
-            // --- 資料處理 ---
             loadAndMergeData() {
                 this.isLoading = true;
-                const tripRef = db.ref('trip_final_family_v39'); // v39 新路徑，確保資料獨立
+                const tripRef = db.ref('trip_final_family_v42'); 
                 tripRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
                         for(let i=0; i<this.days.length; i++) {
                             if(!cloudData[i]) cloudData[i] = [];
-                            else {
-                                cloudData[i].forEach(item => {
-                                    if (!item.images) item.images = [];
-                                });
-                            }
+                            else cloudData[i].forEach(item => { if (!item.images) item.images = []; });
                         }
                         this.activities = cloudData;
                     } else {
@@ -472,94 +504,38 @@
                     this.isLoading = false;
                 });
             },
-            
-            saveToStorage() {
-                db.ref('trip_final_family_v39').set(this.activities);
-            },
-
-            // --- 圖片上傳 ---
+            saveToStorage() { db.ref('trip_final_family_v42').set(this.activities); },
             async uploadImages(event, item) {
                 const files = event.target.files;
                 if (!files.length) return;
-
-                this.isLoading = true;
-                this.loadingText = "上傳中...";
-                this.progress = 0;
-                
+                this.isLoading = true; this.loadingText = "上傳中...";
                 if (!item.images) item.images = [];
                 let completed = 0;
-                let hasError = false;
-
-                try {
-                    for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                        const fileName = `${Date.now()}_${i}_${safeName}`;
-                        const filePath = `trip_photos_family/${fileName}`;
-                        const storageRef = storage.ref().child(filePath);
-
-                        try {
-                            const snapshot = await storageRef.put(file);
-                            const downloadURL = await snapshot.ref.getDownloadURL();
-                            item.images.push({ url: downloadURL, storagePath: filePath });
-                        } catch (error) {
-                            console.error("上傳失敗", error);
-                            alert(`上傳失敗: ${error.message}`);
-                            hasError = true;
-                        }
-                        
-                        completed++;
-                        this.progress = Math.round((completed / files.length) * 100);
-                    }
-                } catch (err) {
-                     alert("錯誤: " + err.message);
-                } finally {
-                    if (!hasError) this.saveToStorage();
-                    this.isLoading = false;
-                    event.target.value = ''; 
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const filePath = `trip_photos_v42/${Date.now()}_${i}_${file.name.replace(/[^a-zA-Z0-9]/g,'_')}`;
+                    try {
+                        const snapshot = await storage.ref().child(filePath).put(file);
+                        const url = await snapshot.ref.getDownloadURL();
+                        item.images.push({ url, storagePath: filePath });
+                    } catch(e){}
+                    completed++;
+                    this.progress = Math.round((completed / files.length) * 100);
                 }
+                this.saveToStorage(); this.isLoading = false; event.target.value = '';
             },
-
             deleteSingleImage(item, index) {
-                if (!confirm("刪除這張照片？")) return;
-                const imgData = item.images[index];
-                if (imgData.storagePath) {
-                    storage.ref().child(imgData.storagePath).delete().catch(err => console.log("雲端檔案已不存在"));
-                }
+                if (!confirm("刪除此照片？")) return;
+                const img = item.images[index];
+                if(img.storagePath) storage.ref().child(img.storagePath).delete();
                 item.images.splice(index, 1);
                 this.saveToStorage();
             },
-            
             viewImage(url) { window.open(url, '_blank'); },
-
-            // --- 其他功能 ---
-            checkPasscode() {
-                if (this.passcode === this.correctPasscode) {
-                    this.isAccessGranted = true;
-                    localStorage.setItem('trip_unlocked', 'true');
-                } else {
-                    alert('密碼錯誤！');
-                    this.passcode = '';
-                }
-            },
-            getMainName(str) { return str ? str.split('(')[0] : ''; },
-            getSubName(str) { 
-                if(!str) return '';
-                const match = str.match(/\(([^)]+)\)/);
-                return match ? match[1] : '';
-            },
-            getIconColor(item) {
-                if (item.isHotel) return 'bg-purple-500';
-                if (item.isGame) return 'bg-red-500 ring-2 ring-red-200';
-                if (item.recommend) return 'bg-black border-black';
-                return 'bg-blue-500';
-            },
-            generateGoogleLink(query, fallbackName, mode) {
-                let q = query || fallbackName;
-                if (!q) return '#';
-                const encodedQ = encodeURIComponent(q);
-                if (mode === 'walking') return `https://www.google.com/maps/search/?api=1&query=${encodedQ}`;
-                return `https://www.google.com/maps/dir/?api=1&destination=${encodedQ}&travelmode=${mode || 'transit'}`;
+            generateGoogleLink(query, name, mode) {
+                const q = encodeURIComponent(query || name);
+                if (mode === 'walking') return `https://www.google.com/maps/search/?api=1&query=${q}`;
+                return `https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=${mode || 'transit'}`;
             },
             changeDay(index) {
                 this.currentDay = index; this.currentView = 'list'; this.showAllMap = false;
@@ -567,8 +543,6 @@
                 if(container) container.scrollTop = 0;
                 if (this.mapInstance) this.$nextTick(() => { this.updateMapMarkers(); });
             },
-            
-            // --- 地圖與其他 ---
             switchMap() {
                 this.currentView = 'map'; this.showAllMap = true;
                 this.$nextTick(() => { if (!this.mapInstance) this.initMap(); else { this.mapInstance.invalidateSize(); this.updateMapMarkers(); } });
@@ -583,89 +557,73 @@
             updateMapMarkers() {
                 if (!this.mapInstance || !this.markerGroup) return;
                 this.markerGroup.clearLayers();
-                let actsToShow = [];
+                let acts = this.showAllMap ? Object.values(this.activities).flat() : (this.activities[this.currentDay] || []);
                 const bounds = [];
-                
-                const getItems = (d) => {
-                    const list = this.activities[d] || [];
-                    const markers = [];
-                    list.forEach(item => {
-                        if (item.coords) markers.push({...item, type: 'main'});
-                        if (item.foodOptions) {
-                            item.foodOptions.forEach(food => {
-                                markers.push({
-                                    coords: food.coords,
-                                    location: food.name,
-                                    action: '推薦餐廳',
-                                    type: 'food'
-                                });
-                            });
-                        }
-                    });
-                    return markers;
-                };
-                
-                if (this.showAllMap) Object.keys(this.activities).forEach(k => actsToShow = actsToShow.concat(getItems(k)));
-                else actsToShow = getItems(this.currentDay);
-
-                actsToShow.forEach(item => {
-                    let color = item.type === 'food' ? '#f97316' : (item.isHotel ? '#8b5cf6' : '#3b82f6');
-                    let radius = item.type === 'food' ? 6 : 8;
-                    
-                    L.circleMarker(item.coords, { color: color, fillColor: color, fillOpacity: 0.8, radius: radius }).addTo(this.markerGroup)
-                     .bindPopup(`<b>${this.getMainName(item.location)}</b><br><span style="font-size:11px">${item.action}</span>`);
-                    bounds.push(item.coords);
+                acts.forEach(item => {
+                    if(item.coords) {
+                       L.circleMarker(item.coords, { color: '#3b82f6', radius: 8, fillOpacity: 0.8 }).addTo(this.markerGroup).bindPopup(item.location);
+                       bounds.push(item.coords);
+                    }
+                    if(item.foodOptions) {
+                        item.foodOptions.forEach(f => {
+                            L.circleMarker(f.coords, { color: '#f97316', radius: 5, fillOpacity: 0.8 }).addTo(this.markerGroup).bindPopup(f.name);
+                        });
+                    }
+                    if(item.shopOptions) {
+                        item.shopOptions.forEach(s => {
+                            L.circleMarker(s.coords, { color: '#ec4899', radius: 5, fillOpacity: 0.8 }).addTo(this.markerGroup).bindPopup(s.name);
+                        });
+                    }
                 });
-                if (bounds.length > 0) this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
+                if (bounds.length) this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
             },
-            
-            // --- 編輯 ---
+            checkPasscode() {
+                if (this.passcode === this.correctPasscode) {
+                    this.isAccessGranted = true;
+                    localStorage.setItem('trip_unlocked', 'true');
+                } else alert('密碼錯誤！');
+            },
             openModal(item = null) {
                 this.isEditing = !!item;
-                this.form = item ? JSON.parse(JSON.stringify(item)) : { id: Date.now(), time: '09:00', location: '', action: '', transport_detail: '', coords: [], images: [] };
+                this.form = item ? JSON.parse(JSON.stringify(item)) : { id: Date.now(), time: '09:00', location: '', action: '', coords: [], images: [], foodOptions: [], shopOptions: [] };
                 this.showModal = true;
             },
             saveActivity() {
-                if (!this.form.location) return alert('請輸入地點');
+                if (!this.form.location) return;
                 if (!this.activities[this.currentDay]) this.activities[this.currentDay] = [];
                 if (this.isEditing) {
                     const idx = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
                     if (idx !== -1) {
-                         if(!this.form.images) this.form.images = [];
-                         if(this.activities[this.currentDay][idx].foodOptions) {
-                            this.form.foodOptions = this.activities[this.currentDay][idx].foodOptions;
-                         }
+                         if(this.activities[this.currentDay][idx].images) this.form.images = this.activities[this.currentDay][idx].images;
+                         // 保留原本的推薦資料
+                         if(this.activities[this.currentDay][idx].foodOptions) this.form.foodOptions = this.activities[this.currentDay][idx].foodOptions;
+                         if(this.activities[this.currentDay][idx].shopOptions) this.form.shopOptions = this.activities[this.currentDay][idx].shopOptions;
                          this.activities[this.currentDay][idx] = this.form;
                     }
-                } else {
-                    this.activities[this.currentDay].push(this.form);
-                }
-                this.saveToStorage();
-                this.showModal = false;
+                } else this.activities[this.currentDay].push(this.form);
+                this.saveToStorage(); this.showModal = false;
             },
             deleteActivity() {
-                if(confirm('刪除此行程？')) {
+                if(confirm('刪除？')) {
                     this.activities[this.currentDay] = this.activities[this.currentDay].filter(x => x.id !== this.form.id);
-                    this.saveToStorage();
-                    this.showModal = false;
+                    this.saveToStorage(); this.showModal = false;
                 }
             },
             resetData() {
-                if(confirm('警告：確定重置行程？(不會刪除雲端照片)')) {
+                if(confirm('重置資料？')) {
                     this.activities = JSON.parse(JSON.stringify(masterDataVFinal));
                     this.saveToStorage();
                     this.currentDay = 0;
                 }
             },
-            async downloadMemories() {
-                alert("功能準備中：打包回憶");
-            },
-            handleTouchStart(e) { if(this.currentView !== 'list') return; this.touchStartX = e.changedTouches[0].screenX; this.touchStartY = e.changedTouches[0].screenY; },
-            handleTouchEnd(e) { if(this.currentView !== 'list') return; this.touchEndX = e.changedTouches[0].screenX; this.touchEndY = e.changedTouches[0].screenY; 
-                const diffX = this.touchStartX - this.touchEndX;
-                if (Math.abs(diffX) > 50) {
-                    if (diffX > 0 && this.currentDay < this.days.length - 1) this.changeDay(this.currentDay + 1);
-                    else if (diffX < 0 && this.currentDay > 0) this.changeDay(this.currentDay - 1);
+            downloadMemories() { alert("旅程結束後可在此下載完整回憶相簿！"); },
+            handleTouchStart(e) { if(this.currentView!=='list') return; this.tsX = e.changedTouches[0].screenX; },
+            handleTouchEnd(e) { 
+                if(this.currentView!=='list') return; 
+                const diff = this.tsX - e.changedTouches[0].screenX;
+                if(Math.abs(diff)>60) {
+                    if(diff>0 && this.currentDay<4) this.changeDay(this.currentDay+1);
+                    else if(diff<0 && this.currentDay>0) this.changeDay(this.currentDay-1);
                 }
             }
         }
