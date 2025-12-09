@@ -21,26 +21,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; -webkit-tap-highlight-color: transparent; }
-        
-        /* 手機模擬器外框 */
         .app-container { max-width: 430px; margin: 0 auto; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        
-        /* 隱藏捲軸但保留功能 */
         .scroll-container::-webkit-scrollbar { display: none; }
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 動畫 */
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; }
-        
-        /* 地圖高度 */
-        #map { height: 100%; width: 100%; z-index: 0; }
-
-        /* 卡片樣式 */
         .timeline-line { position: absolute; left: 24px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
         .last-item .timeline-line { display: none; }
-        
-        /* 圖片網格 */
+        #map { height: 100%; width: 100%; z-index: 0; }
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
         .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -54,7 +40,7 @@
             <div class="mb-4 text-4xl">🔐</div>
             <h2 class="text-xl font-bold mb-2">旅程鎖定中</h2>
             <p class="text-gray-500 text-sm mb-6">請輸入通行碼以查看行程</p>
-            <input type="tel" v-model="passcode" maxlength="4" class="w-full text-center text-2xl tracking-widest border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="••••">
+            <input type="tel" v-model="passcode" class="w-full text-center text-2xl tracking-widest border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="密碼">
             <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition">解鎖</button>
         </div>
     </div>
@@ -142,6 +128,23 @@
                             {{ item.action }}
                         </div>
 
+                        <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-2 mb-3 bg-orange-50 rounded-xl p-3 border border-orange-100" @click.stop>
+                            <div class="text-xs font-bold text-orange-600 mb-2 flex items-center">
+                                <i class="fas fa-utensils mr-1.5"></i> 附近美食推薦
+                            </div>
+                            <div class="space-y-2">
+                                <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-100 shadow-sm">
+                                    <div class="flex-1 min-w-0 mr-2">
+                                        <div class="text-xs font-bold text-gray-800 truncate">{{ food.name }}</div>
+                                        <div class="text-[10px] text-gray-500 truncate">{{ food.desc }}</div>
+                                    </div>
+                                    <a :href="generateGoogleLink(food.query, food.name, 'walking')" target="_blank" class="w-6 h-6 rounded-full bg-orange-100 text-orange-500 flex flex-shrink-0 items-center justify-center text-[10px]">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
                             <div class="photo-grid" v-if="item.images && item.images.length">
                                 <div v-for="(img, imgIdx) in item.images" :key="imgIdx" class="photo-item bg-gray-100" @click.stop="viewImage(img.url)">
@@ -219,15 +222,15 @@
 </div>
 
 <script>
-    // 1. Firebase 初始化 (請確保 Storage 規則為 allow read, write: if true;)
+    // 1. Firebase 初始化
     const firebaseConfig = {
-  apiKey: "AIzaSyByeBl_M9-TjF2i-5D71AjVm5j-vNCbAUc",
-  authDomain: "jp-travel-ef684.firebaseapp.com",
-  databaseURL: "https://jp-travel-ef684-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "jp-travel-ef684",
-  storageBucket: "jp-travel-ef684.firebasestorage.app",
-  messagingSenderId: "14551021580",
-  appId: "1:14551021580:web:586459078e20ac09175629"
+        apiKey: "AIzaSyByeBl_M9-TjF2i-5D71AjVm5j-vNCbAUc",
+        authDomain: "jp-travel-ef684.firebaseapp.com",
+        databaseURL: "https://jp-travel-ef684-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jp-travel-ef684",
+        storageBucket: "jp-travel-ef684.firebasestorage.app",
+        messagingSenderId: "14551021580",
+        appId: "1:14551021580:web:586459078e20ac09175629"
     };
 
     if (!firebase.apps.length) {
@@ -238,16 +241,93 @@
 
     const { createApp } = Vue;
 
-    // 2. 完美版本預設行程資料 (修正日期為 12/5 - 12/9)
+    // 2. 完整行程與餐廳資料 (已加入午晚餐推薦)
     const masterDataVFinal = {
-       0: [ { id: 101, time: '16:50', location: '關西機場 T2 (Kansai Airport T2)', action: '接駁巴士', transport_detail: '出關後，尋找 "Terminal 1 / Railways" 免費接駁巴士站台。', nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] }, { id: 102, time: '17:35', location: '關西機場站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海電鐵 (Nankai Line)，深藍色列車。全車指定席。', nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] }, { id: 103, time: '18:15', location: '南海難波站 (Namba Station)', action: '抵達/出站', transport_detail: '請走 "2F 中央改札口" (2F Central Exit)，下電扶梯往北出口。', nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] }, { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '飯店 Check-in', isHotel: true, nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] }, { id: 105, time: '19:15', location: '道頓堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行約10分鐘。', nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], foodOptions: [ {name:'一蘭拉麵 道頓堀本館', desc:'24hr 獨立隔間', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, {name:'千房大阪燒 道頓堀', desc:'經典大阪燒', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, {name:'藏壽司 道頓堀店', desc:'扭蛋壽司', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]} ], shopping: {name:'唐吉訶德 (摩天輪店)', desc:'人多，建議速戰速決', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]} } ], 1: [ { id: 201, time: '09:00', location: '近鐵日本橋站 (Kintetsu-Nippombashi)', action: '移動至神戶', transport_detail: '搭乘阪神電車 "快速急行" (Rapid Exp.) 往神戶三宮。', nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] }, { id: 202, time: '11:30', location: '神戶三宮 (Kobe-Sannomiya)', action: '神戶牛午餐', nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], foodOptions: [ {name:'Steakland 神戶館', desc:'高CP值', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]}, {name:'Red Rock 本店', desc:'烤牛肉丼', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]} ] }, { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百貨', action: '必去', isGame: true, nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843] } ], 2: [ { id: 301, time: '09:30', location: '黑門市場', action: '早午餐', nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] }, { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', isHotel: true, nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }, { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗艦店', isGame: true, nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695] } ], 3: [ { id: 401, time: '08:30', location: '伏見稻荷大社', action: '千本鳥居', recommend: true, nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] }, { id: 402, time: '10:30', location: '清水寺', action: '移動', recommend: true, nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] } ], 4: [ { id: 501, time: '08:05', location: '京都站 八條口', action: '前往車站', recommend: true, nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] }, { id: 503, time: '10:05', location: '關西機場 T1', action: '登機', nav_query: 'Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443] } ] 
+        0: [ // Day 1: 大阪
+            { id: 101, time: '16:50', location: '關西機場 T2', action: '接駁巴士', transport_detail: '出關後，尋找 "Terminal 1 / Railways" 免費接駁巴士站台。', nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] }, 
+            { id: 102, time: '17:35', location: '關西機場站', action: '搭乘特急 Rapi:t', transport_detail: '南海電鐵 (Nankai Line)，深藍色列車。', nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] }, 
+            { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '飯店 Check-in', isHotel: true, nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] }, 
+            { id: 105, time: '19:15', location: '道頓堀 (Dotonbori)', action: '晚餐/逛街', transport_mode: 'walking', coords: [34.6687, 135.5013], 
+                foodOptions: [ // 晚餐推薦
+                    {name:'一蘭拉麵 道頓堀本館', desc:'24hr 獨立隔間，經典豚骨', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, 
+                    {name:'千房大阪燒', desc:'道地大阪燒名店', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
+                    {name:'國產牛燒肉放題 Aburiya', desc:'高CP值燒肉吃到飽 (需預約)', query:'Aburiya Dotonbori', coords:[34.6690, 135.5020]} 
+                ] 
+            } 
+        ], 
+        1: [ // Day 2: 神戶
+            { id: 201, time: '09:00', location: '近鐵日本橋站', action: '移動至神戶', transport_detail: '搭乘阪神電車 "快速急行" 往神戶三宮。', nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] }, 
+            { id: 202, time: '11:30', location: '神戶三宮', action: '神戶牛午餐', nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
+                foodOptions: [ // 午餐推薦
+                    {name:'Steakland 神戶館', desc:'高CP值鐵板燒，觀光客首選', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]}, 
+                    {name:'Red Rock 本店', desc:'神戶必吃烤牛肉丼', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
+                    {name:'Mouriya 凜', desc:'志玲姐姐推薦，頂級神戶牛', query:'Mouriya Rin', coords:[34.6920, 135.1910]}
+                ] 
+            }, 
+            { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百貨', action: '神戶港逛街', isGame: true, nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843] },
+            { id: 205, time: '18:00', location: '神戶港 (Harborland)', action: '欣賞夜景/晚餐', coords: [34.6800, 135.1860],
+                foodOptions: [ // 晚餐推薦
+                    {name:'Fisherman\'s Market', desc:'海鮮吃到飽，景觀佳', query:'Fisherman\'s Market Kobe', coords:[34.6785, 135.1840]},
+                    {name:'Bikkuri Donkey', desc:'平價好吃的漢堡排餐廳', query:'Bikkuri Donkey Mosaic', coords:[34.6790, 135.1842]},
+                    {name:'Frantz Cafe', desc:'甜點與義大利麵，看夜景', query:'Frantz Cafe Kobe', coords:[34.6788, 135.1845]}
+                ]
+            }
+        ], 
+        2: [ // Day 3: 移動到京都
+            { id: 301, time: '09:30', location: '黑門市場', action: '早餐/早午餐', nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] }, 
+            { id: 302, time: '11:30', location: '京都車站', action: '抵達京都', coords: [34.9858, 135.7588],
+                foodOptions: [ // 午餐推薦 (京都車站周邊)
+                    {name:'名代炸豬排 Katsukura', desc:'京都第一名炸豬排 (The Cube 11F)', query:'Katsukura Kyoto Station', coords:[34.9855, 135.7585]},
+                    {name:'本家 第一旭', desc:'京都最有名拉麵 (需排隊)', query:'Honke Daiichi-Asahi', coords:[34.9850, 135.7600]},
+                    {name:'東洋亭', desc:'百年老店漢堡排 (Porta地下街)', query:'Touyoutei Porta', coords:[34.9860, 135.7590]}
+                ]
+            },
+            { id: 303, time: '13:00', location: 'Hyatt Place Kyoto', action: '寄放行李/Check-in', isHotel: true, nav_query: 'Hyatt Place Kyoto', transport_mode: 'transit', coords: [35.0163, 135.7592] }, 
+            { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗艦店', isGame: true, nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695] },
+            { id: 306, time: '18:00', location: '四條河原町', action: '晚餐/逛街', coords: [35.0039, 135.7700],
+                foodOptions: [ // 晚餐推薦 (河原町周邊)
+                    {name:'京都勝牛 (河原町)', desc:'超人氣炸牛排', query:'Kyoto Katsugyu Kawaramachi', coords:[35.0045, 135.7690]},
+                    {name:'燒肉 弘 (四條木屋町)', desc:'必吃人氣燒肉 (建議預約)', query:'Yakiniku Hiro Kiyamachi', coords:[35.0040, 135.7710]},
+                    {name:'五行拉麵 (Gogyo)', desc:'獨特焦香味噌拉麵', query:'Gogyo Ramen Kyoto', coords:[35.0050, 135.7650]}
+                ]
+            }
+        ], 
+        3: [ // Day 4: 清水寺/伏見稻荷
+            { id: 401, time: '08:30', location: '伏見稻荷大社', action: '千本鳥居', recommend: true, nav_query: 'Fushimi Inari Taisha', transport_mode: 'transit', coords: [34.9671, 135.7726] }, 
+            { id: 402, time: '11:00', location: '清水寺周邊', action: '午餐/移動', nav_query: 'Kiyomizu-dera', transport_mode: 'transit', coords: [34.9949, 135.7850],
+                foodOptions: [ // 午餐推薦 (清水寺周邊)
+                    {name:'奧丹清水 / 清水順正', desc:'京都經典湯豆腐料理', query:'Okutan Kiyomizu', coords:[34.9940, 135.7840]},
+                    {name:'名代 Omen 烏龍麵', desc:'沾麵式烏龍麵，清爽好吃', query:'Omen Kodaiji', coords:[34.9990, 135.7800]},
+                    {name:'日出烏龍麵', desc:'(稍遠) 知名咖哩烏龍麵', query:'Hinode Udon', coords:[35.0150, 135.7930]}
+                ]
+            },
+            { id: 403, time: '13:00', location: '清水寺', action: '參拜/和服', coords: [34.9949, 135.7850] },
+            { id: 404, time: '18:00', location: '祇園/先斗町', action: '晚餐', coords: [35.0035, 135.7740],
+                foodOptions: [ // 晚餐推薦 (祇園)
+                    {name:'祇園 Tanto', desc:'排隊名店，好吃的大阪燒', query:'Gion Tanto', coords:[35.0060, 135.7735]},
+                    {name:'Izuju 鯖姿壽司', desc:'百年老店箱壽司 (外帶佳)', query:'Izuju Sushi', coords:[35.0037, 135.7780]},
+                    {name:'Kawa Cafe', desc:'先斗町鴨川景觀咖啡/Bistro', query:'Kawa Cafe Kyoto', coords:[35.0020, 135.7715]}
+                ]
+            }
+        ], 
+        4: [ // Day 5: 返程
+            { id: 501, time: '08:05', location: '京都站 八條口', action: '搭乘巴士前往機場', recommend: true, nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'transit', coords: [34.9850, 135.7580] }, 
+            { id: 502, time: '10:05', location: '關西機場 T1', action: '抵達/報到', nav_query: 'Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443] },
+            { id: 503, time: '11:00', location: '關西機場美食街', action: '離境前午餐', coords: [34.4357, 135.2443],
+                 foodOptions: [ // 機場午餐
+                    {name:'551 Horai', desc:'必吃肉包/燒賣 (T1 2F)', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2440]},
+                    {name:'Kineya 烏龍麵', desc:'手打烏龍麵', query:'Kineya Kansai Airport', coords:[34.4360, 135.2440]},
+                    {name:'Sukiya / 松屋', desc:'快速解決', query:'Sukiya Kansai Airport', coords:[34.4360, 135.2440]}
+                ]
+            }
+        ] 
     };
 
     const app = createApp({
         data() {
             return {
                 isAccessGranted: false,
-                passcode: '',
+                passcode: '20251212',
                 correctPasscode: 'alfredyiting',
 
                 currentDay: 0,
@@ -264,7 +344,6 @@
 
                 touchStartX: 0, touchStartY: 0, touchEndX: 0, touchEndY: 0,
                 
-                // 3. 修正後的日期設定 (12/5 - 12/9)
                 days: [
                     { date: '12/05', weekday: '週五', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
                     { date: '12/06', weekday: '週六', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
@@ -323,15 +402,13 @@
             // --- 資料處理 ---
             loadAndMergeData() {
                 this.isLoading = true;
-                const tripRef = db.ref('trip_final_v1'); // 使用新路徑確保資料乾淨
+                const tripRef = db.ref('trip_final_v1');
                 tripRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
-                        // 確保所有天數都有陣列，防止報錯
                         for(let i=0; i<this.days.length; i++) {
                             if(!cloudData[i]) cloudData[i] = [];
                             else {
-                                // 修復舊圖片格式
                                 cloudData[i].forEach(item => {
                                     if (!item.images) item.images = [];
                                 });
@@ -339,7 +416,6 @@
                         }
                         this.activities = cloudData;
                     } else {
-                        // 如果雲端沒資料，使用 Master Data
                         this.activities = JSON.parse(JSON.stringify(masterDataVFinal));
                         this.saveToStorage();
                     }
@@ -351,7 +427,7 @@
                 db.ref('trip_final_v1').set(this.activities);
             },
 
-            // --- 圖片上傳 (含除錯) ---
+            // --- 圖片上傳 ---
             async uploadImages(event, item) {
                 const files = event.target.files;
                 if (!files.length) return;
@@ -378,7 +454,7 @@
                             item.images.push({ url: downloadURL, storagePath: filePath });
                         } catch (error) {
                             console.error("上傳失敗", error);
-                            alert(`上傳失敗: ${error.message}\n請檢查 Firebase Storage Rules 是否設為 allow write: if true;`);
+                            alert(`上傳失敗: ${error.message}`);
                             hasError = true;
                         }
                         
@@ -458,15 +534,38 @@
                 this.markerGroup.clearLayers();
                 let actsToShow = [];
                 const bounds = [];
-                const getItems = (d) => (this.activities[d] || []).filter(i => i.coords);
+                
+                // 擴充：地圖也要顯示餐廳
+                const getItems = (d) => {
+                    const list = this.activities[d] || [];
+                    const markers = [];
+                    list.forEach(item => {
+                        // 加入主要景點
+                        if (item.coords) markers.push({...item, type: 'main'});
+                        // 加入餐廳
+                        if (item.foodOptions) {
+                            item.foodOptions.forEach(food => {
+                                markers.push({
+                                    coords: food.coords,
+                                    location: food.name,
+                                    action: '推薦餐廳',
+                                    type: 'food'
+                                });
+                            });
+                        }
+                    });
+                    return markers;
+                };
                 
                 if (this.showAllMap) Object.keys(this.activities).forEach(k => actsToShow = actsToShow.concat(getItems(k)));
                 else actsToShow = getItems(this.currentDay);
 
                 actsToShow.forEach(item => {
-                    let color = item.isHotel ? '#8b5cf6' : '#3b82f6';
-                    L.circleMarker(item.coords, { color: color, fillColor: color, fillOpacity: 0.8, radius: 8 }).addTo(this.markerGroup)
-                     .bindPopup(`<b>${this.getMainName(item.location)}</b>`);
+                    let color = item.type === 'food' ? '#f97316' : (item.isHotel ? '#8b5cf6' : '#3b82f6');
+                    let radius = item.type === 'food' ? 6 : 8;
+                    
+                    L.circleMarker(item.coords, { color: color, fillColor: color, fillOpacity: 0.8, radius: radius }).addTo(this.markerGroup)
+                     .bindPopup(`<b>${this.getMainName(item.location)}</b><br><span style="font-size:11px">${item.action}</span>`);
                     bounds.push(item.coords);
                 });
                 if (bounds.length > 0) this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
@@ -485,6 +584,10 @@
                     const idx = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
                     if (idx !== -1) {
                          if(!this.form.images) this.form.images = [];
+                         // 保留原本的 foodOptions 不被覆蓋
+                         if(this.activities[this.currentDay][idx].foodOptions) {
+                            this.form.foodOptions = this.activities[this.currentDay][idx].foodOptions;
+                         }
                          this.activities[this.currentDay][idx] = this.form;
                     }
                 } else {
