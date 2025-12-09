@@ -271,7 +271,7 @@
 
 <script>
     // ==========================================
-    // 1. Firebase 設定
+    // 1. Firebase 設定 (維持不變)
     // ==========================================
     const firebaseConfig = {
   apiKey: "AIzaSyByeBl_M9-TjF2i-5D71AjVm5j-vNCbAUc",
@@ -290,14 +290,25 @@
     const storage = firebase.storage();
 
     const { createApp } = Vue;
-    
-    // v37 Master Data (僅顯示部分以節省空間，邏輯不變)
-    const masterDataV36 = {
+
+    // v38 Master Data (預設資料)
+    const masterDataV38 = {
         0: [
             { id: 101, time: '16:50', location: '關西機場 T2', action: '接駁巴士', transport_mode: 'transit', coords: [34.4357, 135.2443] },
             { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: 'Check-in', isHotel: true, coords: [34.6655, 135.5065], images: [] }
         ],
-        // ... (保留原本數據結構)
+        1: [
+            { id: 201, time: '09:00', location: '神戶動物王國', action: '看水豚', isGame: true, coords: [34.6405, 135.2185] }
+        ],
+        2: [
+            { id: 301, time: '10:00', location: '京都鐵道博物館', action: '看火車', isGame: true, coords: [34.9863, 135.7424] }
+        ],
+        3: [
+            { id: 401, time: '09:30', location: '清水寺', action: '參拜', transport_mode: 'walking', coords: [34.9949, 135.7850] }
+        ],
+        4: [
+            { id: 501, time: '14:00', location: '臨空城 Outlet', action: '最後採買', shopping: { name: 'Rinku Outlet', query: 'Rinku Premium Outlets', desc: '購物' }, coords: [34.4067, 135.2952] }
+        ]
     };
 
     const app = createApp({
@@ -306,7 +317,7 @@
                 // 隱私鎖設定
                 isAccessGranted: false,
                 passcode: '',
-                correctPasscode: 'alfredyiting', // 設定預設密碼
+                correctPasscode: '8888',
 
                 currentDay: 0,
                 currentView: 'list',
@@ -323,12 +334,14 @@
 
                 touchStartX: 0, touchStartY: 0, touchEndX: 0, touchEndY: 0,
                 
+                // ★ 改良版 Days：加入地點座標以便查詢天氣 (大阪、神戶、京都)
                 days: [
-                    { date: '12/12', name: 'Day 1: 大阪', weather: { status: '晴', icon: 'fas fa-sun', temp_high: 11, color: 'text-orange-500' } },
-                    { date: '12/13', name: 'Day 2: 神戶', weather: { status: '陰', icon: 'fas fa-cloud', temp_high: 11, color: 'text-gray-500' } },
-                    { date: '12/14', name: 'Day 3: 京都', weather: { status: '雨', icon: 'fas fa-cloud-rain', temp_high: 14, color: 'text-blue-500' } },
-                    { date: '12/15', name: 'Day 4: 清水', weather: { status: '多雲', icon: 'fas fa-cloud', temp_high: 11, color: 'text-gray-500' } },
-                    { date: '12/16', name: 'Day 5: 返程', weather: { status: '晴', icon: 'fas fa-sun', temp_high: 12, color: 'text-orange-500' } }
+                    // locCoords: 用於查詢天氣的代表座標
+                    { date: '12/12', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/13', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/14', name: 'Day 3: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/15', name: 'Day 4: 清水', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/16', name: 'Day 5: 返程', locCoords: {lat: 34.4320, lon: 135.2304}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } } // 關西機場
                 ],
                 activities: {},
                 form: { id: null, time: '', location: '', action: '', transport_detail: '', coords: [], images: [] }
@@ -340,19 +353,80 @@
         },
         mounted() { 
             this.loadAndMergeData(); 
-            // 檢查是否已解鎖 (可選: 若想重新整理後保持解鎖)
+            this.fetchRealTimeWeather(); // ★ 啟動時抓取真實天氣
+            
             if(localStorage.getItem('trip_unlocked') === 'true') {
                 this.isAccessGranted = true;
             }
         },
         methods: {
-            // --- 隱私鎖邏輯 ---
+            // --- ★ 真實天氣 API 串接 ---
+            async fetchRealTimeWeather() {
+                const year = new Date().getFullYear(); // 自動抓取今年年份 (2025)
+                
+                // 逐日查詢天氣
+                this.days.forEach(async (day, index) => {
+                    // 1. 處理日期格式： 12/12 -> 2025-12-12
+                    const [m, d] = day.date.split('/');
+                    const apiDate = `${year}-${m}-${d}`;
+                    
+                    // 2. 呼叫 Open-Meteo API (包含最高溫、天氣代碼)
+                    // 使用 timezone=Asia/Tokyo 確保時區正確
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${day.locCoords.lat}&longitude=${day.locCoords.lon}&daily=weathercode,temperature_2m_max&timezone=Asia%2FTokyo&start_date=${apiDate}&end_date=${apiDate}`;
+
+                    try {
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        
+                        if (data.daily && data.daily.weathercode) {
+                            const code = data.daily.weathercode[0];
+                            const temp = Math.round(data.daily.temperature_2m_max[0]);
+                            const wInfo = this.getWeatherFromCode(code);
+                            
+                            // 更新畫面
+                            this.days[index].weather = {
+                                status: wInfo.status,
+                                icon: wInfo.icon,
+                                color: wInfo.color,
+                                temp_high: temp
+                            };
+                        }
+                    } catch (err) {
+                        console.error("天氣讀取失敗", err);
+                        // 失敗時保持原樣或顯示錯誤
+                        this.days[index].weather.status = "未知";
+                        this.days[index].weather.icon = "fas fa-question";
+                    }
+                });
+            },
+
+            // 將 WMO 代碼轉為中文與圖示
+            getWeatherFromCode(code) {
+                // 0: 晴天
+                if (code === 0) return { status: '晴朗', icon: 'fas fa-sun', color: 'text-orange-500' };
+                // 1-3: 多雲
+                if ([1, 2, 3].includes(code)) return { status: '多雲', icon: 'fas fa-cloud', color: 'text-gray-500' };
+                // 45, 48: 霧
+                if ([45, 48].includes(code)) return { status: '起霧', icon: 'fas fa-smog', color: 'text-slate-400' };
+                // 51-67: 雨
+                if (code >= 51 && code <= 67) return { status: '下雨', icon: 'fas fa-umbrella', color: 'text-blue-500' };
+                // 71-77: 雪
+                if (code >= 71 && code <= 77) return { status: '降雪', icon: 'fas fa-snowflake', color: 'text-cyan-400' };
+                // 80-82: 陣雨
+                if (code >= 80 && code <= 82) return { status: '陣雨', icon: 'fas fa-cloud-rain', color: 'text-blue-600' };
+                // 95+: 雷雨
+                if (code >= 95) return { status: '雷雨', icon: 'fas fa-bolt', color: 'text-purple-600' };
+                
+                return { status: '陰天', icon: 'fas fa-cloud', color: 'text-gray-500' };
+            },
+
+            // --- 其他原本的功能 (保持不變) ---
             checkPasscode() {
                 if (this.passcode === this.correctPasscode) {
                     this.isAccessGranted = true;
                     localStorage.setItem('trip_unlocked', 'true');
                 } else {
-                    alert('密碼錯誤！');
+                    alert('密碼錯誤！(提示: 8888)');
                     this.passcode = '';
                 }
             },
@@ -364,27 +438,26 @@
                 return match ? match[1] : '';
             },
 
-            // --- 雲端同步 & 舊資料遷移 ---
             loadAndMergeData() {
                 this.isLoading = true;
-                const tripRef = db.ref('my_trip_v37');
+                const tripRef = db.ref('my_trip_v38'); // 改用 v38 新路徑避免舊資料干擾
                 tripRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
-                        // 資料遷移：將舊的 imageUrl 字串轉為 images 陣列
+                        // 資料遷移：確保 images 陣列存在
                         Object.keys(cloudData).forEach(day => {
                             cloudData[day].forEach(item => {
                                 if (!item.images) item.images = [];
                                 if (item.imageUrl) {
                                     item.images.push({ url: item.imageUrl, storagePath: item.storagePath || '' });
-                                    delete item.imageUrl; // 清除舊欄位
+                                    delete item.imageUrl;
                                     delete item.storagePath;
                                 }
                             });
                         });
                         this.activities = cloudData;
                     } else {
-                        this.activities = JSON.parse(JSON.stringify(masterDataV36));
+                        this.activities = JSON.parse(JSON.stringify(masterDataV38));
                         this.saveToStorage();
                     }
                     this.isLoading = false;
@@ -392,68 +465,66 @@
             },
             
             saveToStorage() {
-                db.ref('my_trip_v37').set(this.activities);
+                db.ref('my_trip_v38').set(this.activities);
             },
 
-            // --- ★ 多圖上傳邏輯 ---
             async uploadImages(event, item) {
                 const files = event.target.files;
                 if (!files.length) return;
 
                 this.isLoading = true;
-                this.loadingText = "照片上傳中...";
+                this.loadingText = "準備上傳中...";
                 this.progress = 0;
                 
                 if (!item.images) item.images = [];
                 let completed = 0;
+                let hasError = false;
 
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert(`檔案 ${file.name} 太大，跳過`);
-                        continue;
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                        const fileName = `${Date.now()}_${i}_${safeName}`;
+                        const filePath = `trip_photos/${fileName}`;
+                        const storageRef = storage.ref().child(filePath);
+
+                        this.loadingText = `上傳中 ${i+1}/${files.length}...`;
+
+                        try {
+                            const snapshot = await storageRef.put(file);
+                            const downloadURL = await snapshot.ref.getDownloadURL();
+                            item.images.push({ url: downloadURL, storagePath: filePath });
+                        } catch (error) {
+                            console.error("上傳失敗", error);
+                            alert(`上傳失敗 (${file.name})。請檢查 Firebase Storage Rules 是否設為 allow write: if true;`);
+                            hasError = true;
+                        }
+                        
+                        completed++;
+                        this.progress = Math.round((completed / files.length) * 100);
                     }
-
-                    const fileName = `${Date.now()}_${i}_${file.name}`;
-                    const filePath = `trip_photos/${fileName}`;
-                    const storageRef = storage.ref().child(filePath);
-
-                    try {
-                        const snapshot = await storageRef.put(file);
-                        const downloadURL = await snapshot.ref.getDownloadURL();
-                        item.images.push({ url: downloadURL, storagePath: filePath });
-                    } catch (error) {
-                        console.error("上傳失敗", error);
-                    }
-                    
-                    completed++;
-                    this.progress = Math.round((completed / files.length) * 100);
+                } catch (err) {
+                     alert("錯誤: " + err.message);
+                } finally {
+                    if (!hasError) this.saveToStorage();
+                    this.isLoading = false;
+                    this.progress = 0;
+                    event.target.value = ''; 
                 }
-
-                this.saveToStorage();
-                this.isLoading = false;
-                this.progress = 0;
             },
 
             deleteSingleImage(item, index) {
                 if (!confirm("刪除這張照片？")) return;
                 const imgData = item.images[index];
-                
-                // 1. 刪除雲端
                 if (imgData.storagePath) {
                     storage.ref().child(imgData.storagePath).delete().catch(err => console.log("雲端檔案已不存在"));
                 }
-                
-                // 2. 刪除本地陣列
                 item.images.splice(index, 1);
                 this.saveToStorage();
             },
 
-            viewImage(url) {
-                window.open(url, '_blank');
-            },
+            viewImage(url) { window.open(url, '_blank'); },
 
-            // --- ★ 打包下載功能 (Backup) ---
             async downloadMemories() {
                 this.isLoading = true;
                 this.loadingText = "正在打包回憶...";
@@ -461,11 +532,8 @@
 
                 const zip = new JSZip();
                 const folder = zip.folder("Kyoto_Trip_Memories");
-                
-                // 1. 加入行程資料 (JSON)
                 folder.file("itinerary.json", JSON.stringify(this.activities, null, 2));
                 
-                // 2. 嘗試加入照片 (注意 CORS)
                 let photoCount = 0;
                 let failedCount = 0;
                 const photoPromises = [];
@@ -475,19 +543,13 @@
                         if (act.images && act.images.length > 0) {
                             act.images.forEach((img, idx) => {
                                 const cleanName = `${day}_${act.time.replace(':','')}_${idx}.jpg`;
-                                const p = fetch(img.url)
-                                    .then(res => {
+                                const p = fetch(img.url).then(res => {
                                         if(!res.ok) throw new Error("Network Error");
                                         return res.blob();
-                                    })
-                                    .then(blob => {
+                                    }).then(blob => {
                                         folder.file("photos/" + cleanName, blob);
                                         photoCount++;
-                                    })
-                                    .catch(err => {
-                                        console.warn("CORS/Fetch error:", err);
-                                        failedCount++;
-                                    });
+                                    }).catch(err => { failedCount++; });
                                 photoPromises.push(p);
                             });
                         }
@@ -495,13 +557,10 @@
                 });
 
                 await Promise.all(photoPromises);
-
                 this.progress = 80;
-                this.loadingText = "產生壓縮檔...";
 
-                // 如果所有照片都失敗 (通常是 CORS 問題)，給予提示並改為下載 HTML 列表
                 if (photoCount === 0 && failedCount > 0) {
-                    alert("⚠️ 因瀏覽器安全限制 (CORS)，無法直接下載圖片檔。\n\n系統將改為下載一份「包含所有照片連結」的清單，您可以打開該檔案手動保存重要照片。");
+                    alert("⚠️ 瀏覽器安全性限制無法直接打包圖片，將改為下載 HTML 相簿清單。");
                     this.downloadPhotoLinksHTML();
                     this.isLoading = false;
                     return;
@@ -519,9 +578,7 @@
                     this.activities[day].forEach(act => {
                         if (act.images && act.images.length > 0) {
                             html += `<h3>Day ${day} - ${act.location}</h3>`;
-                            act.images.forEach(img => {
-                                html += `<a href="${img.url}" target="_blank"><img src="${img.url}" style="width:200px; margin:5px;"></a>`;
-                            });
+                            act.images.forEach(img => { html += `<a href="${img.url}" target="_blank"><img src="${img.url}" style="width:200px; margin:5px;"></a>`; });
                         }
                     });
                 });
@@ -530,7 +587,6 @@
                 saveAs(blob, "trip_photos_links.html");
             },
 
-            // --- 地圖與其他功能 (保持不變) ---
             handleTouchStart(e) { if(this.currentView !== 'list') return; this.touchStartX = e.changedTouches[0].screenX; this.touchStartY = e.changedTouches[0].screenY; },
             handleTouchEnd(e) { if(this.currentView !== 'list') return; this.touchEndX = e.changedTouches[0].screenX; this.touchEndY = e.changedTouches[0].screenY; this.handleSwipe(); },
             handleSwipe() {
@@ -610,7 +666,6 @@
                 if (this.isEditing) {
                     const idx = this.activities[this.currentDay].findIndex(x => x.id === this.form.id);
                     if (idx !== -1) {
-                         // 確保 images 陣列存在
                          if(!this.form.images) this.form.images = [];
                          this.activities[this.currentDay][idx] = this.form;
                     }
@@ -628,8 +683,8 @@
                 }
             },
             resetData() {
-                if(confirm('警告：確定重置？這不會刪除雲端照片，但會重置行程文字。')) {
-                    this.activities = JSON.parse(JSON.stringify(masterDataV36));
+                if(confirm('警告：確定重置？這不會刪除雲端照片。')) {
+                    this.activities = JSON.parse(JSON.stringify(masterDataV38));
                     this.saveToStorage();
                     this.currentDay = 0;
                 }
