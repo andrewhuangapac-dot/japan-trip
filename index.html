@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神家族之旅 2025</title>
+    <title>京阪神親子遊 (v38: 地圖修復版)</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,6 +11,8 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -25,11 +27,11 @@
         .scroll-container::-webkit-scrollbar { display: none; }
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 修改：時間軸線的位置向右移動，避免遮擋時間 */
-        .timeline-line { position: absolute; left: 59px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
+        .timeline-line { position: absolute; left: 24px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
         .last-item .timeline-line { display: none; }
         
-        #map { height: 100%; width: 100%; z-index: 0; }
+        /* 地圖高度修復：強制設定高度 */
+        #map { height: 100%; width: 100%; min-height: 300px; z-index: 0; background: #e5e5e5; }
         
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
         .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
@@ -41,8 +43,8 @@
 <div id="app">
     <div v-if="!isAccessGranted" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-xs rounded-2xl p-6 text-center shadow-2xl">
-            <div class="mb-4 text-4xl">👨‍👩‍👧‍👦</div>
-            <h2 class="text-xl font-bold mb-2">家族旅程鎖定中</h2>
+            <div class="mb-4 text-4xl">🔐</div>
+            <h2 class="text-xl font-bold mb-2">旅程鎖定中</h2>
             <p class="text-gray-500 text-sm mb-6">請輸入通行碼 (Hint: Alfred)</p>
             <input type="password" v-model="passcode" class="w-full text-center text-xl border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="Passcode">
             <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-blue-500/30">解鎖行程</button>
@@ -50,7 +52,7 @@
     </div>
 
     <div v-else class="app-container">
-        <header class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2">
+        <header class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2 flex-none">
             <div class="px-5 pt-12 pb-2 flex justify-between items-end">
                 <div>
                     <div class="text-xs text-blue-600 font-bold tracking-wider mb-1">FAMILY TRIP 2025</div>
@@ -103,14 +105,13 @@
                 </div>
 
                 <div v-for="(item, idx) in sortedActivities" :key="item.id" 
-                     class="relative pl-20 pb-8 group" 
+                     class="relative pl-12 pb-8 group" 
                      :class="{'last-item': idx === sortedActivities.length - 1}">
                     
                     <div class="timeline-line"></div>
                     
-                    <div class="absolute left-1 top-1 w-12 text-xs font-bold text-gray-500 text-right tracking-wider">{{ item.time }}</div>
-                    
-                    <div class="absolute left-[54px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10"
+                    <div class="absolute left-0 top-1 w-12 text-xs font-bold text-gray-400 text-right pr-4">{{ item.time }}</div>
+                    <div class="absolute left-[18px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10"
                          :class="getIconColor(item)"></div>
 
                     <div @click="openModal(item)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.99] transition-transform duration-200">
@@ -133,7 +134,7 @@
 
                         <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-2 mb-2 bg-orange-50/50 rounded-xl p-3 border border-orange-100" @click.stop>
                             <div class="px-1 mb-2 flex items-center gap-1.5 text-xs font-bold text-orange-600">
-                                <i class="fas fa-utensils"></i> 附近家庭美食推薦
+                                <i class="fas fa-utensils"></i> 推薦美食 (3選1)
                             </div>
                             
                             <div class="flex flex-col gap-2">
@@ -201,7 +202,6 @@
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
             <div class="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl p-6 relative z-10 animate-slide-up shadow-2xl">
                 <h3 class="text-lg font-bold mb-4 text-gray-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h3>
-                
                 <div class="space-y-4">
                     <div class="grid grid-cols-3 gap-3">
                         <div class="col-span-1">
@@ -213,12 +213,10 @@
                             <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
-
                     <div>
                         <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">活動內容 / 備註</label>
                         <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
                     </div>
-
                     <div class="flex gap-2 pt-2">
                         <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold text-sm">刪除</button>
                         <button @click="saveActivity" class="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-200">儲存</button>
@@ -249,128 +247,128 @@
 
     const { createApp } = Vue;
 
-    // 2. 完整行程與餐廳資料 (已針對 2大2小 9/12歲優化)
+    // 2. 完整行程與餐廳資料 (已加入 Uber 標示 & 餐廳中日英文)
     const masterDataVFinal = {
        0: [
-           { id: 101, time: '16:50', location: '关西机场 T2 (Kansai Airport T2)', action: '接驳巴士', transport_detail: '出关后，寻找 "Terminal 1 / Railways" 免费接驳巴士站台。', 
+           { id: 101, time: '16:50', location: '關西機場 T2 (関西空港 T2 / KIX T2)', action: '接駁巴士', transport_detail: '出關後，尋找 "Terminal 1 / Railways" 免費接駁巴士站台。', 
              nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] },
-           { id: 102, time: '17:35', location: '关西机场站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海电铁 (Nankai Line)，深蓝色列车。全车指定席。', 
+           { id: 102, time: '17:35', location: '關西機場站 (関西空港駅 / Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海電鐵 (Nankai Line)，深藍色列車。全車指定席。', 
              nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] },
-           { id: 103, time: '18:15', location: '南海难波站 (Namba Station)', action: '抵达/出站', transport_detail: '请走 "2F 中央改札口" (2F Central Exit)，下电扶梯往北出口。', 
+           { id: 103, time: '18:15', location: '南海難波站 (南海難波駅 / Nankai Namba St.)', action: '抵達/出站', transport_detail: '請走 "2F 中央改札口" (2F Central Exit)，下電扶梯往北出口。', 
              nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] },
-           { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '饭店 Check-in', isHotel: true, 
+           { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '飯店 Check-in', isHotel: true, 
              nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] },
-           { id: 105, time: '19:15', location: '道顿堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行约10分钟。', 
+           { id: 105, time: '19:15', location: '道頓堀 (道頓堀 / Dotonbori)', action: '晚餐/逛街', transport_detail: '步行約10分鐘。', 
              nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], 
              foodOptions: [
-                 {name:'藏寿司 道顿堀店', desc:'【必吃】有扭蛋玩，孩子最爱', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]},
-                 {name:'千房大阪烧', desc:'口感松软，孩子接受度高', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
-                 {name:'一兰拉面 本馆', desc:'独立隔间，9/12岁会觉得有趣', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}
+                 {name:'一蘭拉麵 道頓堀本館 (一蘭 / Ichiran)', desc:'24hr 獨立隔間，經典豚骨', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, 
+                 {name:'千房大阪燒 道頓堀 (千房 / Chibo)', desc:'經典大阪燒，口感鬆軟', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
+                 {name:'藏壽司 道頓堀店 (くら寿司 / Kura Sushi)', desc:'扭蛋壽司，便宜好玩', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]}
              ],
-             shopping: {name:'唐吉诃德 (摩天轮店)', desc:'人多，建议速战速决', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]}
+             shopping: {name:'唐吉訶德 (摩天輪店)', desc:'人多，建議速戰速決', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]}
            }
        ],
        1: [
-           { id: 201, time: '09:00', location: '近铁日本桥站', action: '移动至神户', 
-             transport_detail: '搭乘阪神电车 "快速急行" (Rapid Exp.) 往神户三宫。', 
+           { id: 201, time: '09:00', location: '近鐵日本橋站 (近鉄日本橋駅 / Kintetsu Nippombashi)', action: '移動至神戶', 
+             transport_detail: '搭乘阪神電車 "快速急行" (Rapid Exp.) 往神戶三宮。', 
              nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] },
-           { id: 202, time: '11:30', location: '神户三宫', action: '神户牛午餐', 
+           { id: 202, time: '11:30', location: '神戶三宮 (神戸三宮 / Kobe Sannomiya)', action: '神戶牛午餐', 
              nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
              foodOptions: [
-                 {name:'Steakland 神户馆', desc:'铁板烧表演，孩子看得开心', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]},
-                 {name:'Red Rock 本店', desc:'满满烤牛肉丼，肉食控首选', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
-                 {name:'Moriya 凛', desc:'较高级，有儿童餐具', query:'Moriya Lin', coords:[34.6928, 135.1910]}
+                 {name:'Steakland 神戶館 (ステーキランド)', desc:'高CP值鐵板燒，觀光客首選', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]}, 
+                 {name:'Red Rock 本店 (レッドロック)', desc:'烤牛肉丼，肉量十足', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
+                 {name:'Moriya 凜 (モーリヤ 凜)', desc:'志玲姐姐推薦，頂級神戶牛', query:'Mouriya Rin', coords:[34.6920, 135.1910]}
              ] 
            },
-           { id: 203, time: '14:00', location: '神户 Mosaic 广场', action: '搭 Uber前往', recommend: true, 
-             transport_detail: '请直接在 Uber 输入 "Kobe Harborland umie Mosaic"。', 
+           { id: 203, time: '14:00', location: '神戶 Mosaic 廣場 (神戸モザイク)', action: '搭 Uber前往', recommend: true, 
+             transport_detail: '請直接在 Uber 輸入 "Kobe Harborland umie Mosaic"。', 
              nav_query: 'Kobe Harborland umie Mosaic', transport_mode: 'driving', coords: [34.6795, 135.1843] },
-           { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百货', action: '孩子天堂', isGame: true, 
+           { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百貨', action: '孩子天堂', isGame: true, 
              nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843], 
-             shopping: {name:'扭蛋百货', desc:'关西最大级，2000台扭蛋機', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
-           { id: 205, time: '17:30', location: '神户港塔', action: '夜景/散步', 
+             shopping: {name:'扭蛋百貨', desc:'關西最大級，2000台扭蛋機', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
+           { id: 205, time: '17:30', location: '神戶港塔 (神戸ポートタワー / Kobe Port Tower)', action: '夜景/散步', 
              nav_query: 'Kobe Port Tower', transport_mode: 'walking', coords: [34.6815, 135.1765] },
-           { id: 206, time: '19:00', location: '日本桥 (大阪)', action: '返回/晚餐', 
+           { id: 206, time: '19:00', location: '日本橋 (日本橋 / Nippombashi)', action: '返回/晚餐', 
              nav_query: 'Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065],
              foodOptions: [
-                 {name:'鸟贵族 难波', desc:'均一价串烧，可点很多种分食', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
-                 {name:'天政乌龙面', desc:'便宜快速，孩子累了吃这个', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
-                 {name:'烧肉力丸', desc:'吃到饱，大孩子最爱', query:'Yakiniku Rikimaru Namba', coords:[34.6650, 135.5030]}
+                 {name:'鳥貴族 難波 (鳥貴族)', desc:'均一價串燒居酒屋', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
+                 {name:'天政烏龍麵 (天政 / Tenmasa)', desc:'便宜快速，孩子累了吃這個', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
+                 {name:'燒肉力丸 (焼肉力丸)', desc:'吃到飽，大孩子最愛', query:'Yakiniku Rikimaru Namba', coords:[34.6650, 135.5030]}
              ]
            }
        ],
        2: [
-           { id: 301, time: '09:30', location: '黑门市场', action: '早午餐/吃水果', 
+           { id: 301, time: '09:30', location: '黑門市場 (黒門市場 / Kuromon Market)', action: '早午餐/吃水果', 
              nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] },
-           { id: 302, time: '11:00', location: '淀屋桥站', action: '移动至京都', recommend: true, 
-             transport_detail: '建议叫 Uber 到 "京阪淀屋桥站" (Keihan Yodoyabashi)，这里是京阪电车起点，全家有座位。', 
+           { id: 302, time: '11:00', location: '淀屋橋站 (淀屋橋駅 / Yodoyabashi St.)', action: '移動至京都', recommend: true, 
+             transport_detail: '建議叫 Uber 到 "京阪淀屋橋站" (Keihan Yodoyabashi)，這裡是京阪電車起點，全家有座位。', 
              nav_query: 'Yodoyabashi Station Keihan', transport_mode: 'driving', coords: [34.6930, 135.5015] },
            { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', isHotel: true, 
-             transport_detail: '神宫丸太町站出来，直接搭 Uber 去饭店最快。', 
+             transport_detail: '神宮丸太町站出來，直接搭 Uber 去飯店最快。', 
              nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] },
-           { id: 304, time: '13:30', location: '锦市场', action: '午餐', 
+           { id: 304, time: '13:30', location: '錦市場 (錦市場 / Nishiki Market)', action: '午餐', 
              nav_query: 'Nishiki Market', transport_mode: 'driving', coords: [35.0050, 135.7630],
              foodOptions: [
-                 {name:'名代猪排 三条本店', desc:'【首选】座位宽敞，白饭高丽菜吃到饱', query:'Katsukura Sanjo Main Store', coords:[35.0088, 135.7665]},
-                 {name:'一风堂 锦小路', desc:'豚骨拉面，不辣适合小孩', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]},
-                 {name:'富山黑拉面', desc:'重口味酱油，可尝试', query:'Menya Iroha Kyoto', coords:[35.0010, 135.7590]}
+                 {name:'名代豬排 三條本店 (かつくら / Katsukura)', desc:'【首選】座位寬敞，白飯高麗菜吃到飽', query:'Katsukura Sanjo Main Store', coords:[35.0088, 135.7665]},
+                 {name:'一風堂 錦小路 (一風堂)', desc:'豚骨拉麵，不辣適合小孩', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]},
+                 {name:'富山黑拉麵 (麺家いろは)', desc:'重口味醬油，可嘗試', query:'Menya Iroha Kyoto', coords:[35.0010, 135.7590]}
              ]
            },
-           { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗舰店', isGame: true, 
+           { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗艦店', isGame: true, 
              nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695], 
-             shopping: {name:'Nintendo Kyoto', desc:'高岛屋 T8 7F，建议先拿整理券', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
-           { id: 306, time: '18:00', location: '四条乌丸', action: '晚餐', 
+             shopping: {name:'Nintendo Kyoto', desc:'高島屋 T8 7F，建議先拿整理券', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
+           { id: 306, time: '18:00', location: '四條烏丸 (四条烏丸 / Shijo Karasuma)', action: '晚餐', 
              nav_query: 'Shijo Station', transport_mode: 'walking', coords: [35.0035, 135.7595],
              foodOptions: [
-                 {name:'CoCo壹番屋', desc:'日式咖哩，可调辣度/份量', query:'CoCo Ichibanya Shijo Karasuma', coords:[35.0032, 135.7590]},
-                 {name:'大户屋 四条', desc:'定食类，有鱼有肉很健康', query:'Ootoya Shijo Karasuma', coords:[35.0030, 135.7600]},
-                 {name:'寿司郎 河原町', desc:'如果第一天没吃寿司可来这', query:'Sushiro Kawaramachi', coords:[35.0040, 135.7690]}
+                 {name:'CoCo壹番屋 (CoCo壱番屋)', desc:'日式咖哩，可調辣度/份量', query:'CoCo Ichibanya Shijo Karasuma', coords:[35.0032, 135.7590]},
+                 {name:'大戶屋 四條 (大戸屋)', desc:'定食類，有魚有肉很健康', query:'Ootoya Shijo Karasuma', coords:[35.0030, 135.7600]},
+                 {name:'壽司郎 河原町 (スシロー)', desc:'如果第一天沒吃壽司可來這', query:'Sushiro Kawaramachi', coords:[35.0040, 135.7690]}
              ]
            }
        ],
        3: [
-           { id: 401, time: '08:30', location: '伏见稻荷大社', action: '千本鸟居', recommend: true, 
-             transport_detail: '请直接 Uber 设定目的地："Fushimi Inari Taisha Parking Lot" (停车场)，少走一段上坡。', 
+           { id: 401, time: '08:30', location: '伏見稻荷大社 (伏見稲荷大社)', action: '千本鳥居', recommend: true, 
+             transport_detail: '請直接 Uber 設定目的地："Fushimi Inari Taisha Parking Lot" (停車場)，少走一段上坡。', 
              nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] },
-           { id: 402, time: '10:30', location: '清水寺', action: '移动', transport: 'Uber', recommend: true, 
-             transport_detail: 'Uber 设定目的地："Kiyomizu-michi Bus Stop" (清水道公车站)，从这边走上去比较顺。', 
+           { id: 402, time: '10:30', location: '清水寺 (清水寺 / Kiyomizu-dera)', action: '移動', transport: 'Uber', recommend: true, 
+             transport_detail: 'Uber 設定目的地："Kiyomizu-michi Bus Stop" (清水道公車站)，從這邊走上去比較順。', 
              nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] },
-           { id: 403, time: '12:00', location: '清水道', action: '午餐', 
+           { id: 403, time: '12:00', location: '清水道 (清水道 / Kiyomizu-michi)', action: '午餐', 
              nav_query: 'Omen Kodaiji', transport_mode: 'walking', coords: [34.9960, 135.7830], 
              foodOptions: [
-                 {name:'Omen 乌龙面', desc:'【推】名店，乌龙面小孩接受度高', query:'Omen Kodaiji', coords:[34.9990, 135.7800]},
-                 {name:'奥丹 清水', desc:'汤豆腐，环境美但小孩可能吃不惯', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
-                 {name:'吉野家', desc:'如果小孩吵着要吃饭/牛丼', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
+                 {name:'Omen 烏龍麵 (おめん)', desc:'【推】名店，烏龍麵小孩接受度高', query:'Omen Kodaiji', coords:[34.9990, 135.7800]},
+                 {name:'奧丹 清水 (奥丹)', desc:'湯豆腐，環境美但小孩可能吃不慣', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
+                 {name:'吉野家 清水寺店', desc:'如果小孩吵著要吃飯/牛丼', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
              ] 
            },
-           { id: 404, time: '14:30', location: '三年坂', action: '吉卜力/角落生物', isGame: true, 
+           { id: 404, time: '14:30', location: '三年坂 (産寧坂 / Sannenzaka)', action: '吉卜力/角落生物', isGame: true, 
              nav_query: 'Sannenzaka', transport_mode: 'walking', coords: [35.0035, 135.7780], 
-             shopping: {name:'橡子共和国', desc:'龙猫周边', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
-           { id: 405, time: '18:00', location: '河原町', action: '晚餐/逛街', 
+             shopping: {name:'橡子共和國 (どんぐり共和国)', desc:'龍貓周邊', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
+           { id: 405, time: '18:00', location: '河原町 (河原町 / Kawaramachi)', action: '晚餐/逛街', 
              nav_query: 'Gion Tanto', transport_mode: 'walking', coords: [35.0040, 135.7730],
              foodOptions: [
-                 {name:'祇园 Tanto', desc:'铁板烧/大阪烧，座位稍挤但好吃', query:'Gion Tanto', coords:[35.0055, 135.7735]},
-                 {name:'武藏寿司', desc:'河原町人气回转寿司', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
-                 {name:'星乃咖啡店', desc:'也有义大利面/舒芙蕾', query:'Hoshino Coffee Kawaramachi', coords:[35.0050, 135.7690]}
+                 {name:'祇園 Tanto (祇園たんと)', desc:'鐵板燒/大阪燒，座位稍擠但好吃', query:'Gion Tanto', coords:[35.0055, 135.7735]},
+                 {name:'武藏壽司 (寿しのむさし)', desc:'河原町人氣迴轉壽司', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
+                 {name:'星乃咖啡店 (星乃珈琲店)', desc:'也有義大利麵/舒芙蕾', query:'Hoshino Coffee Kawaramachi', coords:[35.0050, 135.7690]}
              ]
            },
-           { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回饭店', transport: 'Uber', 
+           { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回飯店', transport: 'Uber', 
              nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }
        ],
        4: [
-           { id: 501, time: '08:05', location: '京都站 八条口', action: '前往车站', recommend: true, 
-             transport_detail: 'Uber 设定："Kyoto Station Hachijo Exit" (八条口)。', 
+           { id: 501, time: '08:05', location: '京都站 八條口 (京都駅 八条口)', action: '前往車站', recommend: true, 
+             transport_detail: 'Uber 設定："Kyoto Station Hachijo Exit" (八條口)。', 
              nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] },
-           { id: 502, time: '08:45', location: '关空特急 Haruka', action: '前往机场', 
-             transport_detail: '从八条口进站，找 "30号月台" (Platform 30)。', 
+           { id: 502, time: '08:45', location: '關空特急 Haruka', action: '前往機場', 
+             transport_detail: '從八條口進站，找 "30號月台" (Platform 30)。', 
              nav_query: 'Kyoto Station Platform 30', transport_mode: 'transit', coords: [34.9850, 135.7580] },
-           { id: 503, time: '10:05', location: '关西机场 T1', action: '最后采购/登机', 
+           { id: 503, time: '10:05', location: '關西機場 T1 (KIX T1)', action: '最後採購/登機', 
              nav_query: 'Pokemon Store Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443], 
-             shopping: {name:'Pokemon Store', desc:'T1 2F，最后一站', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
+             shopping: {name:'Pokemon Store', desc:'T1 2F，最後一站', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
              foodOptions: [
-                 {name:'神座拉面 机场店', desc:'T1 3F，大量白菜汤头很甜', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
-                 {name:'Sukiya 机场店', desc:'T1 2F，快速解决', query:'Sukiya Kansai Airport', coords:[34.4355, 135.2445]},
-                 {name:'551蓬莱', desc:'T1 2F 必买猪肉包(可外带)', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2450]}
+                 {name:'神座拉麵 機場店', desc:'T1 3F，大量白菜湯頭很甜', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
+                 {name:'Sukiya 機場店', desc:'T1 2F，快速解決', query:'Sukiya Kansai Airport', coords:[34.4355, 135.2445]},
+                 {name:'551蓬萊', desc:'T1 2F 必買豬肉包(可外帶)', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2450]}
              ]
            }
        ]
@@ -455,7 +453,7 @@
             // --- 資料處理 ---
             loadAndMergeData() {
                 this.isLoading = true;
-                const tripRef = db.ref('trip_final_family_v1'); // 更改 key 以區隔舊資料
+                const tripRef = db.ref('trip_final_family_v38'); // v38 新路徑
                 tripRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
@@ -477,7 +475,7 @@
             },
             
             saveToStorage() {
-                db.ref('trip_final_family_v1').set(this.activities);
+                db.ref('trip_final_family_v38').set(this.activities);
             },
 
             // --- 圖片上傳 ---
@@ -554,6 +552,7 @@
             getIconColor(item) {
                 if (item.isHotel) return 'bg-purple-500';
                 if (item.isGame) return 'bg-red-500 ring-2 ring-red-200';
+                if (item.recommend) return 'bg-black border-black';
                 return 'bg-blue-500';
             },
             generateGoogleLink(query, fallbackName, mode) {
@@ -660,7 +659,7 @@
                 }
             },
             async downloadMemories() {
-                alert("功能準備中：打包回憶");
+                alert("功能準備中：這將打包所有回憶照片與行程");
             },
             handleTouchStart(e) { if(this.currentView !== 'list') return; this.touchStartX = e.changedTouches[0].screenX; this.touchStartY = e.changedTouches[0].screenY; },
             handleTouchEnd(e) { if(this.currentView !== 'list') return; this.touchEndX = e.changedTouches[0].screenX; this.touchEndY = e.changedTouches[0].screenY; 
