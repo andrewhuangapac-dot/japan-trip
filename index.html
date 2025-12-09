@@ -3,276 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>京阪神親子遊 (v38: 回憶珍藏版)</title>
+    <title>京阪神旅遊手冊 2025</title>
     
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-    <style>
-        body, html { height: 100%; margin: 0; overflow: hidden; background-color: #fff7ed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        #app { height: 100%; display: flex; flex-direction: column; }
-        .scroll-container { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; padding-bottom: 90px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        #map { height: 100%; width: 100%; z-index: 1; background: #e5e5e5; }
-        [v-cloak] { display: none; }
-        
-        .btn-press { transition: transform 0.1s, opacity 0.1s; }
-        .btn-press:active { transform: scale(0.96); opacity: 0.8; }
-        
-        /* 標籤與卡片樣式 */
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 4px; vertical-align: middle; display: inline-flex; align-items: center; }
-        .badge-uber { background: black; color: white; border: 1px solid #333; }
-        .badge-hotel { background: #7c3aed; color: white; }
-        .badge-game { background: #ef4444; color: white; }
-        .badge-train { background: #0284c7; color: white; }
-        .badge-walk { background: #16a34a; color: white; }
-        
-        .food-card { background-color: #fffbeb; border: 1px solid #fed7aa; border-radius: 12px; padding: 10px; margin-top: 10px; }
-        .shop-card { background-color: #fff1f2; border: 1px solid #fda4af; border-radius: 12px; padding: 10px; margin-top: 8px; color: #9f1239; display: block; text-decoration: none; }
-        
-        .jp-text { font-family: "Hiragino Sans", "Yu Gothic", sans-serif; }
-        .location-title { font-size: 16px; line-height: 1.3; font-weight: 700; color: #1c1917; }
-        .location-sub { font-size: 12px; color: #57534e; margin-top: 2px; display: block; }
-        
-        .nav-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 52px; height: 52px; border-radius: 14px;
-            background-color: #292524; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            text-decoration: none; border: 1px solid #444;
-        }
-        
-        /* Loading Spinner */
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        input[type="file"] { display: none; }
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
-        /* 相簿滾動條 */
-        .gallery-scroll { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scroll-behavior: smooth; }
-        .gallery-item { flex: 0 0 120px; height: 120px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e5; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; -webkit-tap-highlight-color: transparent; }
         
-        /* 隱私模糊效果 */
-        .blur-content { filter: blur(8px); pointer-events: none; user-select: none; }
+        /* 手機模擬器外框 */
+        .app-container { max-width: 430px; margin: 0 auto; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        
+        /* 隱藏捲軸但保留功能 */
+        .scroll-container::-webkit-scrollbar { display: none; }
+        .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 動畫 */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        /* 地圖高度 */
+        #map { height: 100%; width: 100%; z-index: 0; }
+
+        /* 卡片樣式 */
+        .timeline-line { position: absolute; left: 24px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
+        .last-item .timeline-line { display: none; }
+        
+        /* 圖片網格 */
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
+        .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-<div id="app" v-cloak class="max-w-md mx-auto bg-white shadow-2xl relative h-full flex flex-col">
-    
-    <div v-if="isLoading" class="fixed inset-0 bg-black/70 z-[100] flex flex-col items-center justify-center text-white backdrop-blur-sm">
-        <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full spin mb-3"></div>
-        <p class="text-sm font-bold tracking-widest">{{ loadingText }}</p>
-        <p v-if="progress > 0" class="text-xs mt-2 text-gray-300">{{ progress }}%</p>
-    </div>
-
-    <div v-if="!isAccessGranted" class="fixed inset-0 z-[90] bg-orange-50 flex flex-col items-center justify-center p-6">
-        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-600 text-2xl">
-                <i class="fas fa-lock"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">私人行程記錄</h2>
-            <p class="text-sm text-gray-500 mb-6">請輸入通行碼以檢視照片與編輯</p>
-            <input type="password" v-model="passcode" placeholder="請輸入通行碼 (預設 8888)" class="w-full text-center text-lg tracking-widest p-3 border border-gray-200 rounded-xl bg-gray-50 focus:border-orange-500 focus:outline-none mb-4">
-            <button @click="checkPasscode" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold shadow-lg btn-press">解鎖進入</button>
+<div id="app">
+    <div v-if="!isAccessGranted" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xs rounded-2xl p-6 text-center shadow-2xl">
+            <div class="mb-4 text-4xl">🔐</div>
+            <h2 class="text-xl font-bold mb-2">旅程鎖定中</h2>
+            <p class="text-gray-500 text-sm mb-6">請輸入通行碼以查看行程</p>
+            <input type="tel" v-model="passcode" maxlength="4" class="w-full text-center text-2xl tracking-widest border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="••••">
+            <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition">解鎖</button>
         </div>
     </div>
 
-    <header class="flex-none bg-gradient-to-r from-orange-600 to-red-600 text-white p-5 pb-4 rounded-b-[2rem] shadow-xl z-20">
-        <div class="flex justify-between items-center mb-4">
-            <div>
-                <h1 class="text-xl font-bold tracking-wide">京阪神親子遊 v38</h1>
-                <p class="text-orange-100 text-xs mt-1 font-medium">左右滑動切換日期 (多圖版)</p>
-            </div>
-            <div class="flex gap-2">
-                <button v-if="isAccessGranted" @click="downloadMemories" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full btn-press backdrop-blur-md">
-                    <i class="fas fa-download mr-1"></i>備份
-                </button>
-                <button @click="resetData" class="text-xs bg-white/20 border border-white/30 px-3 py-1.5 rounded-full btn-press backdrop-blur-md">重置</button>
-            </div>
-        </div>
-        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
-            <button v-for="(day, index) in days" :key="index" @click="changeDay(index)"
-                :class="currentDay === index ? 'bg-white text-orange-700 font-bold shadow-lg scale-105' : 'bg-orange-800/40 text-orange-100'"
-                class="px-3 py-2 rounded-xl text-xs whitespace-nowrap btn-press flex-shrink-0 mb-2 flex flex-col items-center min-w-[4.5rem]">
-                <span>{{ day.date }}</span>
-                <span class="text-[10px] opacity-80 mt-0.5">{{ day.weather.temp_high }}°</span>
-            </button>
-        </div>
-    </header>
-
-    <main class="scroll-container bg-stone-50"
-           @touchstart="handleTouchStart"
-           @touchend="handleTouchEnd">
-        
-        <div v-if="currentView === 'list'" class="px-4 pt-4 pb-24 min-h-full">
-            <div class="mb-5 bg-white rounded-2xl p-4 shadow-sm border border-stone-200 flex items-center justify-between">
+    <div v-else class="app-container">
+        <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2">
+            <div class="px-5 pt-12 pb-2 flex justify-between items-end">
                 <div>
-                    <h2 class="text-lg font-bold text-stone-800">{{ days[currentDay].name }}</h2>
-                    <div class="flex items-center mt-1 text-sm font-medium" :class="days[currentDay].weather.color">
-                        <i :class="days[currentDay].weather.icon" class="mr-2 text-lg"></i>
-                        <span>{{ days[currentDay].weather.status }}</span>
+                    <div class="text-xs text-blue-600 font-bold tracking-wider mb-1">TRIP 2025</div>
+                    <h1 class="text-2xl font-bold text-slate-800">京阪神之旅 🇯🇵</h1>
+                </div>
+                <div class="flex gap-3">
+                    <button @click="downloadMemories" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition">
+                        <i class="fas fa-cloud-download-alt"></i>
+                    </button>
+                    <button @click="resetData" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-red-500 hover:bg-red-50 transition">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex overflow-x-auto px-4 pb-2 gap-3 scroll-container snap-x">
+                <div v-for="(day, index) in days" :key="index" 
+                     @click="changeDay(index)"
+                     class="snap-center flex-shrink-0 flex flex-col items-center justify-center w-[72px] h-[85px] rounded-2xl transition-all duration-300 border cursor-pointer"
+                     :class="currentDay === index ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105' : 'bg-white text-gray-400 border-gray-100'">
+                    
+                    <span class="text-xs font-medium">{{ day.date }}</span>
+                    <span class="text-sm font-bold my-0.5">{{ day.weekday }}</span>
+                    
+                    <div class="mt-1 flex flex-col items-center">
+                        <i :class="[day.weather.icon, currentDay === index ? 'text-white' : day.weather.color]" class="text-sm"></i>
+                        <span class="text-[10px] mt-0.5" :class="currentDay === index ? 'text-blue-100' : 'text-gray-400'">
+                            {{ day.weather.temp_high !== '-' ? day.weather.temp_high + '°' : '--' }}
+                        </span>
                     </div>
                 </div>
-                <div class="text-[10px] text-stone-400 font-medium">
-                    <i class="fas fa-arrows-alt-h mr-1"></i>左右滑換日
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto scroll-container relative bg-white" 
+              @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+            
+            <div v-if="isLoading" class="absolute inset-0 z-30 bg-white/80 backdrop-blur flex flex-col items-center justify-center">
+                <div class="animate-spin text-blue-600 text-3xl mb-3"><i class="fas fa-circle-notch"></i></div>
+                <div class="text-sm text-gray-500 font-medium">{{ loadingText }}</div>
+                <div v-if="progress > 0" class="w-32 h-1 bg-gray-200 rounded-full mt-3 overflow-hidden">
+                    <div class="h-full bg-blue-500 transition-all duration-300" :style="{width: progress + '%'}"></div>
                 </div>
             </div>
 
-            <div class="space-y-6 transition-all duration-300">
-                <div v-for="item in sortedActivities" :key="item.id" class="relative pl-6 border-l-[3px] border-stone-200 last:border-0">
-                    <div class="absolute -left-[10px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-sm" :class="getIconColor(item)"></div>
+            <div v-if="currentView === 'list'" class="px-5 py-6 pb-24">
+                <div v-if="sortedActivities.length === 0" class="text-center py-20 text-gray-400">
+                    <i class="fas fa-map-signs text-4xl mb-3 opacity-30"></i>
+                    <p>本日尚無行程</p>
+                    <button @click="openModal()" class="mt-4 text-blue-600 text-sm font-bold">立即新增</button>
+                </div>
+
+                <div v-for="(item, idx) in sortedActivities" :key="item.id" 
+                     class="relative pl-12 pb-8 group" 
+                     :class="{'last-item': idx === sortedActivities.length - 1}">
                     
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1 mr-3 min-w-0">
-                                <div class="flex flex-wrap items-center gap-1 mb-2">
-                                    <span class="bg-stone-100 text-stone-600 text-[11px] font-bold px-2 py-0.5 rounded">{{ item.time }}</span>
-                                    <span v-if="item.isHotel" class="badge badge-hotel">飯店</span>
-                                    <span v-else-if="item.recommend" class="badge badge-uber"><i class="fab fa-uber mr-1"></i>Uber</span>
-                                    <span v-else-if="item.transport_mode === 'walking'" class="badge badge-walk"><i class="fas fa-walking mr-1"></i>步行</span>
-                                    <span v-else-if="item.transport_mode === 'transit'" class="badge badge-train"><i class="fas fa-train mr-1"></i>地鐵</span>
-                                    <span v-if="item.isGame" class="badge badge-game">必去</span>
-                                </div>
-                                
-                                <div class="mb-2">
-                                    <h3 class="location-title jp-text truncate">{{ getMainName(item.location) }}</h3>
-                                    <span class="location-sub jp-text truncate">{{ getSubName(item.location) }}</span>
-                                </div>
-                                <p class="text-stone-600 text-sm font-medium jp-text mb-2">{{ item.action }}</p>
-                                
-                                <div v-if="item.transport_detail" class="bg-slate-50 border-l-4 border-slate-400 p-2.5 rounded-r-lg mb-3">
-                                    <p class="text-[10px] text-slate-500 font-bold mb-0.5"><i class="fas fa-info-circle mr-1"></i>路線建議</p>
-                                    <p class="text-[11px] text-slate-700 leading-relaxed whitespace-pre-line">{{ item.transport_detail }}</p>
-                                </div>
+                    <div class="timeline-line"></div>
+                    
+                    <div class="absolute left-0 top-1 w-12 text-xs font-bold text-gray-400 text-right pr-4">{{ item.time }}</div>
+                    
+                    <div class="absolute left-[18px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10"
+                         :class="getIconColor(item)"></div>
 
-                                <div class="mb-3">
-                                    <div v-if="item.images && item.images.length > 0" :class="{'blur-content': !isAccessGranted}">
-                                        <div class="gallery-scroll no-scrollbar">
-                                            <div v-for="(img, idx) in item.images" :key="idx" class="gallery-item group">
-                                                <img :src="img.url" @click="isAccessGranted && viewImage(img.url)">
-                                                <button v-if="isAccessGranted" @click="deleteSingleImage(item, idx)" class="absolute top-1 right-1 bg-red-600/80 text-white w-5 h-5 rounded-full flex items-center justify-center shadow backdrop-blur">
-                                                    <i class="fas fa-times text-[10px]"></i>
-                                                </button>
-                                            </div>
-                                            <label v-if="isAccessGranted" class="gallery-item flex flex-col items-center justify-center border-2 border-dashed border-stone-300 bg-stone-50 text-stone-400 cursor-pointer active:bg-stone-100 min-w-[80px]">
-                                                <i class="fas fa-plus text-xl mb-1"></i>
-                                                <span class="text-[9px]">加照片</span>
-                                                <input type="file" accept="image/*" multiple @change="uploadImages($event, item)">
-                                            </label>
-                                        </div>
-                                        <p class="text-[10px] text-gray-400 mt-1 text-right">{{ item.images.length }} 張照片</p>
-                                    </div>
-                                    
-                                    <div v-else class="mt-2">
-                                        <label v-if="isAccessGranted" class="flex items-center justify-center w-full h-10 border-2 border-dashed border-stone-300 rounded-lg bg-stone-50 text-stone-400 cursor-pointer active:bg-stone-100">
-                                            <i class="fas fa-camera mr-2"></i>
-                                            <span class="text-xs font-bold">上傳照片 (可多選)</span>
-                                            <input type="file" accept="image/*" multiple @change="uploadImages($event, item)">
-                                        </label>
-                                        <div v-else class="h-10 bg-stone-100 rounded-lg flex items-center justify-center text-xs text-stone-400">
-                                            <i class="fas fa-lock mr-2"></i>相簿已鎖定
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div v-if="item.foodOptions" class="food-card">
-                                    <p class="text-xs font-bold text-orange-700 mb-2 pb-1 border-b border-orange-100 flex justify-between">
-                                        <span><i class="fas fa-utensils mr-1"></i>推薦餐廳</span>
-                                    </p>
-                                    <div class="space-y-2">
-                                        <a v-for="(food, fIdx) in item.foodOptions" :key="fIdx"
-                                            :href="generateGoogleLink(food.query, food.name, 'walking')"
-                                            target="_blank"
-                                           class="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-100 shadow-sm btn-press">
-                                            <div class="flex-1">
-                                                <p class="text-xs font-bold text-gray-800 jp-text">{{ getMainName(food.name) }}</p>
-                                            </div>
-                                            <i class="fas fa-location-arrow text-orange-400 text-xs ml-2"></i>
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <a v-if="item.shopping"
-                                    :href="generateGoogleLink(item.shopping.query, item.shopping.name, 'walking')"
-                                    target="_blank"
-                                   class="shop-card flex justify-between items-center btn-press">
-                                    <div>
-                                        <p class="text-xs font-bold jp-text"><i class="fas fa-shopping-bag mr-1"></i>{{ item.shopping.name }}</p>
-                                    </div>
-                                    <i class="fas fa-location-arrow text-pink-400 text-xs"></i>
-                                </a>
-                            </div>
-
-                            <div class="flex flex-col space-y-2 pt-1">
-                                <a :href="generateGoogleLink(item.nav_query, item.location, item.transport_mode)"
-                                    target="_blank"
-                                    class="nav-btn btn-press">
+                    <div @click="openModal(item)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-800 text-lg leading-tight">{{ getMainName(item.location) }}</h3>
+                            <div class="flex gap-2">
+                                <a v-if="item.coords" :href="generateGoogleLink(item.location, item.location, item.transport_mode)" target="_blank" @click.stop class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
                                     <i class="fas fa-location-arrow"></i>
-                                    <span>導航</span>
                                 </a>
-                                <button v-if="isAccessGranted" @click="openModal(item)" class="w-[52px] h-10 rounded-xl bg-stone-100 text-stone-400 flex items-center justify-center btn-press">
-                                    <i class="fas fa-pen text-xs"></i>
-                                </button>
                             </div>
+                        </div>
+                        
+                        <p v-if="getSubName(item.location)" class="text-xs text-gray-400 mb-2">{{ getSubName(item.location) }}</p>
+                        
+                        <div class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium mb-3"
+                             :class="item.isHotel ? 'bg-purple-100 text-purple-700' : (item.isGame ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')">
+                            <i class="mr-1.5" :class="item.isHotel ? 'fas fa-bed' : (item.isGame ? 'fas fa-gamepad' : 'fas fa-walking')"></i>
+                            {{ item.action }}
+                        </div>
+
+                        <div>
+                            <div class="photo-grid" v-if="item.images && item.images.length">
+                                <div v-for="(img, imgIdx) in item.images" :key="imgIdx" class="photo-item bg-gray-100" @click.stop="viewImage(img.url)">
+                                    <img :src="img.url" loading="lazy">
+                                    <button @click.stop="deleteSingleImage(item, imgIdx)" class="absolute top-1 right-1 bg-black/50 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">✕</button>
+                                </div>
+                            </div>
+                            
+                            <label class="mt-3 flex items-center gap-2 text-xs text-gray-400 py-2 cursor-pointer hover:text-blue-500 transition w-fit" @click.stop>
+                                <i class="fas fa-camera"></i>
+                                <span>新增照片/回憶</span>
+                                <input type="file" multiple accept="image/*" class="hidden" @change="uploadImages($event, item)">
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-show="currentView === 'map'" class="absolute inset-0 z-0 bg-gray-100 h-full w-full">
-            <div id="map"></div>
-            <button @click="toggleMapMode" class="absolute bottom-24 left-4 z-[500] bg-white text-stone-800 px-4 py-3 rounded-full shadow-xl font-bold text-xs flex items-center border border-stone-200 btn-press">
-                <i class="fas mr-2 text-base" :class="showAllMap ? 'fa-map' : 'fa-map-pin'"></i>
-                {{ showAllMap ? '顯示全程' : `僅看 Day ${currentDay + 1}` }}
-            </button>
-        </div>
-    </main>
-
-    <nav class="flex-none bg-white/95 backdrop-blur border-t border-stone-100 px-8 py-2 flex justify-between items-center z-30 pb-6 pt-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <button @click="currentView = 'list'" :class="currentView === 'list' ? 'text-orange-600' : 'text-stone-300'" class="flex flex-col items-center w-16 btn-press">
-            <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px] font-medium">行程</span>
-        </button>
-        <button v-if="isAccessGranted" @click="openModal()" class="bg-orange-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-orange-200 -translate-y-6 btn-press border-4 border-stone-50">
-            <i class="fas fa-plus text-xl"></i>
-        </button>
-        <button @click="switchMap" :class="currentView === 'map' ? 'text-orange-600' : 'text-stone-300'" class="flex flex-col items-center w-16 btn-press">
-            <i class="fas fa-map-marked-alt text-xl mb-1"></i><span class="text-[10px] font-medium">地圖</span>
-        </button>
-    </nav>
-
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-stone-900/60 p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-bounce-up mb-4 sm:mb-0">
-            <h2 class="text-lg font-bold mb-4 text-stone-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h2>
-            <div class="space-y-3">
-                <input type="time" v-model="form.time" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
-                <input type="text" v-model="form.location" placeholder="地點" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
-                <input type="text" v-model="form.action" placeholder="活動" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
+            <div v-show="currentView === 'map'" class="h-full w-full relative">
+                <div id="map"></div>
+                <div class="absolute bottom-24 right-4 z-[400] flex flex-col gap-2">
+                    <button @click="toggleMapMode" class="w-12 h-12 bg-white rounded-full shadow-lg text-gray-700 flex items-center justify-center font-bold text-xs border border-gray-200">
+                        {{ showAllMap ? 'All' : 'Day' }}
+                    </button>
+                </div>
             </div>
-            <div class="flex gap-3 mt-6">
-                <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold text-sm btn-press">刪除</button>
-                <button @click="showModal = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl text-sm btn-press">取消</button>
-                <button @click="saveActivity" class="flex-[2] bg-orange-600 text-white py-3 rounded-xl font-bold text-sm btn-press">儲存</button>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-around items-center z-50 max-w-[430px] mx-auto pb-safe">
+            <button @click="changeDay(currentDay)" class="flex flex-col items-center gap-1 transition" :class="currentView === 'list' ? 'text-blue-600' : 'text-gray-300'">
+                <i class="fas fa-list-ul text-xl"></i>
+                <span class="text-[10px] font-medium">行程</span>
+            </button>
+            
+            <button @click="openModal()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg shadow-blue-200 flex items-center justify-center text-white text-2xl -mt-8 border-4 border-white active:scale-95 transition">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <button @click="switchMap" class="flex flex-col items-center gap-1 transition" :class="currentView === 'map' ? 'text-blue-600' : 'text-gray-300'">
+                <i class="fas fa-map-marked-alt text-xl"></i>
+                <span class="text-[10px] font-medium">地圖</span>
+            </button>
+        </nav>
+
+        <div v-if="showModal" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
+            <div class="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl p-6 relative z-10 animate-slide-up shadow-2xl">
+                <h3 class="text-lg font-bold mb-4 text-gray-800">{{ isEditing ? '編輯行程' : '新增行程' }}</h3>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-1">
+                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">時間</label>
+                            <input type="time" v-model="form.time" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">地點名稱</label>
+                            <input type="text" v-model="form.location" placeholder="例如: 清水寺" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold ml-1 mb-1 block">活動內容 / 備註</label>
+                        <input type="text" v-model="form.action" placeholder="例如: 穿和服拍照" class="w-full bg-gray-50 border-0 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button v-if="isEditing" @click="deleteActivity" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold text-sm">刪除</button>
+                        <button @click="saveActivity" class="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-200">儲存</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ==========================================
-    // 1. Firebase 設定 (維持不變)
-    // ==========================================
+    // 1. Firebase 初始化 (請確保 Storage 規則為 allow read, write: if true;)
     const firebaseConfig = {
   apiKey: "AIzaSyByeBl_M9-TjF2i-5D71AjVm5j-vNCbAUc",
   authDomain: "jp-travel-ef684.firebaseapp.com",
@@ -291,33 +238,17 @@
 
     const { createApp } = Vue;
 
-    // v38 Master Data (預設資料)
-    const masterDataV38 = {
-        0: [
-            { id: 101, time: '16:50', location: '關西機場 T2', action: '接駁巴士', transport_mode: 'transit', coords: [34.4357, 135.2443] },
-            { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: 'Check-in', isHotel: true, coords: [34.6655, 135.5065], images: [] }
-        ],
-        1: [
-            { id: 201, time: '09:00', location: '神戶動物王國', action: '看水豚', isGame: true, coords: [34.6405, 135.2185] }
-        ],
-        2: [
-            { id: 301, time: '10:00', location: '京都鐵道博物館', action: '看火車', isGame: true, coords: [34.9863, 135.7424] }
-        ],
-        3: [
-            { id: 401, time: '09:30', location: '清水寺', action: '參拜', transport_mode: 'walking', coords: [34.9949, 135.7850] }
-        ],
-        4: [
-            { id: 501, time: '14:00', location: '臨空城 Outlet', action: '最後採買', shopping: { name: 'Rinku Outlet', query: 'Rinku Premium Outlets', desc: '購物' }, coords: [34.4067, 135.2952] }
-        ]
+    // 2. 完美版本預設行程資料 (修正日期為 12/5 - 12/9)
+    const masterDataVFinal = {
+       0: [ { id: 101, time: '16:50', location: '關西機場 T2 (Kansai Airport T2)', action: '接駁巴士', transport_detail: '出關後，尋找 "Terminal 1 / Railways" 免費接駁巴士站台。', nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] }, { id: 102, time: '17:35', location: '關西機場站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海電鐵 (Nankai Line)，深藍色列車。全車指定席。', nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] }, { id: 103, time: '18:15', location: '南海難波站 (Namba Station)', action: '抵達/出站', transport_detail: '請走 "2F 中央改札口" (2F Central Exit)，下電扶梯往北出口。', nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] }, { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '飯店 Check-in', isHotel: true, nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] }, { id: 105, time: '19:15', location: '道頓堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行約10分鐘。', nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], foodOptions: [ {name:'一蘭拉麵 道頓堀本館', desc:'24hr 獨立隔間', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, {name:'千房大阪燒 道頓堀', desc:'經典大阪燒', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, {name:'藏壽司 道頓堀店', desc:'扭蛋壽司', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]} ], shopping: {name:'唐吉訶德 (摩天輪店)', desc:'人多，建議速戰速決', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]} } ], 1: [ { id: 201, time: '09:00', location: '近鐵日本橋站 (Kintetsu-Nippombashi)', action: '移動至神戶', transport_detail: '搭乘阪神電車 "快速急行" (Rapid Exp.) 往神戶三宮。', nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] }, { id: 202, time: '11:30', location: '神戶三宮 (Kobe-Sannomiya)', action: '神戶牛午餐', nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], foodOptions: [ {name:'Steakland 神戶館', desc:'高CP值', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]}, {name:'Red Rock 本店', desc:'烤牛肉丼', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]} ] }, { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百貨', action: '必去', isGame: true, nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843] } ], 2: [ { id: 301, time: '09:30', location: '黑門市場', action: '早午餐', nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] }, { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: 'Check-in', isHotel: true, nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }, { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗艦店', isGame: true, nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695] } ], 3: [ { id: 401, time: '08:30', location: '伏見稻荷大社', action: '千本鳥居', recommend: true, nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] }, { id: 402, time: '10:30', location: '清水寺', action: '移動', recommend: true, nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] } ], 4: [ { id: 501, time: '08:05', location: '京都站 八條口', action: '前往車站', recommend: true, nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] }, { id: 503, time: '10:05', location: '關西機場 T1', action: '登機', nav_query: 'Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443] } ] 
     };
 
     const app = createApp({
         data() {
             return {
-                // 隱私鎖設定
                 isAccessGranted: false,
                 passcode: '',
-                correctPasscode: '8888',
+                correctPasscode: 'alfredyiting',
 
                 currentDay: 0,
                 currentView: 'list',
@@ -327,21 +258,19 @@
                 mapInstance: null,
                 markerGroup: null,
                 
-                // Loading
                 isLoading: false, 
                 loadingText: '讀取中...',
                 progress: 0,
 
                 touchStartX: 0, touchStartY: 0, touchEndX: 0, touchEndY: 0,
                 
-                // ★ 改良版 Days：加入地點座標以便查詢天氣 (大阪、神戶、京都)
+                // 3. 修正後的日期設定 (12/5 - 12/9)
                 days: [
-                    // locCoords: 用於查詢天氣的代表座標
-                    { date: '12/12', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/13', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/14', name: 'Day 3: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/15', name: 'Day 4: 清水', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
-                    { date: '12/16', name: 'Day 5: 返程', locCoords: {lat: 34.4320, lon: 135.2304}, weather: { status: '讀取中', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } } // 關西機場
+                    { date: '12/05', weekday: '週五', name: 'Day 1: 大阪', locCoords: {lat: 34.6937, lon: 135.5023}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/06', weekday: '週六', name: 'Day 2: 神戶', locCoords: {lat: 34.6901, lon: 135.1955}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/07', weekday: '週日', name: 'Day 3: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/08', weekday: '週一', name: 'Day 4: 京都', locCoords: {lat: 35.0116, lon: 135.7681}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } },
+                    { date: '12/09', weekday: '週二', name: 'Day 5: 返程', locCoords: {lat: 34.4320, lon: 135.2304}, weather: { status: '...', icon: 'fas fa-spinner fa-spin', temp_high: '-', color: 'text-gray-400' } }
                 ],
                 activities: {},
                 form: { id: null, time: '', location: '', action: '', transport_detail: '', coords: [], images: [] }
@@ -353,111 +282,65 @@
         },
         mounted() { 
             this.loadAndMergeData(); 
-            this.fetchRealTimeWeather(); // ★ 啟動時抓取真實天氣
+            this.fetchRealTimeWeather();
             
             if(localStorage.getItem('trip_unlocked') === 'true') {
                 this.isAccessGranted = true;
             }
         },
         methods: {
-            // --- ★ 真實天氣 API 串接 ---
+            // --- 天氣 API ---
             async fetchRealTimeWeather() {
-                const year = new Date().getFullYear(); // 自動抓取今年年份 (2025)
-                
-                // 逐日查詢天氣
+                const year = new Date().getFullYear(); 
                 this.days.forEach(async (day, index) => {
-                    // 1. 處理日期格式： 12/12 -> 2025-12-12
                     const [m, d] = day.date.split('/');
                     const apiDate = `${year}-${m}-${d}`;
-                    
-                    // 2. 呼叫 Open-Meteo API (包含最高溫、天氣代碼)
-                    // 使用 timezone=Asia/Tokyo 確保時區正確
                     const url = `https://api.open-meteo.com/v1/forecast?latitude=${day.locCoords.lat}&longitude=${day.locCoords.lon}&daily=weathercode,temperature_2m_max&timezone=Asia%2FTokyo&start_date=${apiDate}&end_date=${apiDate}`;
 
                     try {
                         const res = await fetch(url);
                         const data = await res.json();
-                        
                         if (data.daily && data.daily.weathercode) {
                             const code = data.daily.weathercode[0];
                             const temp = Math.round(data.daily.temperature_2m_max[0]);
                             const wInfo = this.getWeatherFromCode(code);
-                            
-                            // 更新畫面
-                            this.days[index].weather = {
-                                status: wInfo.status,
-                                icon: wInfo.icon,
-                                color: wInfo.color,
-                                temp_high: temp
-                            };
+                            this.days[index].weather = { status: wInfo.status, icon: wInfo.icon, color: wInfo.color, temp_high: temp };
                         }
                     } catch (err) {
                         console.error("天氣讀取失敗", err);
-                        // 失敗時保持原樣或顯示錯誤
-                        this.days[index].weather.status = "未知";
-                        this.days[index].weather.icon = "fas fa-question";
                     }
                 });
             },
-
-            // 將 WMO 代碼轉為中文與圖示
             getWeatherFromCode(code) {
-                // 0: 晴天
                 if (code === 0) return { status: '晴朗', icon: 'fas fa-sun', color: 'text-orange-500' };
-                // 1-3: 多雲
                 if ([1, 2, 3].includes(code)) return { status: '多雲', icon: 'fas fa-cloud', color: 'text-gray-500' };
-                // 45, 48: 霧
                 if ([45, 48].includes(code)) return { status: '起霧', icon: 'fas fa-smog', color: 'text-slate-400' };
-                // 51-67: 雨
                 if (code >= 51 && code <= 67) return { status: '下雨', icon: 'fas fa-umbrella', color: 'text-blue-500' };
-                // 71-77: 雪
-                if (code >= 71 && code <= 77) return { status: '降雪', icon: 'fas fa-snowflake', color: 'text-cyan-400' };
-                // 80-82: 陣雨
-                if (code >= 80 && code <= 82) return { status: '陣雨', icon: 'fas fa-cloud-rain', color: 'text-blue-600' };
-                // 95+: 雷雨
-                if (code >= 95) return { status: '雷雨', icon: 'fas fa-bolt', color: 'text-purple-600' };
-                
+                if (code >= 80) return { status: '陣雨', icon: 'fas fa-cloud-rain', color: 'text-blue-600' };
                 return { status: '陰天', icon: 'fas fa-cloud', color: 'text-gray-500' };
             },
 
-            // --- 其他原本的功能 (保持不變) ---
-            checkPasscode() {
-                if (this.passcode === this.correctPasscode) {
-                    this.isAccessGranted = true;
-                    localStorage.setItem('trip_unlocked', 'true');
-                } else {
-                    alert('密碼錯誤！(提示: 8888)');
-                    this.passcode = '';
-                }
-            },
-
-            getMainName(str) { return str ? str.split('(')[0] : ''; },
-            getSubName(str) { 
-                if(!str) return '';
-                const match = str.match(/\(([^)]+)\)/);
-                return match ? match[1] : '';
-            },
-
+            // --- 資料處理 ---
             loadAndMergeData() {
                 this.isLoading = true;
-                const tripRef = db.ref('my_trip_v38'); // 改用 v38 新路徑避免舊資料干擾
+                const tripRef = db.ref('trip_final_v1'); // 使用新路徑確保資料乾淨
                 tripRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
-                        // 資料遷移：確保 images 陣列存在
-                        Object.keys(cloudData).forEach(day => {
-                            cloudData[day].forEach(item => {
-                                if (!item.images) item.images = [];
-                                if (item.imageUrl) {
-                                    item.images.push({ url: item.imageUrl, storagePath: item.storagePath || '' });
-                                    delete item.imageUrl;
-                                    delete item.storagePath;
-                                }
-                            });
-                        });
+                        // 確保所有天數都有陣列，防止報錯
+                        for(let i=0; i<this.days.length; i++) {
+                            if(!cloudData[i]) cloudData[i] = [];
+                            else {
+                                // 修復舊圖片格式
+                                cloudData[i].forEach(item => {
+                                    if (!item.images) item.images = [];
+                                });
+                            }
+                        }
                         this.activities = cloudData;
                     } else {
-                        this.activities = JSON.parse(JSON.stringify(masterDataV38));
+                        // 如果雲端沒資料，使用 Master Data
+                        this.activities = JSON.parse(JSON.stringify(masterDataVFinal));
                         this.saveToStorage();
                     }
                     this.isLoading = false;
@@ -465,15 +348,16 @@
             },
             
             saveToStorage() {
-                db.ref('my_trip_v38').set(this.activities);
+                db.ref('trip_final_v1').set(this.activities);
             },
 
+            // --- 圖片上傳 (含除錯) ---
             async uploadImages(event, item) {
                 const files = event.target.files;
                 if (!files.length) return;
 
                 this.isLoading = true;
-                this.loadingText = "準備上傳中...";
+                this.loadingText = "上傳中...";
                 this.progress = 0;
                 
                 if (!item.images) item.images = [];
@@ -485,10 +369,8 @@
                         const file = files[i];
                         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                         const fileName = `${Date.now()}_${i}_${safeName}`;
-                        const filePath = `trip_photos/${fileName}`;
+                        const filePath = `trip_photos_final/${fileName}`;
                         const storageRef = storage.ref().child(filePath);
-
-                        this.loadingText = `上傳中 ${i+1}/${files.length}...`;
 
                         try {
                             const snapshot = await storageRef.put(file);
@@ -496,7 +378,7 @@
                             item.images.push({ url: downloadURL, storagePath: filePath });
                         } catch (error) {
                             console.error("上傳失敗", error);
-                            alert(`上傳失敗 (${file.name})。請檢查 Firebase Storage Rules 是否設為 allow write: if true;`);
+                            alert(`上傳失敗: ${error.message}\n請檢查 Firebase Storage Rules 是否設為 allow write: if true;`);
                             hasError = true;
                         }
                         
@@ -508,7 +390,6 @@
                 } finally {
                     if (!hasError) this.saveToStorage();
                     this.isLoading = false;
-                    this.progress = 0;
                     event.target.value = ''; 
                 }
             },
@@ -522,87 +403,36 @@
                 item.images.splice(index, 1);
                 this.saveToStorage();
             },
-
+            
             viewImage(url) { window.open(url, '_blank'); },
 
-            async downloadMemories() {
-                this.isLoading = true;
-                this.loadingText = "正在打包回憶...";
-                this.progress = 10;
-
-                const zip = new JSZip();
-                const folder = zip.folder("Kyoto_Trip_Memories");
-                folder.file("itinerary.json", JSON.stringify(this.activities, null, 2));
-                
-                let photoCount = 0;
-                let failedCount = 0;
-                const photoPromises = [];
-
-                Object.keys(this.activities).forEach(day => {
-                    this.activities[day].forEach(act => {
-                        if (act.images && act.images.length > 0) {
-                            act.images.forEach((img, idx) => {
-                                const cleanName = `${day}_${act.time.replace(':','')}_${idx}.jpg`;
-                                const p = fetch(img.url).then(res => {
-                                        if(!res.ok) throw new Error("Network Error");
-                                        return res.blob();
-                                    }).then(blob => {
-                                        folder.file("photos/" + cleanName, blob);
-                                        photoCount++;
-                                    }).catch(err => { failedCount++; });
-                                photoPromises.push(p);
-                            });
-                        }
-                    });
-                });
-
-                await Promise.all(photoPromises);
-                this.progress = 80;
-
-                if (photoCount === 0 && failedCount > 0) {
-                    alert("⚠️ 瀏覽器安全性限制無法直接打包圖片，將改為下載 HTML 相簿清單。");
-                    this.downloadPhotoLinksHTML();
-                    this.isLoading = false;
-                    return;
+            // --- 其他功能 ---
+            checkPasscode() {
+                if (this.passcode === this.correctPasscode) {
+                    this.isAccessGranted = true;
+                    localStorage.setItem('trip_unlocked', 'true');
+                } else {
+                    alert('密碼錯誤！');
+                    this.passcode = '';
                 }
-
-                zip.generateAsync({ type: "blob" }).then((content) => {
-                    saveAs(content, `Kyoto_Trip_Backup_${Date.now()}.zip`);
-                    this.isLoading = false;
-                });
             },
-
-            downloadPhotoLinksHTML() {
-                let html = '<html><head><title>Photo Links</title></head><body><h1>Trip Photos</h1>';
-                Object.keys(this.activities).forEach(day => {
-                    this.activities[day].forEach(act => {
-                        if (act.images && act.images.length > 0) {
-                            html += `<h3>Day ${day} - ${act.location}</h3>`;
-                            act.images.forEach(img => { html += `<a href="${img.url}" target="_blank"><img src="${img.url}" style="width:200px; margin:5px;"></a>`; });
-                        }
-                    });
-                });
-                html += '</body></html>';
-                const blob = new Blob([html], {type: "text/html;charset=utf-8"});
-                saveAs(blob, "trip_photos_links.html");
+            getMainName(str) { return str ? str.split('(')[0] : ''; },
+            getSubName(str) { 
+                if(!str) return '';
+                const match = str.match(/\(([^)]+)\)/);
+                return match ? match[1] : '';
             },
-
-            handleTouchStart(e) { if(this.currentView !== 'list') return; this.touchStartX = e.changedTouches[0].screenX; this.touchStartY = e.changedTouches[0].screenY; },
-            handleTouchEnd(e) { if(this.currentView !== 'list') return; this.touchEndX = e.changedTouches[0].screenX; this.touchEndY = e.changedTouches[0].screenY; this.handleSwipe(); },
-            handleSwipe() {
-                const diffX = this.touchStartX - this.touchEndX;
-                const diffY = this.touchStartY - this.touchEndY;
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                    if (diffX > 0) { if (this.currentDay < this.days.length - 1) this.changeDay(this.currentDay + 1); } 
-                    else { if (this.currentDay > 0) this.changeDay(this.currentDay - 1); }
-                }
+            getIconColor(item) {
+                if (item.isHotel) return 'bg-purple-500';
+                if (item.isGame) return 'bg-red-500 ring-2 ring-red-200';
+                return 'bg-blue-500';
             },
             generateGoogleLink(query, fallbackName, mode) {
                 let q = query || fallbackName;
                 if (!q) return '#';
                 const encodedQ = encodeURIComponent(q);
-                if (mode === 'walking' && !query.includes('Station')) return `https://www.google.com/maps/search/?api=1&query=${encodedQ}`;
-                return `https://www.google.com/maps/dir/?api=1&destination=${encodedQ}&travelmode=${mode}`;
+                if (mode === 'walking') return `https://www.google.com/maps/search/?api=1&query=${encodedQ}`;
+                return `https://www.google.com/maps/dir/?api=1&destination=${encodedQ}&travelmode=${mode || 'transit'}`;
             },
             changeDay(index) {
                 this.currentDay = index; this.currentView = 'list'; this.showAllMap = false;
@@ -610,6 +440,8 @@
                 if(container) container.scrollTop = 0;
                 if (this.mapInstance) this.$nextTick(() => { this.updateMapMarkers(); });
             },
+            
+            // --- 地圖與其他 ---
             switchMap() {
                 this.currentView = 'map'; this.showAllMap = true;
                 this.$nextTick(() => { if (!this.mapInstance) this.initMap(); else { this.mapInstance.invalidateSize(); this.updateMapMarkers(); } });
@@ -617,7 +449,7 @@
             toggleMapMode() { this.showAllMap = !this.showAllMap; this.updateMapMarkers(); },
             initMap() {
                 this.mapInstance = L.map('map');
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(this.mapInstance);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(this.mapInstance);
                 this.markerGroup = L.layerGroup().addTo(this.mapInstance);
                 this.updateMapMarkers();
             },
@@ -626,35 +458,21 @@
                 this.markerGroup.clearLayers();
                 let actsToShow = [];
                 const bounds = [];
-                const getItemsForDay = (dayIndex) => {
-                    const items = [];
-                    if (this.activities[dayIndex]) {
-                        this.activities[dayIndex].forEach(act => {
-                            if(act.coords) items.push({ ...act, type: 'main' });
-                            if (act.foodOptions) act.foodOptions.forEach(f => items.push({ coords: f.coords, location: f.name, action: f.desc, type: 'food', nav_query: f.query }));
-                            if (act.shopping) items.push({ coords: act.shopping.coords, location: act.shopping.name, action: act.shopping.desc, type: 'shop', nav_query: act.shopping.query });
-                        });
-                    }
-                    return items;
-                };
-                if (this.showAllMap) Object.keys(this.activities).forEach(key => actsToShow = actsToShow.concat(getItemsForDay(key)));
-                else actsToShow = getItemsForDay(this.currentDay);
+                const getItems = (d) => (this.activities[d] || []).filter(i => i.coords);
+                
+                if (this.showAllMap) Object.keys(this.activities).forEach(k => actsToShow = actsToShow.concat(getItems(k)));
+                else actsToShow = getItems(this.currentDay);
+
                 actsToShow.forEach(item => {
-                    if (item.coords) {
-                        let color = item.type === 'food' ? '#f97316' : (item.type === 'shop' ? '#ef4444' : (item.isHotel ? '#8b5cf6' : '#3b82f6'));
-                        L.circleMarker(item.coords, { color: color, fillColor: color, fillOpacity: 0.8, radius: 8, weight: 2 }).addTo(this.markerGroup)
-                         .bindPopup(`<div style="font-weight:bold">${this.getMainName(item.location)}</div><div style="font-size:12px;">${item.action}</div>`);
-                        bounds.push(item.coords);
-                    }
+                    let color = item.isHotel ? '#8b5cf6' : '#3b82f6';
+                    L.circleMarker(item.coords, { color: color, fillColor: color, fillOpacity: 0.8, radius: 8 }).addTo(this.markerGroup)
+                     .bindPopup(`<b>${this.getMainName(item.location)}</b>`);
+                    bounds.push(item.coords);
                 });
                 if (bounds.length > 0) this.mapInstance.fitBounds(bounds, { padding: [50, 50] });
             },
-            getIconColor(item) {
-                if (item.isHotel) return 'bg-purple-500';
-                if (item.isGame) return 'bg-red-500 ring-2 ring-red-200';
-                if (item.recommend) return 'bg-black border-black';
-                return 'bg-blue-500';
-            },
+            
+            // --- 編輯 ---
             openModal(item = null) {
                 this.isEditing = !!item;
                 this.form = item ? JSON.parse(JSON.stringify(item)) : { id: Date.now(), time: '09:00', location: '', action: '', transport_detail: '', coords: [], images: [] };
@@ -683,10 +501,21 @@
                 }
             },
             resetData() {
-                if(confirm('警告：確定重置？這不會刪除雲端照片。')) {
-                    this.activities = JSON.parse(JSON.stringify(masterDataV38));
+                if(confirm('警告：確定重置行程？(不會刪除雲端照片)')) {
+                    this.activities = JSON.parse(JSON.stringify(masterDataVFinal));
                     this.saveToStorage();
                     this.currentDay = 0;
+                }
+            },
+            async downloadMemories() {
+                alert("功能準備中：這將打包所有回憶照片與行程");
+            },
+            handleTouchStart(e) { if(this.currentView !== 'list') return; this.touchStartX = e.changedTouches[0].screenX; this.touchStartY = e.changedTouches[0].screenY; },
+            handleTouchEnd(e) { if(this.currentView !== 'list') return; this.touchEndX = e.changedTouches[0].screenX; this.touchEndY = e.changedTouches[0].screenY; 
+                const diffX = this.touchStartX - this.touchEndX;
+                if (Math.abs(diffX) > 50) {
+                    if (diffX > 0 && this.currentDay < this.days.length - 1) this.changeDay(this.currentDay + 1);
+                    else if (diffX < 0 && this.currentDay > 0) this.changeDay(this.currentDay - 1);
                 }
             }
         }
