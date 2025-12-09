@@ -21,12 +21,21 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; -webkit-tap-highlight-color: transparent; }
+        
         .app-container { max-width: 430px; margin: 0 auto; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        
+        /* 隱藏捲軸但保留功能 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .scroll-container::-webkit-scrollbar { display: none; }
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .timeline-line { position: absolute; left: 24px; top: 30px; bottom: -20px; width: 2px; background: #e5e7eb; z-index: 0; }
         .last-item .timeline-line { display: none; }
+        
         #map { height: 100%; width: 100%; z-index: 0; }
+        
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
         .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -40,13 +49,13 @@
             <div class="mb-4 text-4xl">🔐</div>
             <h2 class="text-xl font-bold mb-2">旅程鎖定中</h2>
             <p class="text-gray-500 text-sm mb-6">請輸入通行碼以查看行程</p>
-            <input type="tel" v-model="passcode" class="w-full text-center text-2xl tracking-widest border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="密碼">
-            <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition">解鎖</button>
+            <input type="tel" v-model="passcode" class="w-full text-center text-2xl tracking-widest border-b-2 border-blue-500 py-2 mb-6 outline-none focus:border-blue-700" placeholder="Passcode">
+            <button @click="checkPasscode" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-blue-500/30">解鎖</button>
         </div>
     </div>
 
     <div v-else class="app-container">
-        <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2">
+        <header class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 pb-2">
             <div class="px-5 pt-12 pb-2 flex justify-between items-end">
                 <div>
                     <div class="text-xs text-blue-600 font-bold tracking-wider mb-1">TRIP 2025</div>
@@ -106,15 +115,14 @@
                     <div class="timeline-line"></div>
                     
                     <div class="absolute left-0 top-1 w-12 text-xs font-bold text-gray-400 text-right pr-4">{{ item.time }}</div>
-                    
                     <div class="absolute left-[18px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10"
                          :class="getIconColor(item)"></div>
 
-                    <div @click="openModal(item)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-200">
+                    <div @click="openModal(item)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.99] transition-transform duration-200">
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="font-bold text-gray-800 text-lg leading-tight">{{ getMainName(item.location) }}</h3>
                             <div class="flex gap-2">
-                                <a v-if="item.coords" :href="generateGoogleLink(item.location, item.location, item.transport_mode)" target="_blank" @click.stop class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                <a v-if="item.coords" :href="generateGoogleLink(item.location, item.location, item.transport_mode)" target="_blank" @click.stop class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs hover:bg-blue-100 transition">
                                     <i class="fas fa-location-arrow"></i>
                                 </a>
                             </div>
@@ -128,19 +136,26 @@
                             {{ item.action }}
                         </div>
 
-                        <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-2 mb-3 bg-orange-50 rounded-xl p-3 border border-orange-100" @click.stop>
-                            <div class="text-xs font-bold text-orange-600 mb-2 flex items-center">
-                                <i class="fas fa-utensils mr-1.5"></i> 附近美食推薦
+                        <div v-if="item.foodOptions && item.foodOptions.length > 0" class="mt-3 -mx-2" @click.stop>
+                            <div class="px-2 mb-2 flex items-center gap-1.5 text-xs font-bold text-orange-600">
+                                <i class="fas fa-utensils"></i> 推薦美食 (左右滑動)
                             </div>
-                            <div class="space-y-2">
-                                <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-100 shadow-sm">
-                                    <div class="flex-1 min-w-0 mr-2">
-                                        <div class="text-xs font-bold text-gray-800 truncate">{{ food.name }}</div>
-                                        <div class="text-[10px] text-gray-500 truncate">{{ food.desc }}</div>
-                                    </div>
-                                    <a :href="generateGoogleLink(food.query, food.name, 'walking')" target="_blank" class="w-6 h-6 rounded-full bg-orange-100 text-orange-500 flex flex-shrink-0 items-center justify-center text-[10px]">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                    </a>
+                            
+                            <div class="flex overflow-x-auto gap-3 px-2 pb-2 snap-x hide-scrollbar">
+                                <div v-for="(food, fIdx) in item.foodOptions" :key="fIdx" 
+                                     class="snap-center shrink-0 w-48 bg-white p-3 rounded-xl border border-orange-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                                     
+                                     <div class="absolute top-0 right-0 w-8 h-8 bg-orange-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                                     
+                                     <div class="relative z-10 mb-2">
+                                        <div class="font-bold text-gray-800 text-sm mb-1 truncate">{{ food.name }}</div>
+                                        <div class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed h-8">{{ food.desc }}</div>
+                                     </div>
+                                     
+                                     <a :href="generateGoogleLink(food.query, food.name, 'walking')" target="_blank" 
+                                        class="flex items-center justify-center gap-1 w-full py-2 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold active:scale-95 transition hover:bg-orange-100">
+                                        <i class="fas fa-map-marker-alt"></i> 導航
+                                     </a>
                                 </div>
                             </div>
                         </div>
@@ -179,7 +194,7 @@
                 <span class="text-[10px] font-medium">行程</span>
             </button>
             
-            <button @click="openModal()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg shadow-blue-200 flex items-center justify-center text-white text-2xl -mt-8 border-4 border-white active:scale-95 transition">
+            <button @click="openModal()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg shadow-blue-200 flex items-center justify-center text-white text-2xl -mt-8 border-4 border-white active:scale-95 transition hover:bg-blue-700">
                 <i class="fas fa-plus"></i>
             </button>
             
@@ -241,138 +256,139 @@
 
     const { createApp } = Vue;
 
-    // 2. 完整行程與餐廳資料 (已加入午晚餐推薦)
+    // 2. 完整行程與餐廳資料 (已內建推薦清單)
     const masterDataVFinal = {
        0: [
-            { id: 101, time: '16:50', location: '关西机场 T2 (Kansai Airport T2)', action: '接驳巴士', transport_detail: '出关后，寻找 "Terminal 1 / Railways" 免费接驳巴士站台。', 
-              nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] },
-            { id: 102, time: '17:35', location: '关西机场站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海电铁 (Nankai Line)，深蓝色列车。全车指定席。', 
-              nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] },
-            { id: 103, time: '18:15', location: '南海难波站 (Namba Station)', action: '抵达/出站', transport_detail: '请走 "2F 中央改札口" (2F Central Exit)，下电扶梯往北出口。', 
-              nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] },
-            { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '饭店 Check-in', isHotel: true, 
-              nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] },
-            { id: 105, time: '19:15', location: '道顿堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行约10分钟。', 
-              nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], 
-              foodOptions: [
-                  {name:'一兰拉面 道顿堀本馆', desc:'24hr 独立隔间', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, 
-                  {name:'千房大阪烧 道顿堀', desc:'经典大阪烧', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
-                  {name:'藏寿司 道顿堀店', desc:'扭蛋寿司', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]}
-              ],
-              shopping: {name:'唐吉诃德 (摩天轮店)', desc:'人多，建议速战速决', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]}
-            }
-        ],
-        1: [
-            { id: 201, time: '09:00', location: '近铁日本桥站 (Kintetsu-Nippombashi)', action: '移动至神户', 
-              transport_detail: '搭乘阪神电车 "快速急行" (Rapid Exp.) 往神户三宫。', 
-              nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] },
-            { id: 202, time: '11:30', location: '神户三宫 (Kobe-Sannomiya)', action: '神户牛午餐', 
-              nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
-              foodOptions: [
-                  {name:'Steakland 神户馆', desc:'高CP值', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]},
-                  {name:'Red Rock 本店', desc:'烤牛肉丼', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
-                  {name:'Ishida 三宫店', desc:'高级铁板烧(需预订)', query:'Kobe Beef Steak Ishida Sannomiya', coords:[34.6938, 135.1920]}
-              ] 
-            },
-            { id: 203, time: '14:00', location: '神户 Mosaic 广场', action: '搭 Uber前往', recommend: true, 
-              transport_detail: '请直接在 Uber 输入 "Kobe Harborland umie Mosaic"。', 
-              nav_query: 'Kobe Harborland umie Mosaic', transport_mode: 'driving', coords: [34.6795, 135.1843] },
-            { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百货', action: '必去', isGame: true, 
-              nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843], 
-              shopping: {name:'扭蛋百货', desc:'Mosaic 3F', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
-            { id: 205, time: '17:30', location: '神户港塔 (Kobe Port Tower)', action: '夜景/散步', 
-              nav_query: 'Kobe Port Tower', transport_mode: 'walking', coords: [34.6815, 135.1765] },
-            { id: 206, time: '19:00', location: '日本桥 (Nippombashi)', action: '返回大阪/晚餐', 
-              nav_query: 'Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065],
-              foodOptions: [
-                  {name:'天政乌龙面', desc:'便宜好吃', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
-                  {name:'鸟贵族 难波', desc:'串烧居酒屋', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
-                  {name:'天下一品 难波', desc:'浓厚鸡白汤', query:'Tenkaippin Namba', coords:[34.6658, 135.5070]}
-              ]
-            }
-        ],
-        2: [
-            { id: 301, time: '09:30', location: '黑门市场 (Kuromon Market)', action: '早午餐', 
-              nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] },
-            { id: 302, time: '11:00', location: '淀屋桥站 (Yodoyabashi)', action: '移动至京都', recommend: true, 
-              transport_detail: '建议叫 Uber 到 "京阪淀屋桥站" (Keihan Yodoyabashi)，这里是京阪电车起点，有座位。', 
-              nav_query: 'Yodoyabashi Station Keihan', transport_mode: 'driving', coords: [34.6930, 135.5015] },
-            { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: '饭店 Check-in', isHotel: true, 
-              transport_detail: '神宫丸太町站出来，直接搭 Uber 去饭店最快。', 
-              nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] },
-            { id: 304, time: '13:30', location: '锦市场 (Nishiki Market)', action: '午餐', 
-              nav_query: 'Nishiki Market', transport_mode: 'driving', coords: [35.0050, 135.7630],
-              foodOptions: [
-                  {name:'面屋 猪一 (Inoichi)', desc:'必比登推荐 (需排队)', query:'Menya Inoichi', coords:[35.0015, 135.7675]},
-                  {name:'名代猪排 三条本店', desc:'顶级炸猪排', query:'Katsukura Sanjo Main Store', coords:[35.0088, 135.7665]},
-                  {name:'一风堂 锦小路', desc:'博多豚骨拉面', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]}
-              ]
-            },
-            { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗舰店', isGame: true, 
-              nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695], 
-              shopping: {name:'Nintendo Kyoto', desc:'高岛屋 T8 7F', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
-            { id: 306, time: '18:00', location: '四条乌丸 (Shijo Karasuma)', action: '晚餐', 
-              nav_query: 'Shijo Station', transport_mode: 'walking', coords: [35.0035, 135.7595],
-              foodOptions: [
-                  {name:'饺子 ChaoChao', desc:'一口饺子', query:'Gyoza ChaoChao Shijo-Kawaramachi', coords:[35.0030, 135.7700]},
-                  {name:'CoCo壹番屋', desc:'日式咖哩', query:'CoCo Ichibanya Shijo Karasuma', coords:[35.0032, 135.7590]},
-                  {name:'大户屋 四条', desc:'定食', query:'Ootoya Shijo Karasuma', coords:[35.0030, 135.7600]}
-              ]
-            }
-        ],
-        3: [
-            { id: 401, time: '08:30', location: '伏见稻荷大社', action: '千本鸟居', recommend: true, 
-              transport_detail: '请直接 Uber 设定目的地："Fushimi Inari Taisha Parking Lot" (停车场)，少走一段上坡。', 
-              nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] },
-            { id: 402, time: '10:30', location: '清水寺 (Kiyomizu-dera)', action: '移动', transport: 'Uber', recommend: true, 
-              transport_detail: 'Uber 设定目的地："Kiyomizu-michi Bus Stop" (清水道公车站)，从这边走上去比较顺。', 
-              nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] },
-            { id: 403, time: '12:00', location: '清水道 (Kiyomizu-michi)', action: '午餐', 
-              nav_query: 'Okutan Kiyomizu', transport_mode: 'walking', coords: [34.9960, 135.7830], 
-              foodOptions: [
-                  {name:'奥丹 清水', desc:'汤豆腐老店', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
-                  {name:'清水 顺正', desc:'汤豆腐/宴席', query:'Kiyomizu Junsei Okabeya', coords:[34.9965, 135.7835]},
-                  {name:'吉野家', desc:'快速解决', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
-              ] 
-            },
-            { id: 404, time: '14:30', location: '三年坂 (Sannenzaka)', action: '老街/吉卜力', isGame: true, 
-              nav_query: 'Sannenzaka', transport_mode: 'walking', coords: [35.0035, 135.7780], 
-              shopping: {name:'橡子共和国', desc:'龙猫周边', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
-            { id: 405, time: '18:00', location: '河原町 (Kawaramachi)', action: '鸭川晚餐', 
-              nav_query: 'Gion Tanto', transport_mode: 'walking', coords: [35.0040, 135.7730],
-              foodOptions: [
-                  {name:'祇园 Tanto', desc:'大阪烧/铁板烧', query:'Gion Tanto', coords:[35.0055, 135.7735]},
-                  {name:'武藏寿司', desc:'人气回转寿司', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
-                  {name:'本家尾张屋', desc:'荞麦面老铺', query:'Honke Owariya Main Branch', coords:[35.0115, 135.7610]}
-              ],
-              shopping: { name: '唐吉诃德 河原町', desc: '最后补货', query: 'Don Quijote Kyoto Kawaramachi', coords:[35.0040, 135.7700] }
-            },
-            { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回饭店', transport: 'Uber', 
-              nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }
-        ],
-        4: [
-            { id: 501, time: '08:05', location: '京都站 八条口', action: '前往车站', recommend: true, 
-              transport_detail: 'Uber 设定："Kyoto Station Hachijo Exit" (八条口)。', 
-              nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] },
-            { id: 502, time: '08:45', location: '关空特急 Haruka', action: '前往机场', 
-              transport_detail: '从八条口进站，找 "30号月台" (Platform 30)。', 
-              nav_query: 'Kyoto Station Platform 30', transport_mode: 'transit', coords: [34.9850, 135.7580] },
-            { id: 503, time: '10:05', location: '关西机场 T1', action: '最后采购/登机', 
-              nav_query: 'Pokemon Store Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443], 
-              shopping: {name:'Pokemon Store', desc:'T1 2F', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
-              foodOptions: [
-                  {name:'神座拉面 机场店', desc:'T1 3F', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
-                  {name:'Sukiya 机场店', desc:'T1 2F', query:'Sukiya Kansai Airport', coords:[34.4355, 135.2445]},
-                  {name:'551蓬莱', desc:'T1 2F 猪肉包', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2450]}
-              ]
-            }
+           { id: 101, time: '16:50', location: '关西机场 T2 (Kansai Airport T2)', action: '接驳巴士', transport_detail: '出关后，寻找 "Terminal 1 / Railways" 免费接驳巴士站台。', 
+             nav_query: 'Aeroplaza Kansai Airport', transport_mode: 'transit', coords: [34.4357, 135.2443] },
+           { id: 102, time: '17:35', location: '关西机场站 (Kansai Airport Station)', action: '搭乘特急 Rapi:t', transport_detail: '南海电铁 (Nankai Line)，深蓝色列车。全车指定席。', 
+             nav_query: 'Kansai Airport Station Nankai', transport_mode: 'transit', coords: [34.4367, 135.2435] },
+           { id: 103, time: '18:15', location: '南海难波站 (Namba Station)', action: '抵达/出站', transport_detail: '请走 "2F 中央改札口" (2F Central Exit)，下电扶梯往北出口。', 
+             nav_query: 'Nankai Namba Station Central Exit', transport_mode: 'walking', coords: [34.6631, 135.5023] },
+           { id: 104, time: '18:30', location: 'Caption by Hyatt Namba', action: '饭店 Check-in', isHotel: true, 
+             nav_query: 'Caption by Hyatt Namba Osaka', transport_mode: 'walking', coords: [34.6655, 135.5065] },
+           { id: 105, time: '19:15', location: '道顿堀 (Dotonbori)', action: '晚餐/逛街', transport_detail: '步行约10分钟。', 
+             nav_query: 'Dotonbori Glico Sign', transport_mode: 'walking', coords: [34.6687, 135.5013], 
+             foodOptions: [
+                 {name:'一兰拉面 道顿堀本馆', desc:'24hr 独立隔间，经典豚骨', query:'Ichiran Dotonbori Main Building', coords:[34.6698, 135.5025]}, 
+                 {name:'千房大阪烧 道顿堀', desc:'经典大阪烧，口感松软', query:'Chibo Dotonbori', coords:[34.6685, 135.5032]}, 
+                 {name:'藏寿司 道顿堀店', desc:'扭蛋寿司，便宜好玩', query:'Kura Sushi Dotonbori', coords:[34.6680, 135.5010]}
+             ],
+             shopping: {name:'唐吉诃德 (摩天轮店)', desc:'人多，建议速战速决', query:'Don Quijote Dotonbori', coords:[34.6695, 135.5030]}
+           }
+       ],
+       1: [
+           { id: 201, time: '09:00', location: '近铁日本桥站 (Kintetsu-Nippombashi)', action: '移动至神户', 
+             transport_detail: '搭乘阪神电车 "快速急行" (Rapid Exp.) 往神户三宫。', 
+             nav_query: 'Kintetsu Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065] },
+           { id: 202, time: '11:30', location: '神户三宫 (Kobe-Sannomiya)', action: '神户牛午餐', 
+             nav_query: 'Steakland Kobe-kan', transport_mode: 'walking', coords: [34.6930, 135.1915], 
+             foodOptions: [
+                 {name:'Steakland 神户馆', desc:'高CP值，观光客入门首选', query:'Steakland Kobe-kan', coords:[34.6929, 135.1917]},
+                 {name:'Red Rock 本店', desc:'烤牛肉丼，肉量十足', query:'Red Rock Sannomiya', coords:[34.6925, 135.1905]},
+                 {name:'Ishida 三宫店', desc:'高级铁板烧(需预订)', query:'Kobe Beef Steak Ishida Sannomiya', coords:[34.6938, 135.1920]}
+             ] 
+           },
+           { id: 203, time: '14:00', location: '神户 Mosaic 广场', action: '搭 Uber前往', recommend: true, 
+             transport_detail: '请直接在 Uber 输入 "Kobe Harborland umie Mosaic"。', 
+             nav_query: 'Kobe Harborland umie Mosaic', transport_mode: 'driving', coords: [34.6795, 135.1843] },
+           { id: 204, time: '14:30', location: 'Mosaic 3F 扭蛋百货', action: '必去', isGame: true, 
+             nav_query: 'Gashapon Department Store Mosaic', transport_mode: 'walking', coords: [34.6795, 135.1843], 
+             shopping: {name:'扭蛋百货', desc:'Mosaic 3F', query:'Gashapon Department Store Mosaic', coords:[34.6795, 135.1843]} },
+           { id: 205, time: '17:30', location: '神户港塔 (Kobe Port Tower)', action: '夜景/散步', 
+             nav_query: 'Kobe Port Tower', transport_mode: 'walking', coords: [34.6815, 135.1765] },
+           { id: 206, time: '19:00', location: '日本桥 (Nippombashi)', action: '返回大阪/晚餐', 
+             nav_query: 'Nippombashi Station', transport_mode: 'transit', coords: [34.6672, 135.5065],
+             foodOptions: [
+                 {name:'天政乌龙面', desc:'便宜好吃，当地人爱店', query:'Tenmasa Udon Namba', coords:[34.6660, 135.5045]},
+                 {name:'鸟贵族 难波', desc:'均一价串烧居酒屋', query:'Torikizoku Namba', coords:[34.6675, 135.5055]},
+                 {name:'天下一品 难波', desc:'浓厚鸡白汤拉面', query:'Tenkaippin Namba', coords:[34.6658, 135.5070]}
+             ]
+           }
+       ],
+       2: [
+           { id: 301, time: '09:30', location: '黑门市场 (Kuromon Market)', action: '早午餐', 
+             nav_query: 'Kuromon Market', transport_mode: 'walking', coords: [34.6654, 135.5065] },
+           { id: 302, time: '11:00', location: '淀屋桥站 (Yodoyabashi)', action: '移动至京都', recommend: true, 
+             transport_detail: '建议叫 Uber 到 "京阪淀屋桥站" (Keihan Yodoyabashi)，这里是京阪电车起点，有座位。', 
+             nav_query: 'Yodoyabashi Station Keihan', transport_mode: 'driving', coords: [34.6930, 135.5015] },
+           { id: 303, time: '12:30', location: 'Hyatt Place Kyoto', action: '饭店 Check-in', isHotel: true, 
+             transport_detail: '神宫丸太町站出来，直接搭 Uber 去饭店最快。', 
+             nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] },
+           { id: 304, time: '13:30', location: '锦市场 (Nishiki Market)', action: '午餐', 
+             nav_query: 'Nishiki Market', transport_mode: 'driving', coords: [35.0050, 135.7630],
+             foodOptions: [
+                 {name:'面屋 猪一', desc:'必比登推荐，清爽汤头 (需排队)', query:'Menya Inoichi', coords:[35.0015, 135.7675]},
+                 {name:'名代猪排 三条', desc:'顶级炸猪排，服务佳', query:'Katsukura Sanjo Main Store', coords:[35.0088, 135.7665]},
+                 {name:'一风堂 锦小路', desc:'博多豚骨拉面', query:'Ippudo Nishiki-Koji', coords:[35.0042, 135.7625]}
+             ]
+           },
+           { id: 305, time: '15:30', location: 'Nintendo Kyoto', action: '任天堂旗舰店', isGame: true, 
+             nav_query: 'Nintendo Kyoto', transport_mode: 'walking', coords: [35.0038, 135.7695], 
+             shopping: {name:'Nintendo Kyoto', desc:'高岛屋 T8 7F', query:'Nintendo Kyoto', coords:[35.0038, 135.7695]} },
+           { id: 306, time: '18:00', location: '四条乌丸 (Shijo Karasuma)', action: '晚餐', 
+             nav_query: 'Shijo Station', transport_mode: 'walking', coords: [35.0035, 135.7595],
+             foodOptions: [
+                 {name:'饺子 ChaoChao', desc:'一口饺子，适合配啤酒', query:'Gyoza ChaoChao Shijo-Kawaramachi', coords:[35.0030, 135.7700]},
+                 {name:'CoCo壹番屋', desc:'日式咖哩，稳定好吃', query:'CoCo Ichibanya Shijo Karasuma', coords:[35.0032, 135.7590]},
+                 {name:'大户屋 四条', desc:'日式定食，营养均衡', query:'Ootoya Shijo Karasuma', coords:[35.0030, 135.7600]}
+             ]
+           }
+       ],
+       3: [
+           { id: 401, time: '08:30', location: '伏见稻荷大社', action: '千本鸟居', recommend: true, 
+             transport_detail: '请直接 Uber 设定目的地："Fushimi Inari Taisha Parking Lot" (停车场)，少走一段上坡。', 
+             nav_query: 'Fushimi Inari Taisha Parking Lot', transport_mode: 'driving', coords: [34.9671, 135.7726] },
+           { id: 402, time: '10:30', location: '清水寺 (Kiyomizu-dera)', action: '移动', transport: 'Uber', recommend: true, 
+             transport_detail: 'Uber 设定目的地："Kiyomizu-michi Bus Stop" (清水道公车站)，从这边走上去比较顺。', 
+             nav_query: 'Kiyomizu-michi Bus Stop', transport_mode: 'driving', coords: [34.9949, 135.7850] },
+           { id: 403, time: '12:00', location: '清水道 (Kiyomizu-michi)', action: '午餐', 
+             nav_query: 'Okutan Kiyomizu', transport_mode: 'walking', coords: [34.9960, 135.7830], 
+             foodOptions: [
+                 {name:'奥丹 清水', desc:'京都最古老汤豆腐老店', query:'Okutan Kiyomizu', coords:[34.9965, 135.7835]},
+                 {name:'清水 顺正', desc:'庭园美景，汤豆腐/宴席', query:'Kiyomizu Junsei Okabeya', coords:[34.9965, 135.7835]},
+                 {name:'吉野家', desc:'快速解决，省时选择', query:'Yoshinoya Kiyomizu-dera', coords:[34.9960, 135.7830]}
+             ] 
+           },
+           { id: 404, time: '14:30', location: '三年坂 (Sannenzaka)', action: '老街/吉卜力', isGame: true, 
+             nav_query: 'Sannenzaka', transport_mode: 'walking', coords: [35.0035, 135.7780], 
+             shopping: {name:'橡子共和国', desc:'龙猫周边', query:'Donguri Republic Ninen-zaka', coords:[34.9985, 135.7800]} },
+           { id: 405, time: '18:00', location: '河原町 (Kawaramachi)', action: '鸭川晚餐', 
+             nav_query: 'Gion Tanto', transport_mode: 'walking', coords: [35.0040, 135.7730],
+             foodOptions: [
+                 {name:'祇园 Tanto', desc:'排队名店，大阪烧/铁板烧', query:'Gion Tanto', coords:[35.0055, 135.7735]},
+                 {name:'武藏寿司', desc:'高人气回转寿司', query:'Sushi no Musashi Sanjo', coords:[35.0090, 135.7695]},
+                 {name:'本家尾张屋', desc:'550年老店，荞麦面', query:'Honke Owariya Main Branch', coords:[35.0115, 135.7610]}
+             ],
+             shopping: { name: '唐吉诃德 河原町', desc: '最后补货', query: 'Don Quijote Kyoto Kawaramachi', coords:[35.0040, 135.7700] }
+           },
+           { id: 406, time: '20:00', location: 'Hyatt Place Kyoto', action: '回饭店', transport: 'Uber', 
+             nav_query: 'Hyatt Place Kyoto', transport_mode: 'driving', coords: [35.0163, 135.7592] }
+       ],
+       4: [
+           { id: 501, time: '08:05', location: '京都站 八条口', action: '前往车站', recommend: true, 
+             transport_detail: 'Uber 设定："Kyoto Station Hachijo Exit" (八条口)。', 
+             nav_query: 'Kyoto Station Hachijo Exit', transport_mode: 'driving', coords: [34.9850, 135.7580] },
+           { id: 502, time: '08:45', location: '关空特急 Haruka', action: '前往机场', 
+             transport_detail: '从八条口进站，找 "30号月台" (Platform 30)。', 
+             nav_query: 'Kyoto Station Platform 30', transport_mode: 'transit', coords: [34.9850, 135.7580] },
+           { id: 503, time: '10:05', location: '关西机场 T1', action: '最后采购/登机', 
+             nav_query: 'Pokemon Store Kansai Airport', transport_mode: 'walking', coords: [34.4357, 135.2443], 
+             shopping: {name:'Pokemon Store', desc:'T1 2F', query:'Pokemon Store Kansai Airport', coords:[34.4357, 135.2443]},
+             foodOptions: [
+                 {name:'神座拉面 机场店', desc:'T1 3F，清爽白菜汤头', query:'Kamukura Kansai Airport', coords:[34.4350, 135.2440]},
+                 {name:'Sukiya 机场店', desc:'T1 2F', query:'Sukiya Kansai Airport', coords:[34.4355, 135.2445]},
+                 {name:'551蓬莱', desc:'T1 2F 猪肉包(可外带)', query:'551 Horai Kansai Airport', coords:[34.4360, 135.2450]}
+             ]
+           }
+       ]
     };
 
     const app = createApp({
         data() {
             return {
                 isAccessGranted: false,
-                passcode: '1212',
+                passcode: '',
                 correctPasscode: '1212',
 
                 currentDay: 0,
